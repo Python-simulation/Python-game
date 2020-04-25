@@ -9,9 +9,7 @@ follow along in the tutorial.
 # Import Modules
 import os
 import pygame as pg
-#from pg.locals import *
 from pygame.compat import geterror
-from pygame import RLEACCEL, QUIT, K_ESCAPE, KEYDOWN, MOUSEBUTTONDOWN, MOUSEBUTTONUP, FULLSCREEN
 
 if not pg.font:
     print("Warning, fonts disabled")
@@ -39,9 +37,11 @@ def load_image(name, colorkey=None):
     if colorkey is not None:
 
         if colorkey == -1:
-            colorkey = image.get_at((0, 0))  # take the first pixel of the image as reference for alpha
+            # (0, 0) ->take the first pixel of the image as reference for alpha
+            colorkey = image.get_at((0, 0))
 
-        image.set_colorkey(colorkey, RLEACCEL)  # RLEACCEL make it faster to display
+        # RLEACCEL make it faster to display
+        image.set_colorkey(colorkey, pg.RLEACCEL)
 
     return image, image.get_rect()
 
@@ -161,91 +161,180 @@ class BackGround(pg.sprite.Sprite):
         if midbottom is not None:
             self.rect.midbottom = midbottom
 
-def main():
+
+class Game():
     """this function is called when the program starts.
        it initializes everything it needs, then runs in
        a loop until the function returns."""
-    # Initialize Everything
-    pg.init()
-    screen = pg.display.set_mode((640,480), pg.RESIZABLE)
-#    screen = pg.display.set_mode((500, 400))
-    pg.display.set_caption("Testing")
-    pg.mouse.set_visible(0)
 
-    # Create The Backgound
-    background = pg.Surface(screen.get_size())
-    background = background.convert()
-    background_color = (200, 200, 200)
-    background.fill(background_color)
+    def __init__(self):
+        GAME_SCREEN_W = 500
+        GAME_SCREEN_H = 400
 
-    center = screen.get_rect().center
-    midbottom = screen.get_rect().midbottom
-    background_screen = BackGround('background.png', center=center)
-    lower_tool_bar = BackGround('lower_bar.png', midbottom=midbottom)
-    # Put Text On The Background, Centered
-    if pg.font:
-        font = pg.font.Font(None, 36)
-        text = font.render("Text displayed on not so white background", 1, (10, 10, 10))
-        textpos = text.get_rect(centerx=screen.get_width() / 2)
-        background.blit(text, textpos)
-#        background_screen.image.blit(text, textpos)
+        pg.init()
 
-    # Display The Background before the beginning of the game (while everything is loaded)
-    screen.blit(background, (0, 0))  # draw background to erase everything
-    pg.display.flip()
+        self.flags = (
+                pg.RESIZABLE |
+                pg.DOUBLEBUF
+                )
 
-    # Prepare Game Objects
-    clock = pg.time.Clock()
-#    whiff_sound = load_sound("whiff.wav")
-#    punch_sound = load_sound("punch.wav")
-    chimp = Chimp()
-    fist = Fist()
-    allsprites = pg.sprite.RenderPlain((fist, chimp))
+        self.window_stretched = False  # false mean we want fixed ratio defined
+        # by the game_screen size (not the app_screen)
 
-    # Main Loop
-    going = True
-    while going:
-        clock.tick(60)  # 60 Hz lattency (1/60s = 16.6ms (60 frames per seond max))
+        # application window surface
+        self.app_screen = pg.display.set_mode((WINDOW_W, WINDOW_H), self.flags)
+        self.app_screen_rect = self.app_screen.get_rect()
 
-        # Handle Input Events
+        # game screen surface (where all the ingame stuff gets blitted on)
+        self.game_screen = pg.Surface((GAME_SCREEN_W, GAME_SCREEN_H))
+        self.game_screen_rect = self.game_screen.get_rect()
+
+        self.clock = pg.time.Clock()
+
+        pg.display.set_caption("Testing")
+        pg.mouse.set_visible(1)
+
+        # Create The Backgound that never changes (with fixed toolbar)
+        self.bg_image = pg.Surface(self.game_screen.get_size()).convert()
+        background_color = (200, 200, 200)
+        self.bg_image.fill(background_color)
+
+        # create the map on top of the background
+        center = self.game_screen_rect.center
+        midbottom = self.game_screen_rect.midbottom
+        self.lower_tool_bar = BackGround('lower_bar.png', midbottom=midbottom)
+        self.background_screen = BackGround('background.png', center=center)
+
+        # Put Text On The Background, Centered
+        if pg.font:
+            font = pg.font.Font(None, 36)
+            text = font.render("Text displayed on not so white background",
+                               1, (10, 10, 10))
+            textpos = text.get_rect(centerx=self.game_screen.get_width() / 2)
+            self.bg_image.blit(text, textpos)
+
+        self.bg_image.blit(self.lower_tool_bar.image, self.lower_tool_bar.rect)
+
+        # Prepare Game Objects
+        self.clock = pg.time.Clock()
+    #    whiff_sound = load_sound("whiff.wav")
+    #    punch_sound = load_sound("punch.wav")
+        self.chimp = Chimp()
+        self.fist = Fist()
+        self.allsprites = pg.sprite.RenderPlain((self.fist, self.chimp))
+
+    def events(self):
+        """All clicked regestered"""
         for event in pg.event.get():
-#            print(event)
 
-            if event.type == QUIT:
-                going = False
+            if event.type == pg.QUIT:
+                self.running = False
 
-            elif event.type == KEYDOWN and event.key == K_ESCAPE:
-                going = False
+            elif event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    self.running = False
+#                elif event.key == pg.K_s:  # if want to toggle respect ratio
+#                    self.window_stretched = not self.window_stretched
+#                    self.reset_app_screen(self.app_screen_rect.size)
+                elif event.key == pg.K_f:
+                    # toggle fullscreen
+                    self.flags = self.flags ^ pg.FULLSCREEN
+                    self.reset_app_screen(self.app_screen_rect.size)
+#                elif event.key == pg.K_r:  # if want to toggle resizability
+#                    # toggle fullscreen
+#                    self.flags = self.flags ^ pg.RESIZABLE
+#                    self.reset_app_screen(self.app_screen_rect.size)
 
-            elif event.type == MOUSEBUTTONDOWN and event.button == 1:
+            elif event.type == pg.VIDEORESIZE:
+                # if the user resizes the window (drag the bottom right corner)
+                # get the new size from the event dict and reset the
+                # window screen surface
+                self.reset_app_screen(event.dict['size'])
 
-                if fist.punch(chimp):
+            elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                if self.fist.punch(self.chimp):
 #                    punch_sound.play()  # punch
-                    chimp.punched()
-
+                    self.chimp.punched()
                 else:
 #                    whiff_sound.play()  # miss
                     ""
+            elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
+                self.fist.unpunch()
 
-            elif event.type == MOUSEBUTTONUP and event.button == 1:
-                fist.unpunch()
+    def update(self, dt):
+#        print(dt)
+        self.allsprites.update()  # call update function of each class inside
 
-        allsprites.update()  # call update function of each class inside
-
+    def draw(self):
         # Draw Everything
-        screen.blit(background, (0, 0))  # draw background to erase everything
-        screen.blit(background_screen.image, background_screen.rect)
-        screen.blit(lower_tool_bar.image, lower_tool_bar.rect)
-        allsprites.draw(screen)  # draw moving items
+        self.game_screen.blit(self.bg_image, (0, 0))  # blackground
+        self.game_screen.blit(self.background_screen.image,
+                              self.background_screen.rect)
 #        allsprites.remove(chimp)
+
+        self.allsprites.draw(self.game_screen)  # draw moving items
+
+        if self.window_stretched:  # don't want this but keep in code in case
+            # scale the game screen to the window size
+            resized_screen = pg.transform.scale(self.game_screen,
+                                                self.app_screen_rect.size)
+        else:  # allows to keep ratio
+            # compare aspect ratios
+            game_ratio = self.game_screen_rect.w / self.game_screen_rect.h
+            app_ratio = self.app_screen_rect.w / self.app_screen_rect.h
+
+            if game_ratio < app_ratio:
+                width = int(self.app_screen_rect.h / self.game_screen_rect.h
+                        * self.game_screen_rect.w)
+                height = self.app_screen_rect.h
+            else:
+                width = self.app_screen_rect.w
+                height = int(self.app_screen_rect.w / self.game_screen_rect.w
+                         * self.game_screen_rect.h)
+            resized_screen = pg.transform.scale(self.game_screen,
+                                                (width, height))
+
+        # get the rect of the resized screen for blitting
+        # and center it to the window screen
+        res_screen_rect = resized_screen.get_rect()
+        res_screen_rect.center = self.app_screen_rect.center
+
+        self.app_screen.blit(resized_screen, res_screen_rect)
+
+        fps = self.clock.get_fps()
+        pg.display.set_caption(f'{round(fps,2)}')
+
+        pg.display.update(res_screen_rect)
+
         pg.display.flip()
 
-    " end "
-    pg.display.quit()
-    pg.quit()
+    def reset_app_screen(self, size):
+        self.app_screen = pg.display.set_mode(size, self.flags)
+        self.app_screen_rect = self.app_screen.get_rect()
+        pg.display.update()
+
+
+    def run(self):
+        self.running = True
+        while self.running:
+            self.clock.tick(60)
+            delta_time = self.clock.tick() / 1000
+            self.events()
+            self.update(delta_time)
+            self.draw()
+
+        pg.display.quit()
+        pg.quit()
 
 # Game Over
 
 
 if __name__ == "__main__":
-    main()
+
+    # wanted resolution (knowing that the game will have a different resolution
+    # and will resize to match this size)
+    WINDOW_W = 500
+    WINDOW_H = 400
+
+    g = Game()
+    g.run()
