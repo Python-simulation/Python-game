@@ -175,8 +175,8 @@ class Game():
        a loop until the function returns."""
 
     def __init__(self):
-        GAME_SCREEN_W = 500
-        GAME_SCREEN_H = 400
+        GAME_SCREEN_W = 1920
+        GAME_SCREEN_H = 1080
 
         pg.init()
 
@@ -202,9 +202,9 @@ class Game():
         pg.mouse.set_visible(1)
 
         # Create The Backgound that never changes (with fixed toolbar)
-        self.bg_image = pg.Surface(self.game_screen.get_size()).convert()
-        background_color = (200, 200, 200)
-        self.bg_image.fill(background_color)
+#        self.bg_image = pg.Surface(self.game_screen.get_size()).convert()
+#        background_color = (200, 200, 200)
+#        self.bg_image.fill(background_color)
 
         # create the map on top of the background
         center = self.game_screen_rect.center
@@ -213,14 +213,12 @@ class Game():
         self.background_screen = BackGround('background.png', center=center)
 
         # Put Text On The Background, Centered
-        if pg.font:
-            font = pg.font.Font(None, 36)
-            text = font.render("Text displayed on not so white background",
-                               1, (10, 10, 10))
-            textpos = text.get_rect(centerx=self.game_screen.get_width() / 2)
-            self.bg_image.blit(text, textpos)
-
-        self.bg_image.blit(self.lower_tool_bar.image, self.lower_tool_bar.rect)
+#        if pg.font:
+#            font = pg.font.Font(None, 36)
+#            text = font.render("Text displayed on not so white background",
+#                               1, (10, 10, 10))
+#            textpos = text.get_rect(centerx=self.game_screen.get_width() / 2)
+#            self.bg_image.blit(text, textpos)
 
         # Prepare Game Objects
         self.clock = pg.time.Clock()
@@ -276,9 +274,11 @@ class Game():
 
     def draw(self):
         # Draw Everything
-        self.game_screen.blit(self.bg_image, (0, 0))  # blackground
+#        self.game_screen.blit(self.bg_image, (0, 0))  # blackground
         self.game_screen.blit(self.background_screen.image,
                               self.background_screen.rect)
+
+        self.game_screen.blit(self.lower_tool_bar.image, self.lower_tool_bar.rect)
 #        allsprites.remove(chimp)
 
         self.allsprites.draw(self.game_screen)  # draw moving items
@@ -342,8 +342,8 @@ if __name__ == "__main__":
 
     # wanted resolution (knowing that the game will have a different resolution
     # and will resize to match this size)
-    WINDOW_W = 500
-    WINDOW_H = 400
+    WINDOW_W = 1920
+    WINDOW_H = 1080
 
     game = Game()
     mouse = Mouse(game)
