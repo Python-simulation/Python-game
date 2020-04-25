@@ -68,17 +68,18 @@ def load_sound(name):
 
 
 # classes for our game objects
-class Fist(pg.sprite.Sprite):
-    """moves a clenched fist on the screen, following the mouse"""
+class Mouse(pg.sprite.Sprite):
+    """Position and surface of the mouse (can change the mouse image by
+    removing the real mouse image and replacing by a defined one)"""
 
     def __init__(self, Game):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)  # call Sprite initializer
-        self.image, self.rect = load_image("fist.png", -1)
+        self.image, self.rect = load_image("mouse.png", -1)
         self.punching = 0
 
     def update(self):
-        """move the fist based on the mouse position"""
+        """move the mouse based on the mouse position"""
 
         pos = pg.mouse.get_pos()
         real_pos_x = pos[0] * self.Game.game_screen_rect.w / self.Game.app_screen_rect.w
@@ -90,14 +91,14 @@ class Fist(pg.sprite.Sprite):
             self.rect.move_ip(5, 10)
 
     def punch(self, target):
-        """returns true if the fist collides with the target"""
+        """returns true if the mouse collides with the target"""
         if not self.punching:
             self.punching = 1
             hitbox = self.rect.inflate(-5, -5)
             return hitbox.colliderect(target.rect)
 
     def unpunch(self):
-        """called to pull the fist back"""
+        """called to pull the mouse back"""
         self.punching = 0
 
 
@@ -226,8 +227,8 @@ class Game():
     #    whiff_sound = load_sound("whiff.wav")
     #    punch_sound = load_sound("punch.wav")
         self.chimp = Chimp()
-#        self.fist = Fist(game)
-#        self.allsprites = pg.sprite.RenderPlain((self.fist, self.chimp))
+#        self.mouse = Mouse(game)
+#        self.allsprites = pg.sprite.RenderPlain((self.mouse, self.chimp))
         self.allsprites = pg.sprite.RenderPlain((self.chimp))
 
     def events(self):
@@ -259,18 +260,18 @@ class Game():
                 self.reset_app_screen(event.dict['size'])
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                if self.fist.punch(self.chimp):
+                if self.mouse.punch(self.chimp):
 #                    punch_sound.play()  # punch
                     self.chimp.punched()
                 else:
 #                    whiff_sound.play()  # miss
                     ""
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
-                self.fist.unpunch()
+                self.mouse.unpunch()
 
     def update(self, dt):
 #        print(dt)
-        self.fist.update()
+        self.mouse.update()
         self.allsprites.update()  # call update function of each class inside
 
     def draw(self):
@@ -345,6 +346,7 @@ if __name__ == "__main__":
     WINDOW_H = 400
 
     game = Game()
-    mouse = Fist(game)
-    game.fist = mouse
+    mouse = Mouse(game)
+    game.mouse = mouse
+    game.allsprites.add(game.mouse)
     game.run()
