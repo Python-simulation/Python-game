@@ -71,15 +71,21 @@ def load_sound(name):
 class Fist(pg.sprite.Sprite):
     """moves a clenched fist on the screen, following the mouse"""
 
-    def __init__(self):
+    def __init__(self, Game):
+        self.Game = Game
         pg.sprite.Sprite.__init__(self)  # call Sprite initializer
         self.image, self.rect = load_image("fist.png", -1)
         self.punching = 0
 
     def update(self):
         """move the fist based on the mouse position"""
+
         pos = pg.mouse.get_pos()
-        self.rect.midtop = pos
+        real_pos_x = pos[0] * self.Game.game_screen_rect.w / self.Game.app_screen_rect.w
+        real_pos_y = pos[1] * self.Game.game_screen_rect.h / self.Game.app_screen_rect.h
+        real_pos = real_pos_x, real_pos_y
+
+        self.rect.midtop = real_pos
         if self.punching:
             self.rect.move_ip(5, 10)
 
@@ -220,8 +226,9 @@ class Game():
     #    whiff_sound = load_sound("whiff.wav")
     #    punch_sound = load_sound("punch.wav")
         self.chimp = Chimp()
-        self.fist = Fist()
-        self.allsprites = pg.sprite.RenderPlain((self.fist, self.chimp))
+#        self.fist = Fist(game)
+#        self.allsprites = pg.sprite.RenderPlain((self.fist, self.chimp))
+        self.allsprites = pg.sprite.RenderPlain((self.chimp))
 
     def events(self):
         """All clicked regestered"""
@@ -263,6 +270,7 @@ class Game():
 
     def update(self, dt):
 #        print(dt)
+        self.fist.update()
         self.allsprites.update()  # call update function of each class inside
 
     def draw(self):
@@ -336,5 +344,7 @@ if __name__ == "__main__":
     WINDOW_W = 500
     WINDOW_H = 400
 
-    g = Game()
-    g.run()
+    game = Game()
+    mouse = Fist(game)
+    game.fist = mouse
+    game.run()
