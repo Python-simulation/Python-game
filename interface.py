@@ -75,41 +75,63 @@ class Mouse(pg.sprite.Sprite):
     def __init__(self, Game):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)  # call Sprite initializer
-        self.image, self.rect = load_image("mouse.png", -1)
-        self.punching = 0
+        self.image, self.rect = load_image("mouse.png")#, -1)
+        self.cliking = 0
 
     def update(self):
-        """move the mouse based on the mouse position"""
+        """move the resized mouse based on the real mouse position"""
+
+        game_ratio = self.Game.game_screen_rect.w / self.Game.game_screen_rect.h
+        app_ratio = self.Game.app_screen_rect.w / self.Game.app_screen_rect.h
+
+        if game_ratio < app_ratio:
+            width = int(self.Game.app_screen_rect.h / self.Game.game_screen_rect.h
+                    * self.Game.game_screen_rect.w)
+            height = self.Game.app_screen_rect.h
+        else:
+            width = self.Game.app_screen_rect.w
+            height = int(self.Game.app_screen_rect.w / self.Game.game_screen_rect.w
+                     * self.Game.game_screen_rect.h)
+        resized_screen = pg.transform.scale(self.Game.game_screen,
+                                            (width, height))
+
+        # get the rect of the resized screen for blitting
+        # and center it to the window screen
+        res_screen_rect = resized_screen.get_rect()
+        res_screen_rect.center = self.Game.app_screen_rect.center
+
+        diff_x = (self.Game.app_screen_rect.w - res_screen_rect.w) / 2
+        diff_y = (self.Game.app_screen_rect.h - res_screen_rect.h) / 2
 
         pos = pg.mouse.get_pos()
-        real_pos_x = pos[0] * self.Game.game_screen_rect.w / self.Game.app_screen_rect.w
-        real_pos_y = pos[1] * self.Game.game_screen_rect.h / self.Game.app_screen_rect.h
+        real_pos_x = (-diff_x + pos[0]) * self.Game.game_screen_rect.w / res_screen_rect.w
+        real_pos_y = (-diff_y + pos[1]) * self.Game.game_screen_rect.h / res_screen_rect.h
         real_pos = real_pos_x, real_pos_y
 
         self.rect.midtop = real_pos
-        if self.punching:
+        if self.cliking:
             self.rect.move_ip(5, 10)
 
-    def punch(self, target):
+    def cliked(self, target):
         """returns true if the mouse collides with the target"""
-        if not self.punching:
-            self.punching = 1
+        if not self.cliking:
+            self.cliking = 1
             hitbox = self.rect.inflate(-5, -5)
             return hitbox.colliderect(target.rect)
 
-    def unpunch(self):
+    def uncliked(self):
         """called to pull the mouse back"""
-        self.punching = 0
+        self.cliking = 0
 
 
 class Chimp(pg.sprite.Sprite):
     """moves a monkey critter across the screen. it can spin the
        monkey when it is punched."""
 
-    def __init__(self):
+    def __init__(self, Game):
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
-        screen = pg.display.get_surface()
-        self.area = screen.get_rect()  # walkable space
+        self.area = Game.game_screen_rect  # walkable space
+        print(self.area)
         self.image, self.rect = load_image("chimp.png", -1)
 #        self.image = pg.transform.scale(self.image, (200, 100))
 #        self.rect = self.image.get_rect()
@@ -224,7 +246,7 @@ class Game():
         self.clock = pg.time.Clock()
     #    whiff_sound = load_sound("whiff.wav")
     #    punch_sound = load_sound("punch.wav")
-        self.chimp = Chimp()
+        self.chimp = Chimp(self)
 #        self.mouse = Mouse(game)
 #        self.allsprites = pg.sprite.RenderPlain((self.mouse, self.chimp))
         self.allsprites = pg.sprite.RenderPlain((self.chimp))
@@ -258,14 +280,14 @@ class Game():
                 self.reset_app_screen(event.dict['size'])
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                if self.mouse.punch(self.chimp):
+                if self.mouse.cliked(self.chimp):
 #                    punch_sound.play()  # punch
                     self.chimp.punched()
                 else:
 #                    whiff_sound.play()  # miss
                     ""
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
-                self.mouse.unpunch()
+                self.mouse.uncliked()
 
     def update(self, dt):
 #        print(dt)
@@ -342,8 +364,8 @@ if __name__ == "__main__":
 
     # wanted resolution (knowing that the game will have a different resolution
     # and will resize to match this size)
-    WINDOW_W = 1920
-    WINDOW_H = 1080
+    WINDOW_W = 300
+    WINDOW_H = 200
 
     game = Game()
     mouse = Mouse(game)
