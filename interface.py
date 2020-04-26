@@ -108,15 +108,15 @@ class Mouse(pg.sprite.Sprite):
         real_pos_y = (-diff_y + pos[1]) * self.Game.game_screen_rect.h / res_screen_rect.h
         real_pos = real_pos_x, real_pos_y
 
-        self.rect.midtop = real_pos
+        self.rect.center = real_pos
         if self.cliking:
-            self.rect.move_ip(5, 10)
+            self.rect.move_ip(5, 10)  # good for button
 
     def cliked(self, target):
         """returns true if the mouse collides with the target"""
         if not self.cliking:
             self.cliking = 1
-            hitbox = self.rect.inflate(-5, -5)
+            hitbox = self.rect  # .inflate(-5, -5) " why move it ?
             return hitbox.colliderect(target.rect)
 
     def uncliked(self):
@@ -136,7 +136,8 @@ class Chimp(pg.sprite.Sprite):
 #        self.image = pg.transform.scale(self.image, (200, 100))
 #        self.rect = self.image.get_rect()
         self.rect.topleft = 0, 100
-        self.move = -9  # depend on image original orientation (positive move = directed to right)
+        self.move_x = -9  # depend on image original orientation (positive move = directed to right)
+        self.move_y = -9  # depend on image original orientation (positive move = directed to right)
         self.dizzy = 0
 
     def update(self):  # implicitly called from allsprite update
@@ -148,13 +149,17 @@ class Chimp(pg.sprite.Sprite):
 
     def _walk(self):
         """move the monkey across the screen, and turn at the ends"""
-        newpos = self.rect.move((self.move, 0))
-#        if not self.area.contains(newpos):  # could be useful but not here
+#        newpos = self.rect.move((self.move_x, self.move_y))
+#        if not self.area.contains(newpos_x):  # could be useful but not here
 
         if self.rect.left < self.area.left or self.rect.right > self.area.right:
-            self.move = -self.move
-            newpos = self.rect.move((self.move, 0))
+            self.move_x = -self.move_x
             self.image = pg.transform.flip(self.image, 1, 0)
+
+        if self.rect.top < self.area.top or self.rect.bottom > self.area.bottom:
+            self.move_y = -self.move_y
+
+        newpos = self.rect.move((self.move_x, self.move_y))
         self.rect = newpos
 
     def _spin(self):
@@ -265,9 +270,10 @@ class Game():
 #                    self.window_stretched = not self.window_stretched
 #                    self.reset_app_screen(self.app_screen_rect.size)
                 elif event.key == pg.K_f:
-                    # toggle fullscreen
+                    # toggle fullscreen  # TODO: for now because mouse is
+                    # not adapted to it and change speed if game_size != real screen (fullscreen=zoom)
                     self.flags = self.flags ^ pg.FULLSCREEN
-                    self.reset_app_screen(self.app_screen_rect.size)
+                    self.reset_app_screen(self.game_screen_rect.size)
 #                elif event.key == pg.K_r:  # if want to toggle resizability
 #                    # toggle fullscreen
 #                    self.flags = self.flags ^ pg.RESIZABLE
@@ -343,7 +349,6 @@ class Game():
         self.app_screen = pg.display.set_mode(size, self.flags)
         self.app_screen_rect = self.app_screen.get_rect()
         pg.display.update()
-
 
     def run(self):
         self.running = True
