@@ -75,34 +75,42 @@ class Mouse(pg.sprite.Sprite):
     def __init__(self, Game):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)  # call Sprite initializer
-        self.image, self.rect = load_image("mouse.png")#, -1)
-        self.cliking = 0
+        self.image, self.rect = load_image("mouse.png")  # , -1)
+        self.cliking = False
 
     def update(self):
         """move the resized mouse based on the real mouse position"""
+        diff_x = (self.Game.resized_screen.rect.w
+                  - self.Game.app_screen_rect.w)/2
+        diff_y = (self.Game.resized_screen.rect.h
+                  - self.Game.app_screen_rect.h)/2
 
-        diff_x = (self.Game.resized_screen.rect.w - self.Game.app_screen_rect.w) / 2
-        diff_y = (self.Game.resized_screen.rect.h - self.Game.app_screen_rect.h) / 2
+        ratio_x = (self.Game.game_screen_rect.w
+                   / self.Game.resized_screen.rect.w)
+        ratio_y = (self.Game.game_screen_rect.h
+                   / self.Game.resized_screen.rect.h)
 
         pos = pg.mouse.get_pos()
-        real_pos_x = (diff_x + pos[0]) * self.Game.game_screen_rect.w / self.Game.resized_screen.rect.w
-        real_pos_y = (diff_y + pos[1]) * self.Game.game_screen_rect.h / self.Game.resized_screen.rect.h
+
+        real_pos_x = (diff_x + pos[0]) * ratio_x
+        real_pos_y = (diff_y + pos[1]) * ratio_y
         real_pos = real_pos_x, real_pos_y
 
         self.rect.center = real_pos
+
         if self.cliking:
             self.rect.move_ip(5, 10)  # good for button
 
     def cliked(self, target):
         """returns true if the mouse collides with the target"""
-        if not self.cliking:
-            self.cliking = 1
+        if not self.cliking:  # cliked only once and wait to unpress clicking
+            self.cliking = True
             hitbox = self.rect  # .inflate(-5, -5) " why move it ?
             return hitbox.colliderect(target.rect)
 
     def uncliked(self):
         """called to pull the mouse back"""
-        self.cliking = 0
+        self.cliking = False
 
 
 class Chimp(pg.sprite.Sprite):
@@ -111,14 +119,14 @@ class Chimp(pg.sprite.Sprite):
 
     def __init__(self, Game):
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
-        self.area = Game.game_screen_rect  # walkable space
+        self.area = Game.game_screen_rect  # walkable space (update any change)
 
         self.image, self.rect = load_image("chimp.png", -1)
 #        self.image = pg.transform.scale(self.image, (200, 100))
 #        self.rect = self.image.get_rect()
         self.rect.topleft = 0, 100
-        self.move_x = -9  # depend on image original orientation (positive move = directed to right)
-        self.move_y = -9  # depend on image original orientation (positive move = directed to right)
+        self.move_x = 9
+        self.move_y = 9
         self.dizzy = 0
 
     def update(self):  # implicitly called from allsprite update
@@ -133,11 +141,13 @@ class Chimp(pg.sprite.Sprite):
 #        newpos = self.rect.move((self.move_x, self.move_y))
 #        if not self.area.contains(newpos_x):  # could be useful but not here
 
-        if self.rect.left < self.area.left or self.rect.right > self.area.right:
+        if (self.rect.left < self.area.left
+                or self.rect.right > self.area.right):
             self.move_x = -self.move_x
             self.image = pg.transform.flip(self.image, 1, 0)
 
-        if self.rect.top < self.area.top or self.rect.bottom > self.area.bottom:
+        if (self.rect.top < self.area.top
+                or self.rect.bottom > self.area.bottom):
             self.move_y = -self.move_y
 
         newpos = self.rect.move((self.move_x, self.move_y))
@@ -251,7 +261,8 @@ class Game():
 #                    self.reset_app_screen(self.app_screen_rect.size)
                 elif event.key == pg.K_f:
                     # toggle fullscreen  # TODO: for now because mouse is
-                    # not adapted to it and change speed if game_size != real screen (fullscreen=zoom)
+                    # not adapted to it and change speed if
+                    # game_size != real screen (fullscreen=zoom)
                     self.flags = self.flags ^ pg.FULLSCREEN
                     self.reset_app_screen(self.game_screen_rect.size)
 #                elif event.key == pg.K_r:  # if want to toggle resizability
@@ -267,48 +278,52 @@ class Game():
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 if self.mouse.cliked(self.chimp):
-#                    punch_sound.play()  # punch
+                    # punch_sound.play()  # punch
                     self.chimp.punched()
                 else:
-#                    whiff_sound.play()  # miss
+                    # whiff_sound.play()  # miss
                     ""
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 self.mouse.uncliked()
 
     def update(self, dt):
-#        print(dt)
+        # print(dt)
         self.mouse.update()
         self.allsprites.update()  # call update function of each class inside
 
     def draw(self):
         """Draw Everything"""
-#        self.game_screen.blit(self.bg_image, (0, 0))  # blackground
+        # self.game_screen.blit(self.bg_image, (0, 0))  # blackground
         self.game_screen.blit(self.background_screen.image,
                               self.background_screen.rect)
 
         self.game_screen.blit(self.lower_tool_bar.image,
                               self.lower_tool_bar.rect)
-#        self.allsprites.remove(self.chimp)
+        # self.allsprites.remove(self.chimp)
 
         self.allsprites.draw(self.game_screen)  # draw moving items
 
-        resized_screen, res_screen_rect = self.resize_app_screen()
+        self.resize_app_screen()  # resize the game size to the app size
 
-        self.app_screen.blit(resized_screen, res_screen_rect)
+        self.app_screen.blit(self.resized_screen.image,
+                             self.resized_screen.rect)
 
         fps = self.clock.get_fps()
         pg.display.set_caption(f'{round(fps,2)}')
 
-        pg.display.update(res_screen_rect)  # must be change to have a fixed bg
-        # and only change moving objects, currently change everything ?
+        pg.display.update(self.resized_screen.rect)
+        # must be change to have a fixed bg and only change moving objects ?
+        # currently change everything
 
 #        pg.display.flip()  # use update instead to only change moving object ?
 
     def resize_app_screen(self):
+        """Scale the game images to fit the app size respecting a
+        constant ratio."""
         if self.window_stretched:  # don't want this but keep in code in case
             # scale the game screen to the window size
-            self.resized_screen.image = pg.transform.scale(self.game_screen,
-                                                self.app_screen_rect.size)
+            self.resized_screen.image = pg.transform.scale(
+                self.game_screen, self.app_screen_rect.size)
         else:  # allows to keep ratio
             # compare aspect ratios
             game_ratio = self.game_screen_rect.w / self.game_screen_rect.h
@@ -316,20 +331,19 @@ class Game():
 
             if game_ratio < app_ratio:
                 width = int(self.app_screen_rect.h / self.game_screen_rect.h
-                        * self.game_screen_rect.w)
+                            * self.game_screen_rect.w)
                 height = self.app_screen_rect.h
             else:
                 width = self.app_screen_rect.w
                 height = int(self.app_screen_rect.w / self.game_screen_rect.w
-                         * self.game_screen_rect.h)
-            self.resized_screen.image = pg.transform.scale(self.game_screen,
-                                                (width, height))
+                             * self.game_screen_rect.h)
+            self.resized_screen.image = pg.transform.scale(
+                self.game_screen, (width, height))
         # get the rect of the resized screen for blitting
         # and center it to the window screen
         self.resized_screen.rect = self.resized_screen.image.get_rect()
         self.resized_screen.rect.center = self.app_screen_rect.center
-
-        return self.resized_screen.image, self.resized_screen.rect
+#        return self.resized_screen.image, self.resized_screen.rect
 
     def reset_app_screen(self, size):
         self.app_screen = pg.display.set_mode(size, self.flags)
