@@ -16,6 +16,8 @@ if not pg.font:
 if not pg.mixer:
     print("Warning, sound disabled")
 
+os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50, 50)
+
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 data_dir = os.path.join(main_dir, "data")
 
@@ -118,15 +120,24 @@ class Chimp(pg.sprite.Sprite):
        monkey when it is punched."""
 
     def __init__(self, Game):
+        self.Game = Game
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
-        self.area = Game.game_screen_rect  # walkable space (update any change)
+        self.area = self.Game.game_screen_rect  # walkable space (update any change)
 
         self.image, self.rect = load_image("chimp.png", -1)
 #        self.image = pg.transform.scale(self.image, (200, 100))
 #        self.rect = self.image.get_rect()
         self.rect.topleft = 0, 100
-        self.move_x = 9
-        self.move_y = 9
+
+        self.direction_x = 1
+        self.direction_y = 1
+
+        self.speed_x = 5 * self.Game.ratio_pixel_meter_x * self.Game.dt
+        self.speed_y = 5 * self.Game.ratio_pixel_meter_y * self.Game.dt
+
+        self.move_x = self.direction_x * self.speed_x
+        self.move_y = self.direction_y * self.speed_y
+
         self.dizzy = 0
 
     def update(self):  # implicitly called from allsprite update
@@ -138,17 +149,31 @@ class Chimp(pg.sprite.Sprite):
 
     def _walk(self):
         """move the monkey across the screen, and turn at the ends"""
-#        newpos = self.rect.move((self.move_x, self.move_y))
+
 #        if not self.area.contains(newpos_x):  # could be useful but not here
 
-        if (self.rect.left < self.area.left
-                or self.rect.right > self.area.right):
-            self.move_x = -self.move_x
-            self.image = pg.transform.flip(self.image, 1, 0)
+        self.speed_x = 5 * self.Game.ratio_pixel_meter_x * self.Game.dt
+        self.speed_y = 5 * self.Game.ratio_pixel_meter_y * self.Game.dt
 
-        if (self.rect.top < self.area.top
-                or self.rect.bottom > self.area.bottom):
-            self.move_y = -self.move_y
+        self.move_x = self.direction_x * self.speed_x
+        self.move_y = self.direction_y * self.speed_y
+
+        newpos = self.rect.move((self.move_x, self.move_y))
+
+        if newpos.left < self.area.left:
+            self.direction_x = 1
+            self.image = pg.transform.flip(self.image, 1, 0)  # temporaire
+        if newpos.right > self.area.right:
+            self.direction_x = -1
+            self.image = pg.transform.flip(self.image, 1, 0)  # temporaire
+
+        if newpos.top < self.area.top:
+            self.direction_y = 1
+        if newpos.bottom > self.area.bottom:
+            self.direction_y = -1
+
+        self.move_x = self.direction_x * self.speed_x
+        self.move_y = self.direction_y * self.speed_y
 
         newpos = self.rect.move((self.move_x, self.move_y))
         self.rect = newpos
@@ -157,7 +182,7 @@ class Chimp(pg.sprite.Sprite):
         """spin the monkey image"""
         center = self.rect.center
         self.dizzy = self.dizzy + 12
-        if self.dizzy >= 360:
+        if self.dizzy >= 360:  # TODO: implement dt to have fixed animation
             self.dizzy = 0
             self.image = self.original
         else:
@@ -187,9 +212,12 @@ class Game():
        it initializes everything it needs, then runs in
        a loop until the function returns."""
 
-    def __init__(self):
+    def __init__(self, WINDOW_W=1920, WINDOW_H=1080):
         GAME_SCREEN_W = 1920
         GAME_SCREEN_H = 1080
+
+        self.ratio_pixel_meter_x = GAME_SCREEN_W/16  # pixel/meter
+        self.ratio_pixel_meter_y = GAME_SCREEN_H/9  # pixel/meter
 
         pg.init()
 
@@ -237,6 +265,7 @@ class Game():
 
         # Prepare Game Objects
         self.clock = pg.time.Clock()
+        self.dt = self.clock.tick(60)/1000
     #    whiff_sound = load_sound("whiff.wav")
     #    punch_sound = load_sound("punch.wav")
         self.mouse = Mouse(self)
@@ -286,7 +315,7 @@ class Game():
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 self.mouse.uncliked()
 
-    def update(self, dt):
+    def update(self):
         # print(dt)
         self.mouse.update()
         self.allsprites.update()  # call update function of each class inside
@@ -353,10 +382,9 @@ class Game():
     def run(self):
         self.running = True
         while self.running:
-            self.clock.tick(60)  # delay the game to 60 Hz
-            delta_time = self.clock.tick() / 1000
+            self.dt = self.clock.tick()/1000  # delay the game to 60 Hz
             self.events()  # look for commands
-            self.update(delta_time)  # update movement
+            self.update()  # update movement
             self.draw()  # draw everything after the movements
 
         pg.display.quit()
@@ -372,5 +400,5 @@ if __name__ == "__main__":
     WINDOW_W = 500
     WINDOW_H = 400
 
-    game = Game()
+    game = Game(WINDOW_W=WINDOW_W, WINDOW_H=WINDOW_H)
     game.run()
