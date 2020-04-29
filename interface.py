@@ -120,25 +120,20 @@ class Chimp(pg.sprite.Sprite):
        monkey when it is punched."""
 
     def __init__(self, Game):
-        self.Game = Game
+        self.Game = Game  # add real-time variable change from the Game class
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
-        self.area = self.Game.game_screen_rect  # walkable space (update any change)
+        self.area = self.Game.game_screen_rect  # walkable space (updated)
 
         self.image, self.rect = load_image("chimp.png", -1)
 #        self.image = pg.transform.scale(self.image, (200, 100))
 #        self.rect = self.image.get_rect()
         self.rect.topleft = 0, 100
 
-        self.direction_x = 1
-        self.direction_y = 1
-
-        self.speed_x = 5 * self.Game.ratio_pixel_meter_x * self.Game.dt
-        self.speed_y = 5 * self.Game.ratio_pixel_meter_y * self.Game.dt
-
-        self.move_x = self.direction_x * self.speed_x
-        self.move_y = self.direction_y * self.speed_y
+        self.speed_x = 5
+        self.speed_y = 5  # meter per second
 
         self.dizzy = 0
+        self.angular_speed = 360  # degrees per second
 
     def update(self):  # implicitly called from allsprite update
         """walk or spin, depending on the monkeys state"""
@@ -152,36 +147,28 @@ class Chimp(pg.sprite.Sprite):
 
 #        if not self.area.contains(newpos_x):  # could be useful but not here
 
-        self.speed_x = 5 * self.Game.ratio_pixel_meter_x * self.Game.dt
-        self.speed_y = 5 * self.Game.ratio_pixel_meter_y * self.Game.dt
+        move_x = self.speed_x * self.Game.ratio_pixel_meter_x * self.Game.dt
+        move_y = self.speed_y * self.Game.ratio_pixel_meter_y * self.Game.dt
 
-        self.move_x = self.direction_x * self.speed_x
-        self.move_y = self.direction_y * self.speed_y
+        newpos = self.rect.move((move_x, move_y))
 
-        newpos = self.rect.move((self.move_x, self.move_y))
-
-        if newpos.left < self.area.left:
-            self.direction_x = 1
-            self.image = pg.transform.flip(self.image, 1, 0)  # temporaire
-        if newpos.right > self.area.right:
-            self.direction_x = -1
+        if newpos.left < self.area.left or newpos.right > self.area.right:
+            self.speed_x = -self.speed_x
             self.image = pg.transform.flip(self.image, 1, 0)  # temporaire
 
-        if newpos.top < self.area.top:
-            self.direction_y = 1
-        if newpos.bottom > self.area.bottom:
-            self.direction_y = -1
+        if newpos.top < self.area.top or newpos.bottom > self.area.bottom:
+            self.speed_y = -self.speed_y
 
-        self.move_x = self.direction_x * self.speed_x
-        self.move_y = self.direction_y * self.speed_y
+        move_x = self.speed_x * self.Game.ratio_pixel_meter_x * self.Game.dt
+        move_y = self.speed_y * self.Game.ratio_pixel_meter_y * self.Game.dt
 
-        newpos = self.rect.move((self.move_x, self.move_y))
+        newpos = self.rect.move((move_x, move_y))
         self.rect = newpos
 
     def _spin(self):
         """spin the monkey image"""
         center = self.rect.center
-        self.dizzy = self.dizzy + 12
+        self.dizzy = self.dizzy + self.angular_speed*self.Game.dt
         if self.dizzy >= 360:  # TODO: implement dt to have fixed animation
             self.dizzy = 0
             self.image = self.original
@@ -265,7 +252,7 @@ class Game():
 
         # Prepare Game Objects
         self.clock = pg.time.Clock()
-        self.dt = self.clock.tick(60)/1000
+        self.dt = 0
     #    whiff_sound = load_sound("whiff.wav")
     #    punch_sound = load_sound("punch.wav")
         self.mouse = Mouse(self)
@@ -277,23 +264,28 @@ class Game():
 
     def events(self):
         """All clicked regestered"""
-        for event in pg.event.get():
+        all_keys = pg.key.get_pressed()  # all pressed key at current time
+        if (all_keys[pg.K_LCTRL] or all_keys[pg.K_RCTRL]) and all_keys[pg.K_f]:
+            self.flags = self.flags ^ pg.FULLSCREEN
+            self.reset_app_screen(self.game_screen_rect.size)
 
-            if event.type == pg.QUIT:
+        for event in pg.event.get():  # listed key in pressed order
+
+            if event.type == pg.QUIT:  # close windows using red cross
                 self.running = False
 
             elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
+                if event.key == pg.K_ESCAPE:  # close windows using escape key
                     self.running = False
 #                elif event.key == pg.K_s:  # if want to toggle respect ratio
 #                    self.window_stretched = not self.window_stretched
 #                    self.reset_app_screen(self.app_screen_rect.size)
-                elif event.key == pg.K_f:
-                    # toggle fullscreen  # TODO: for now because mouse is
-                    # not adapted to it and change speed if
-                    # game_size != real screen (fullscreen=zoom)
-                    self.flags = self.flags ^ pg.FULLSCREEN
-                    self.reset_app_screen(self.game_screen_rect.size)
+#                elif event.key == pg.K_f:
+#                    # toggle fullscreen  # TODO: for now because mouse is
+#                    # not adapted to it and change speed if
+#                    # game_size != real screen (fullscreen=zoom)
+#                    self.flags = self.flags ^ pg.FULLSCREEN
+#                    self.reset_app_screen(self.game_screen_rect.size)
 #                elif event.key == pg.K_r:  # if want to toggle resizability
 #                    # toggle fullscreen
 #                    self.flags = self.flags ^ pg.RESIZABLE
