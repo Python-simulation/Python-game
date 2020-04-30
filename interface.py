@@ -93,9 +93,9 @@ class Mouse(pg.sprite.Sprite):
         diff_y = (self.Game.resized_screen.rect.h
                   - self.Game.app_screen_rect.h)/2
 
-        ratio_x = (self.Game.game_screen_rect.w
+        ratio_x = (self.Game.game_screen.rect.w
                    / self.Game.resized_screen.rect.w)
-        ratio_y = (self.Game.game_screen_rect.h
+        ratio_y = (self.Game.game_screen.rect.h
                    / self.Game.resized_screen.rect.h)
 
         pos = pg.mouse.get_pos()
@@ -130,7 +130,7 @@ class Chimp(pg.sprite.Sprite):
     def __init__(self, Game):
         self.Game = Game  # add real-time variable change from the Game class
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
-        self.area = self.Game.game_screen_rect  # walkable space (updated)
+        self.area = self.Game.game_screen.rect  # walkable space (updated)
 
         self.image, self.rect = load_image("chimp.png", -1)
 #        self.image = pg.transform.scale(self.image, (200, 100))
@@ -155,8 +155,8 @@ class Chimp(pg.sprite.Sprite):
 
 #        if not self.area.contains(newpos_x):  # could be useful but not here
 
-        move_x = self.speed_x * self.Game.ratio_pixel_meter_x * self.Game.dt
-        move_y = self.speed_y * self.Game.ratio_pixel_meter_y * self.Game.dt
+        move_x = self.speed_x * self.Game.ratio_pix_meter_x * self.Game.dt
+        move_y = self.speed_y * self.Game.ratio_pix_meter_y * self.Game.dt
 
         newpos = self.rect.move((move_x, move_y))
 
@@ -167,8 +167,8 @@ class Chimp(pg.sprite.Sprite):
         if newpos.top < self.area.top or newpos.bottom > self.area.bottom:
             self.speed_y = -self.speed_y
 
-        move_x = self.speed_x * self.Game.ratio_pixel_meter_x * self.Game.dt
-        move_y = self.speed_y * self.Game.ratio_pixel_meter_y * self.Game.dt
+        move_x = self.speed_x * self.Game.ratio_pix_meter_x * self.Game.dt
+        move_y = self.speed_y * self.Game.ratio_pix_meter_y * self.Game.dt
 
         newpos = self.rect.move((move_x, move_y))
         self.rect = newpos
@@ -177,7 +177,7 @@ class Chimp(pg.sprite.Sprite):
         """spin the monkey image"""
         center = self.rect.center
         self.dizzy = self.dizzy + self.angular_speed*self.Game.dt
-        if self.dizzy >= 360:  # TODO: implement dt to have fixed animation
+        if self.dizzy >= 360:
             self.dizzy = 0
             self.image = self.original
         else:
@@ -198,13 +198,13 @@ class Character(pg.sprite.Sprite):
     def __init__(self, Game):
         self.Game = Game  # add real-time variable change from the Game class
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
-        self.area = self.Game.game_screen_rect  # walkable space (updated)
+        self.area = self.Game.game_screen.rect  # walkable space (updated)
 
         self.image, self.rect = load_image("character.png", -1)
         self.rect.topleft = 0, 100
 
         self.position = self.rect.midbottom
-        self.destination_coordinate = self.position
+        self.dest_coord = self.position
         self.moving = False
         self.max_speed = 5
 
@@ -215,42 +215,45 @@ class Character(pg.sprite.Sprite):
         else:
             pass
 
-    def destination(self, cell):
-        real_pos = cell.rect.center
+    def destination(self, real_pos):
 
         if (self.area.left < real_pos[0] < self.area.right
                 and self.area.top < real_pos[1] < self.area.bottom):
-            self.destination_coordinate = real_pos
+            self.dest_coord = real_pos
             self.moving = True
 
     def _walk(self):
         """move the character across the screen"""
         self.position = self.rect.midbottom
-        acceptance = 10
-        self.interval = ((self.destination_coordinate[0] - acceptance,
-                         self.destination_coordinate[0] - acceptance),
-                         (self.destination_coordinate[0] + acceptance,
-                         self.destination_coordinate[0] + acceptance))
+        acceptance = 20
+        interv_low = (self.dest_coord[0] - acceptance,
+                      self.dest_coord[1] - acceptance)
+        interv_high = (self.dest_coord[0] + acceptance,
+                       self.dest_coord[1] + acceptance)
 
-        if self.interval[0] < self.position < self.interval[1]:
-            # if self.position == self.destination_coordinate:  # not stable
+        if (interv_low[0] < self.position[0] < interv_high[0]
+                and interv_low[1] < self.position[1] < interv_high[1]):
+            # if self.position == self.dest_coord:  # not stable
             self.speed_x = 0  # can remove self
             self.speed_y = 0
-            self.position = self.destination_coordinate
+            self.position = self.dest_coord
             self.rect.midbottom = self.position
             self.moving = False
             pass
 
-        x_length = self.destination_coordinate[0] - self.position[0]
-        y_length = self.destination_coordinate[1] - self.position[1]
+        x_length = self.dest_coord[0] - self.position[0]
+        y_length = self.dest_coord[1] - self.position[1]
 
         theta = math.atan2(y_length, x_length)
+
+#        theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
+        theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
 
         self.speed_x = self.max_speed * math.cos(theta)
         self.speed_y = self.max_speed * math.sin(theta)  # meter per second
 
-        self.move_x = self.speed_x * self.Game.ratio_pixel_meter_x * self.Game.dt
-        self.move_y = self.speed_y * self.Game.ratio_pixel_meter_y * self.Game.dt
+        self.move_x = self.speed_x * self.Game.ratio_pix_meter_x * self.Game.dt
+        self.move_y = self.speed_y * self.Game.ratio_pix_meter_y * self.Game.dt
 
         newpos = self.rect.move((self.move_x, self.move_y))
         self.rect = newpos
@@ -269,11 +272,11 @@ class Cell(pg.sprite.Sprite):
 
 class BackGround():
     """image of the map"""
-    def __init__(self, image_file=None):
+    def __init__(self, image_file=None, size=(1, 1)):
         if image_file is not None:
             self.image, self.rect = load_image(image_file)
         else:
-            self.image = pg.Surface((1, 1))
+            self.image = pg.Surface(size)
             self.rect = self.image.get_rect()
 
 
@@ -286,8 +289,8 @@ class Game():
         GAME_SCREEN_W = 1920
         GAME_SCREEN_H = 1080
 
-        self.ratio_pixel_meter_x = GAME_SCREEN_W/16  # pixel/meter
-        self.ratio_pixel_meter_y = GAME_SCREEN_H/9  # pixel/meter
+        self.ratio_pix_meter_x = GAME_SCREEN_W/16  # pixel/meter
+        self.ratio_pix_meter_y = GAME_SCREEN_H/9  # pixel/meter
 
         pg.init()
 
@@ -304,8 +307,9 @@ class Game():
         self.app_screen_rect = self.app_screen.get_rect()
 
         # game screen surface (where all the ingame stuff gets blitted on)
-        self.game_screen = pg.Surface((GAME_SCREEN_W, GAME_SCREEN_H))
-        self.game_screen_rect = self.game_screen.get_rect()
+        self.game_screen = BackGround(size=(GAME_SCREEN_W, GAME_SCREEN_H))
+#        self.game_screen.image = pg.Surface((GAME_SCREEN_W, GAME_SCREEN_H))
+#        self.game_screen.rect = self.game_screen.image.get_rect()
 
         self.resized_screen = BackGround()
 
@@ -321,9 +325,9 @@ class Game():
 
         # create the map on top of the background
         self.lower_tool_bar = BackGround('lower_bar.png')
-        self.lower_tool_bar.rect.midbottom = self.game_screen_rect.midbottom
+        self.lower_tool_bar.rect.midbottom = self.game_screen.rect.midbottom
         self.background_screen = BackGround('background.png')
-        self.background_screen.rect.center = self.game_screen_rect.center
+        self.background_screen.rect.center = self.game_screen.rect.center
 
         # Put Text On The Background, Centered
 #        if pg.font:
@@ -358,7 +362,7 @@ class Game():
         all_keys = pg.key.get_pressed()  # all pressed key at current time
         if (all_keys[pg.K_LCTRL] or all_keys[pg.K_RCTRL]) and all_keys[pg.K_f]:
             self.flags = self.flags ^ pg.FULLSCREEN
-            self.reset_app_screen(self.game_screen_rect.size)
+            self.reset_app_screen(self.game_screen.rect.size)
 
         for event in pg.event.get():  # listed key in pressed order
 
@@ -376,7 +380,7 @@ class Game():
 #                    # not adapted to it and change speed if
 #                    # game_size != real screen (fullscreen=zoom)
 #                    self.flags = self.flags ^ pg.FULLSCREEN
-#                    self.reset_app_screen(self.game_screen_rect.size)
+#                    self.reset_app_screen(self.game_screen.rect.size)
 #                elif event.key == pg.K_r:  # if want to toggle resizability
 #                    # toggle fullscreen
 #                    self.flags = self.flags ^ pg.RESIZABLE
@@ -390,18 +394,20 @@ class Game():
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 if self.mouse.cliked(self.chimp):
-#                    print("hit chimp")
+                    print("hit chimp")
                     # punch_sound.play()  # punch
                     self.chimp.punched()
+
                 for cell in self.all_cells:
                     if self.mouse.cliked(cell):
-#                        print("hit cell", cell.rect)
-                        self.character.destination(cell)
-#                else:
-#                    print("nothing")
-#                elif self.area.contains(real_pos):  # could be useful but not here:
-#                else:
-#                    self.character.destination()
+                        print("hit cell", cell.rect)
+                        self.character.destination(cell.rect.center)
+                        break
+                else:
+                    if self.mouse.cliked(self.game_screen):
+                        print("hit no cells, moving to destination")
+                        self.character.destination(self.mouse.rect.center)
+
                     # whiff_sound.play()  # miss
                     ""
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
@@ -415,16 +421,16 @@ class Game():
     def draw(self):
         """Draw Everything"""
         # self.game_screen.blit(self.bg_image, (0, 0))  # blackground
-        self.game_screen.blit(self.background_screen.image,
-                              self.background_screen.rect)
-        for cell in self.all_cells:
-            self.game_screen.blit(cell.image,
-                                  cell.rect)
-        self.game_screen.blit(self.lower_tool_bar.image,
-                              self.lower_tool_bar.rect)
+        self.game_screen.image.blit(self.background_screen.image,
+                                    self.background_screen.rect)
+        for cell in self.all_cells:  # TODO: temporary just to test and after can remove
+            self.game_screen.image.blit(cell.image, cell.rect)
+
+        self.game_screen.image.blit(self.lower_tool_bar.image,
+                                    self.lower_tool_bar.rect)
         # self.allsprites.remove(self.chimp)
 
-        self.allsprites.draw(self.game_screen)  # draw moving items
+        self.allsprites.draw(self.game_screen.image)  # draw moving items
 
         self.resize_app_screen()  # resize the game size to the app size
 
@@ -446,22 +452,22 @@ class Game():
         if self.window_stretched:  # don't want this but keep in code in cell
             # scale the game screen to the window size
             self.resized_screen.image = pg.transform.scale(
-                self.game_screen, self.app_screen_rect.size)
+                self.game_screen.image, self.app_screen_rect.size)
         else:  # allows to keep ratio
             # compare aspect ratios
-            game_ratio = self.game_screen_rect.w / self.game_screen_rect.h
+            game_ratio = self.game_screen.rect.w / self.game_screen.rect.h
             app_ratio = self.app_screen_rect.w / self.app_screen_rect.h
 
             if game_ratio < app_ratio:
-                width = int(self.app_screen_rect.h / self.game_screen_rect.h
-                            * self.game_screen_rect.w)
+                width = int(self.app_screen_rect.h / self.game_screen.rect.h
+                            * self.game_screen.rect.w)
                 height = self.app_screen_rect.h
             else:
                 width = self.app_screen_rect.w
-                height = int(self.app_screen_rect.w / self.game_screen_rect.w
-                             * self.game_screen_rect.h)
+                height = int(self.app_screen_rect.w / self.game_screen.rect.w
+                             * self.game_screen.rect.h)
             self.resized_screen.image = pg.transform.scale(
-                self.game_screen, (width, height))
+                self.game_screen.image, (width, height))
         # get the rect of the resized screen for blitting
         # and center it to the window screen
         self.resized_screen.rect = self.resized_screen.image.get_rect()
