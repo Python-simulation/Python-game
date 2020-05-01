@@ -8,6 +8,7 @@ follow along in the tutorial.
 
 # Import Modules
 import os
+import time
 import pygame as pg
 from pygame.compat import geterror
 import math
@@ -82,7 +83,7 @@ class Mouse(pg.sprite.Sprite):
         self.image, self.rect = load_image("mouse.png")  # , -1)
         self.cliking = False
 
-    def update(self):
+    def update(self, dt):
         self.position()
 #        print(self.rect.center)
 
@@ -143,20 +144,20 @@ class Chimp(pg.sprite.Sprite):
         self.dizzy = 0
         self.angular_speed = 360  # degrees per second
 
-    def update(self):  # implicitly called from allsprite update
+    def update(self, dt):  # implicitly called from allsprite update
         """walk or spin, depending on the monkeys state"""
         if self.dizzy:
-            self._spin()
+            self._spin(dt)
         else:
-            self._walk()
+            self._walk(dt)
 
-    def _walk(self):
+    def _walk(self, dt):
         """move the monkey across the screen, and turn at the ends"""
 
 #        if not self.area.contains(newpos_x):  # could be useful but not here
 
-        move_x = self.speed_x * self.Game.ratio_pix_meter_x * self.Game.dt
-        move_y = self.speed_y * self.Game.ratio_pix_meter_y * self.Game.dt
+        move_x = self.speed_x * self.Game.ratio_pix_meter_x * dt
+        move_y = self.speed_y * self.Game.ratio_pix_meter_y * dt
 
         newpos = self.rect.move((move_x, move_y))
 
@@ -167,16 +168,16 @@ class Chimp(pg.sprite.Sprite):
         if newpos.top < self.area.top or newpos.bottom > self.area.bottom:
             self.speed_y = -self.speed_y
 
-        move_x = self.speed_x * self.Game.ratio_pix_meter_x * self.Game.dt
-        move_y = self.speed_y * self.Game.ratio_pix_meter_y * self.Game.dt
+        move_x = self.speed_x * self.Game.ratio_pix_meter_x * dt
+        move_y = self.speed_y * self.Game.ratio_pix_meter_y * dt
 
         newpos = self.rect.move((move_x, move_y))
         self.rect = newpos
 
-    def _spin(self):
+    def _spin(self, dt):
         """spin the monkey image"""
         center = self.rect.center
-        self.dizzy = self.dizzy + self.angular_speed*self.Game.dt
+        self.dizzy = self.dizzy + self.angular_speed*dt
         if self.dizzy >= 360:
             self.dizzy = 0
             self.image = self.original
@@ -208,10 +209,10 @@ class Character(pg.sprite.Sprite):
         self.moving = False
         self.max_speed = 5
 
-    def update(self):  # implicitly called from allsprite update
+    def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""
         if self.moving:
-            self._walk()
+            self._walk(dt)
         else:
             pass
 
@@ -222,7 +223,7 @@ class Character(pg.sprite.Sprite):
             self.dest_coord = real_pos
             self.moving = True
 
-    def _walk(self):
+    def _walk(self, dt):
         """move the character across the screen"""
         self.position = self.rect.midbottom
         acceptance = 20
@@ -252,8 +253,8 @@ class Character(pg.sprite.Sprite):
         self.speed_x = self.max_speed * math.cos(theta)
         self.speed_y = self.max_speed * math.sin(theta)  # meter per second
 
-        self.move_x = self.speed_x * self.Game.ratio_pix_meter_x * self.Game.dt
-        self.move_y = self.speed_y * self.Game.ratio_pix_meter_y * self.Game.dt
+        self.move_x = self.speed_x * self.Game.ratio_pix_meter_x * dt
+        self.move_y = self.speed_y * self.Game.ratio_pix_meter_y * dt
 
         newpos = self.rect.move((self.move_x, self.move_y))
         self.rect = newpos
@@ -339,6 +340,8 @@ class Game():
 
         # Prepare Game Objects
         self.clock = pg.time.Clock()
+        self.dt_fixed = 1 / 60
+        self.dt_accumulator = 0
         self.dt = 0
     #    whiff_sound = load_sound("whiff.wav")
     #    punch_sound = load_sound("punch.wav")
@@ -413,10 +416,8 @@ class Game():
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 self.mouse.uncliked()
 
-    def update(self):
-        # print(dt)
-        self.mouse.update()
-        self.allsprites.update()  # call update function of each class inside
+    def update(self, dt):
+        self.allsprites.update(dt)  # call update function of each class inside
 
     def draw(self):
         """Draw Everything"""
@@ -484,7 +485,19 @@ class Game():
         while self.running:
             self.dt = self.clock.tick()/1000  # delay the game to 60 Hz
             self.events()  # look for commands
-            self.update()  # update movement
+            self.dt_accumulator += self.dt
+            step = 0
+#            print(self.dt)
+            while self.dt_accumulator >= self.dt_fixed:
+                step += 1
+                self.update(self.dt_fixed)  # update movement
+#                time.sleep(0.02)
+
+                self.dt -= self.dt_fixed
+                self.dt_accumulator -= self.dt_fixed
+
+            print(step)
+
             self.draw()  # draw everything after the movements
 
         pg.display.quit()
