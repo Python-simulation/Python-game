@@ -81,7 +81,7 @@ class Mouse(pg.sprite.Sprite):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)  # call Sprite initializer
         self.image, self.rect = load_image("mouse.png")  # , -1)
-        self.cliking = False
+        self.clicking = False
 
     def update(self, dt):
         self.position()
@@ -107,21 +107,22 @@ class Mouse(pg.sprite.Sprite):
 
         self.rect.center = real_pos
 
-        if self.cliking:
+        if self.clicking:
             self.rect.move_ip(5, 10)  # good for button
 
-    def cliked(self, target):
+    def clicked(self, target):
         """returns true if the mouse collides with the target"""
-#        if not self.cliking:  # cliked only once and wait to unpress clicking
-        self.cliking = True
-        self.position()
+#        if not self.clicking:  # clicked only once and wait to unpress clicking
+        self.clicking = True
+#        self.position()
         hitbox = self.rect  # .inflate(-5, -5) # change the size - = reduce
 #        print(hitbox, target.rect)
         return hitbox.colliderect(target.rect)
 
-    def uncliked(self):
+    def unclicked(self):
         """called to pull the mouse back"""
-        self.cliking = False
+        self.clicking = False
+        self.Game.unclick()
 
 
 class Chimp(pg.sprite.Sprite):
@@ -138,8 +139,8 @@ class Chimp(pg.sprite.Sprite):
 #        self.rect = self.image.get_rect()
         self.rect.topleft = 0, 100
 
-        self.speed_x = 5
-        self.speed_y = 5  # meter per second
+        self.speed_x = 5/np.sqrt(2)
+        self.speed_y = 5/np.sqrt(2)  # meter per second
 
         self.dizzy = 0
         self.angular_speed = 360  # degrees per second
@@ -273,12 +274,56 @@ class Cell(pg.sprite.Sprite):
 
 class BackGround():
     """image of the map"""
-    def __init__(self, image_file=None, size=(1, 1)):
-        if image_file is not None:
-            self.image, self.rect = load_image(image_file)
-        else:
+    def __init__(self, *args, size=(1, 1)):
+        try:
+            self.image, self.rect = load_image(*args)
+        except Exception:
             self.image = pg.Surface(size)
             self.rect = self.image.get_rect()
+
+
+def function_test(state):
+    print("fct 1 do something with state", state)
+
+
+def function_test2(state):
+    print("fct 2 do something with state", state)
+
+
+class Button():
+    """buttons"""
+    def __init__(self, Game, function, *args):
+        self.Game = Game
+        self.function = function
+
+        self.image, self.rect = load_image(*args)
+
+        self.position = self.rect  # same id until clicked occured, then copy
+        self.state = False
+
+    def add_text(self, text, center=None):
+        font = pg.font.Font(None, 36)
+        msg = font.render(text, 1, (10, 10, 10))
+
+        if center is None:
+            textpos = msg.get_rect(centery=self.rect.h/2)
+        else:
+            textpos = msg.get_rect().center = center
+
+        self.image.blit(msg, textpos)
+
+    def clicked(self):
+        if self.Game.mouse.clicking:
+            # open if closed or close if openned
+            self.position = self.rect.copy()
+            self.rect.move_ip(1, 1)
+            self.state = not self.state
+            self.function(self.state)  # TODO: could be nice to have args and kwargs here
+#            print("here", self.position, "state", self.state)
+
+    def unclicked(self):
+        self.rect = self.position
+        self.position = self.rect  # same id from now
 
 
 class Game():
@@ -324,19 +369,30 @@ class Game():
 #        background_color = (200, 200, 200)
 #        self.bg_image.fill(background_color)
 
-        # create the map on top of the background
-        self.lower_tool_bar = BackGround('lower_bar.png')
-        self.lower_tool_bar.rect.midbottom = self.game_screen.rect.midbottom
+        # create the background, then the interface, then the object
         self.background_screen = BackGround('background.png')
         self.background_screen.rect.center = self.game_screen.rect.center
 
-        # Put Text On The Background, Centered
-#        if pg.font:
-#            font = pg.font.Font(None, 36)
-#            text = font.render("Text displayed on not so white background",
-#                               1, (10, 10, 10))
-#            textpos = text.get_rect(centerx=self.game_screen.get_width() / 2)
-#            self.bg_image.blit(text, textpos)
+        self.lower_tool_bar = BackGround('lower_bar.png')
+        self.lower_tool_bar.rect.midbottom = self.game_screen.rect.midbottom
+
+#        self.button_1 = Button(self, function_test,
+#                               ('button_1.png', -1), (1000,100),
+#                               "button 1", (30,0))
+        self.button_1 = Button(self, function_test, 'button_1.png')
+        self.button_1.add_text("button 1")  # , center = (0,0)
+        self.button_1.rect.midbottom = self.lower_tool_bar.rect.midbottom
+        self.button_1.rect.y -= 12
+        self.button_1.rect.left = 950
+
+        self.button_2 = Button(self, function_test2, 'button_1.png')
+        self.button_2.add_text("button 2")  # , center = (0,0)
+        self.button_2.rect.midbottom = self.lower_tool_bar.rect.midbottom
+        self.button_2.rect.y -= 12
+        self.button_2.rect.left = 1072
+
+        self.all_buttons = [self.button_1, self.button_2,
+                ]
 
         # Prepare Game Objects
         self.clock = pg.time.Clock()
@@ -359,6 +415,10 @@ class Game():
                                                  self.character))
 #        self.allsprites = pg.sprite.RenderPlain((self.chimp))
 #        self.allsprites.add(self.mouse)
+
+    def unclick(self):
+        for button in self.all_buttons:
+            button.unclicked()
 
     def events(self):
         """All clicked regestered"""
@@ -396,25 +456,30 @@ class Game():
                 self.reset_app_screen(event.dict['size'])
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                if self.mouse.cliked(self.chimp):
+                if self.mouse.clicked(self.chimp):
                     print("hit chimp")
                     # punch_sound.play()  # punch
                     self.chimp.punched()
-
-                for cell in self.all_cells:
-                    if self.mouse.cliked(cell):
-                        print("hit cell", cell.rect)
-                        self.character.destination(cell.rect.center)
-                        break
                 else:
-                    if self.mouse.cliked(self.game_screen):
-                        print("hit no cells, moving to destination")
-                        self.character.destination(self.mouse.rect.center)
+                    for button in self.all_buttons:
+                        if self.mouse.clicked(button):
+                            button.clicked()
+                            break
+                    else:
+                        for cell in self.all_cells:
+                            if self.mouse.clicked(cell):
+                                print("hit cell", cell.rect)
+                                self.character.destination(cell.rect.center)
+                                break
+                        else:
+                            if self.mouse.clicked(self.game_screen):
+                                print("hit no cells, moving to destination")
+                                self.character.destination(self.mouse.rect.center)
 
                     # whiff_sound.play()  # miss
                     ""
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
-                self.mouse.uncliked()
+                self.mouse.unclicked()
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside
@@ -429,6 +494,10 @@ class Game():
 
         self.game_screen.image.blit(self.lower_tool_bar.image,
                                     self.lower_tool_bar.rect)
+
+        for button in self.all_buttons:
+            self.game_screen.image.blit(button.image,
+                                        button.rect)
         # self.allsprites.remove(self.chimp)
 
         self.allsprites.draw(self.game_screen.image)  # draw moving items
@@ -486,17 +555,17 @@ class Game():
             self.dt = self.clock.tick()/1000  # delay the game to 60 Hz
             self.events()  # look for commands
             self.dt_accumulator += self.dt
-            step = 0
+#            step = 0
 #            print(self.dt)
             while self.dt_accumulator >= self.dt_fixed:
-                step += 1
+#                step += 1
                 self.update(self.dt_fixed)  # update movement
 #                time.sleep(0.02)
 
                 self.dt -= self.dt_fixed
                 self.dt_accumulator -= self.dt_fixed
 
-            print(step)
+#            print(step)
 
             self.draw()  # draw everything after the movements
 
