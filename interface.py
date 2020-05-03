@@ -233,20 +233,8 @@ class Character(pg.sprite.Sprite):
     def _walk(self, dt):
         """move the character across the screen"""
         self.position = self.rect.midbottom
-        acceptance = 10
-        interv_low = (self.dest_coord[0] - acceptance,
-                      self.dest_coord[1] - acceptance)
-        interv_high = (self.dest_coord[0] + acceptance,
-                       self.dest_coord[1] + acceptance)
 
-        if (interv_low[0] < self.position[0] < interv_high[0]
-                and interv_low[1] < self.position[1] < interv_high[1]):
-            # if self.position == self.dest_coord:  # not stable
-            self.speed_x = 0  # can remove self
-            self.speed_y = 0
-            self.position = self.dest_coord
-            self.rect.midbottom = self.position
-            self.moving = False
+        if self.check_pos():
             pass
 
         x_length = self.dest_coord[0] - self.position[0]
@@ -266,6 +254,25 @@ class Character(pg.sprite.Sprite):
         newpos = self.rect.move((self.move_x, self.move_y))
         self.rect = newpos
 
+    def check_pos(self):
+        acceptance = 10
+        interv_low = (self.dest_coord[0] - acceptance,
+                      self.dest_coord[1] - acceptance)
+        interv_high = (self.dest_coord[0] + acceptance,
+                       self.dest_coord[1] + acceptance)
+
+        if (interv_low[0] < self.position[0] < interv_high[0]
+                and interv_low[1] < self.position[1] < interv_high[1]):
+            # if self.position == self.dest_coord:  # not stable
+            self.speed_x = 0  # can remove self
+            self.speed_y = 0
+            self.position = self.dest_coord
+            self.rect.midbottom = self.position
+            self.moving = False
+            return True
+        else:
+            return False
+
 
 class Cell(pg.sprite.Sprite):
     """simple cell to target movement"""
@@ -279,10 +286,22 @@ class Cell(pg.sprite.Sprite):
         color = (200, 100, 50)
         self.image.fill(color)
 #        self.image.set_colorkey(0)  # at the end to make them invisible
+        self.state = False
 
     def clicked(self, *args, **kwargs):
-        if self.function is not None:
-            self.function(*args, **kwargs)
+        self.args = args
+        self.kwargs = kwargs
+        self.state = True
+
+    def update(self, dt):
+        if self.function is not None and self.state:
+            output = self.function(*self.args, **self.kwargs)
+
+            if output is None:
+                self.state = False
+
+    def unclicked(self):
+        self.state = False
 
 
 class BackGround():
@@ -301,26 +320,6 @@ def function_test(state):
 
 def function_test2(state):
     print("fct 2 do something with state", state)
-
-
-def border_left(*args):
-    print("gauche")
-    pass
-
-
-def border_right(*args):
-    print("droite")
-    pass
-
-
-def border_top(*args):
-    print("haut")
-    pass
-
-
-def border_bottom(*args):
-    print("bas")
-    pass
 
 
 class Button():
@@ -372,17 +371,17 @@ class Map():
                 self.Game, size=(60, self.Game.game_screen.rect.h),
                 position=(self.Game.game_screen.rect.left + 60/2,
                           self.Game.game_screen.rect.centery),
-                function=border_left),
+                function=self.Game.border_left),
             "right": Cell(
                 self.Game, size=(60, self.Game.game_screen.rect.h),
                 position=(self.Game.game_screen.rect.right - 60/2,
                           self.Game.game_screen.rect.centery),
-                function=border_right),
+                function=self.Game.border_right),
             "top": Cell(
                 self.Game, size=(self.Game.game_screen.rect.w, 60),
                 position=(self.Game.game_screen.rect.centerx,
                           self.Game.game_screen.rect.top + 60/2),
-                function=border_top),
+                function=self.Game.border_top),
             "bottom": Cell(
                 self.Game, size=(self.Game.game_screen.rect.w, 60),
                 position=(self.Game.game_screen.rect.centerx,
@@ -390,7 +389,7 @@ class Map():
                           - self.Game.lower_tool_bar.rect.h
                           + 19
                           - 60/2),
-                function=border_bottom),
+                function=self.Game.border_bottom),
         }
 
         cells = [Cell(self.Game, size=(40, 40), position=(500, 100),
@@ -401,10 +400,6 @@ class Map():
                       function=self.Game.character.destination),
                  Cell(self.Game, size=(40, 40), position=(100, 700),
                       function=function_test),
-                 Cell(self.Game, size=(60, self.Game.game_screen.rect.h),
-                      position=(self.Game.game_screen.rect.right - 60/2,
-                                self.Game.game_screen.rect.centery),
-                      function=border_right),
                 borders["left"],
                 borders["right"],
                 borders["top"],
@@ -428,21 +423,28 @@ class Map():
                  Cell(self.Game, size=(40, 40), position=(800, 600)),
                  Cell(self.Game, size=(40, 40), position=(100, 300)),
                  Cell(self.Game, size=(40, 40), position=(100, 200)),
-                 ]
+                borders["left"],
+                borders["right"],
+                borders["top"],
+                borders["bottom"],
+                ]
 
-        chimp = Chimp(Game)
+#        chimp = Chimp(Game)
         sprites = pg.sprite.RenderPlain((
-                chimp,
+#                chimp,
                 ))
 
-        map_0_1 = {"background": background,
+        map_n1_0 = {"background": background,
                    "cells": cells,
                    "sprites": sprites}
 
 #
         all_maps = {
                 (0, 0): map_0_0,
-                (0, 1): map_0_1,
+                (-1, 0): map_n1_0,
+                (1, 0): map_n1_0,
+                (0, 1): map_n1_0,
+                (0, -1): map_n1_0,
                     }
         current_map = all_maps[position]
         self.sprites = current_map["sprites"]
@@ -463,7 +465,7 @@ class Game():
         self.ratio_pix_meter_y = GAME_SCREEN_H/9  # pixel/meter
 
         pg.init()
-
+        self.check_border = None
         self.flags = (
                 pg.RESIZABLE |
                 pg.DOUBLEBUF
@@ -528,7 +530,11 @@ class Game():
 #        self.chimp = Chimp(self)
         self.character = Character(self)
 
-        self.current_map = Map(self, (0, 0))
+        self.current_map_pos = (0, 0)
+        self.change_map(self.current_map_pos)
+
+    def change_map(self, current_map_pos):
+        self.current_map = Map(self, current_map_pos)
         # create the background, then the interface, then the object
         self.background_screen = self.current_map.background
 
@@ -595,13 +601,17 @@ class Game():
                         for cell in self.all_cells:
                             if self.mouse.clicked(cell):
                                 print("hit cell", cell.rect)
+                                for cell_bis in self.all_cells:
+                                    cell_bis.unclicked()
                                 cell.clicked(self.mouse.rect.center)
+
                                 break
                         else:
                             if self.mouse.clicked(self.game_screen):
                                 print("hit no cells")
                                 self.character.destination(self.mouse.rect.center)
-
+                                for cell in self.all_cells:
+                                    cell.unclicked()
                     # whiff_sound.play()  # miss
                     ""
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
@@ -609,6 +619,8 @@ class Game():
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside
+        for cell in self.all_cells:
+            cell.update(dt)
 
     def draw(self):
         """Draw Everything"""
@@ -674,6 +686,87 @@ class Game():
         self.app_screen = pg.display.set_mode(size, self.flags)
         self.app_screen_rect = self.app_screen.get_rect()
         pg.display.update()
+
+    def border_left(self, *args):
+#        print("left")
+
+        if args != self.check_border:
+            print("left")
+            self.character.destination(*args)  # TODO: search how to do it once
+            self.check_border = args
+
+        if self.character.check_pos():
+            self.current_map_pos = (self.current_map_pos[0] - 1,
+                                    self.current_map_pos[1])
+#            print(self.current_map_pos)
+            self.change_map(self.current_map_pos)
+            self.character.rect.midbottom = (
+                self.game_screen.rect.right - self.character.rect.w/2,
+                self.character.rect.midbottom[1]
+                )
+            return None
+        else:
+            return False
+
+    def border_right(self, *args):
+
+        if args != self.check_border:
+            print("right")
+            self.character.destination(*args)  # TODO: search how to do it once
+            self.check_border = args
+
+        if self.character.check_pos():
+            self.current_map_pos = (self.current_map_pos[0] + 1,
+                                    self.current_map_pos[1])
+#            print(self.current_map_pos)
+            self.change_map(self.current_map_pos)
+            self.character.rect.midbottom = (
+                self.game_screen.rect.left + self.character.rect.w/2,
+                self.character.rect.midbottom[1]
+                )
+            return None
+        else:
+            return False
+
+    def border_top(self, *args):
+
+        if args != self.check_border:
+            print("top")
+            self.character.destination(*args)  # TODO: search how to do it once
+            self.check_border = args
+
+        if self.character.check_pos():
+            self.current_map_pos = (self.current_map_pos[0],
+                                    self.current_map_pos[1] - 1)
+#            print(self.current_map_pos)
+            self.change_map(self.current_map_pos)
+            self.character.rect.midbottom = (
+                    self.character.rect.midbottom[0],
+                self.game_screen.rect.bottom - self.character.rect.h/2
+                )
+            return None
+        else:
+            return False
+
+    def border_bottom(self, *args):
+
+        if args != self.check_border:
+            print("bottom")
+            self.character.destination(*args)  # TODO: search how to do it once
+            self.check_border = args
+
+        if self.character.check_pos():
+            self.current_map_pos = (self.current_map_pos[0],
+                                    self.current_map_pos[1] + 1)
+#            print(self.current_map_pos)
+            self.change_map(self.current_map_pos)
+            self.character.rect.midbottom = (
+                    self.character.rect.midbottom[0],
+                self.game_screen.rect.top + self.character.rect.h/2
+                )
+            return None
+        else:
+            return False
 
     def run(self):
         self.running = True
