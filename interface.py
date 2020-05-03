@@ -80,7 +80,10 @@ class Mouse(pg.sprite.Sprite):
     def __init__(self, Game):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)  # call Sprite initializer
-        self.image, self.rect = load_image("mouse.png")  # , -1)
+#        self.image, self.rect = load_image("mouse.png")  # , -1)
+        self.image = pg.Surface((1, 1))
+        self.image.set_colorkey(0)
+        self.rect = self.image.get_rect()
         self.clicking = False
 
     def update(self, dt):
@@ -127,12 +130,13 @@ class Mouse(pg.sprite.Sprite):
 
 class Chimp(pg.sprite.Sprite):
     """moves a monkey critter across the screen. it can spin the
-       monkey when it is punched."""
+       monkey when it is clicked."""
 
     def __init__(self, Game):
         self.Game = Game  # add real-time variable change from the Game class
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
-        self.area = self.Game.game_screen.rect  # walkable space (updated)
+        self.area = self.Game.game_screen.rect.copy()  # walkable space (updated)
+        self.area.h -= self.Game.lower_tool_bar.rect.h - 19
 
         self.image, self.rect = load_image("chimp.png", -1)
 #        self.image = pg.transform.scale(self.image, (200, 100))
@@ -187,7 +191,7 @@ class Chimp(pg.sprite.Sprite):
             self.image = rotate(self.original, self.dizzy)
         self.rect = self.image.get_rect(center=center)
 
-    def punched(self):
+    def clicked(self):
         """this will cause the monkey to start spinning"""
         if not self.dizzy:
             self.dizzy = 1
@@ -200,7 +204,8 @@ class Character(pg.sprite.Sprite):
     def __init__(self, Game):
         self.Game = Game  # add real-time variable change from the Game class
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
-        self.area = self.Game.game_screen.rect  # walkable space (updated)
+        self.area = self.Game.game_screen.rect.copy()  # walkable space (updated)
+        self.area.h -= self.Game.lower_tool_bar.rect.h - 19
 
         self.image, self.rect = load_image("character.png", -1)
         self.rect.topleft = 0, 100
@@ -222,12 +227,13 @@ class Character(pg.sprite.Sprite):
         if (self.area.left < real_pos[0] < self.area.right
                 and self.area.top < real_pos[1] < self.area.bottom):
             self.dest_coord = real_pos
+            print("moving to", real_pos)
             self.moving = True
 
     def _walk(self, dt):
         """move the character across the screen"""
         self.position = self.rect.midbottom
-        acceptance = 20
+        acceptance = 10
         interv_low = (self.dest_coord[0] - acceptance,
                       self.dest_coord[1] - acceptance)
         interv_high = (self.dest_coord[0] + acceptance,
@@ -263,13 +269,20 @@ class Character(pg.sprite.Sprite):
 
 class Cell(pg.sprite.Sprite):
     """simple cell to target movement"""
-    def __init__(self, size, position):
+    def __init__(self, Game, size, position, function=None):
+        self.Game = Game
+        self.function = function
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
         self.image = pg.Surface(size)
         self.rect = self.image.get_rect()
         self.rect.center = position
         color = (200, 100, 50)
         self.image.fill(color)
+#        self.image.set_colorkey(0)  # at the end to make them invisible
+
+    def clicked(self, *args, **kwargs):
+        if self.function is not None:
+            self.function(*args, **kwargs)
 
 
 class BackGround():
@@ -288,6 +301,26 @@ def function_test(state):
 
 def function_test2(state):
     print("fct 2 do something with state", state)
+
+
+def border_left(*args):
+    print("gauche")
+    pass
+
+
+def border_right(*args):
+    print("droite")
+    pass
+
+
+def border_top(*args):
+    print("haut")
+    pass
+
+
+def border_bottom(*args):
+    print("bas")
+    pass
 
 
 class Button():
@@ -324,6 +357,97 @@ class Button():
     def unclicked(self):
         self.rect = self.position
         self.position = self.rect  # same id from now
+
+
+class Map():
+    """Contain all the element of a map defined as (x,y)"""
+    def __init__(self, Game, position=(0, 0)):
+        self.Game = Game
+
+        background = BackGround('background.png')
+        background.rect.center = self.Game.game_screen.rect.center
+
+        borders = {
+            "left": Cell(
+                self.Game, size=(60, self.Game.game_screen.rect.h),
+                position=(self.Game.game_screen.rect.left + 60/2,
+                          self.Game.game_screen.rect.centery),
+                function=border_left),
+            "right": Cell(
+                self.Game, size=(60, self.Game.game_screen.rect.h),
+                position=(self.Game.game_screen.rect.right - 60/2,
+                          self.Game.game_screen.rect.centery),
+                function=border_right),
+            "top": Cell(
+                self.Game, size=(self.Game.game_screen.rect.w, 60),
+                position=(self.Game.game_screen.rect.centerx,
+                          self.Game.game_screen.rect.top + 60/2),
+                function=border_top),
+            "bottom": Cell(
+                self.Game, size=(self.Game.game_screen.rect.w, 60),
+                position=(self.Game.game_screen.rect.centerx,
+                          self.Game.game_screen.rect.bottom
+                          - self.Game.lower_tool_bar.rect.h
+                          + 19
+                          - 60/2),
+                function=border_bottom),
+        }
+
+        cells = [Cell(self.Game, size=(40, 40), position=(500, 100),
+                      function=self.Game.character.destination),
+                 Cell(self.Game, size=(40, 40), position=(800, 200),
+                      function=self.Game.character.destination),
+                 Cell(self.Game, size=(40, 40), position=(1000, 300),
+                      function=self.Game.character.destination),
+                 Cell(self.Game, size=(40, 40), position=(100, 700),
+                      function=function_test),
+                 Cell(self.Game, size=(60, self.Game.game_screen.rect.h),
+                      position=(self.Game.game_screen.rect.right - 60/2,
+                                self.Game.game_screen.rect.centery),
+                      function=border_right),
+                borders["left"],
+                borders["right"],
+                borders["top"],
+                borders["bottom"],
+                ]
+
+        chimp = Chimp(Game)
+        sprites = pg.sprite.RenderPlain((
+                chimp,
+                ))
+
+        map_0_0 = {"background": background,
+                   "cells": cells,
+                   "sprites": sprites}
+
+#
+        background = BackGround('background2.png')
+        background.rect.center = self.Game.game_screen.rect.center
+
+        cells = [Cell(self.Game, size=(80, 40), position=(1000, 100)),
+                 Cell(self.Game, size=(40, 40), position=(800, 600)),
+                 Cell(self.Game, size=(40, 40), position=(100, 300)),
+                 Cell(self.Game, size=(40, 40), position=(100, 200)),
+                 ]
+
+        chimp = Chimp(Game)
+        sprites = pg.sprite.RenderPlain((
+                chimp,
+                ))
+
+        map_0_1 = {"background": background,
+                   "cells": cells,
+                   "sprites": sprites}
+
+#
+        all_maps = {
+                (0, 0): map_0_0,
+                (0, 1): map_0_1,
+                    }
+        current_map = all_maps[position]
+        self.sprites = current_map["sprites"]
+        self.background = current_map["background"]
+        self.cells = current_map["cells"]
 
 
 class Game():
@@ -369,11 +493,7 @@ class Game():
 #        background_color = (200, 200, 200)
 #        self.bg_image.fill(background_color)
 
-        # create the background, then the interface, then the object
-        self.background_screen = BackGround('background.png')
-        self.background_screen.rect.center = self.game_screen.rect.center
-
-        self.lower_tool_bar = BackGround('lower_bar.png')
+        self.lower_tool_bar = BackGround('lower_bar.png', -1)
         self.lower_tool_bar.rect.midbottom = self.game_screen.rect.midbottom
 
 #        self.button_1 = Button(self, function_test,
@@ -391,7 +511,9 @@ class Game():
         self.button_2.rect.y -= 12
         self.button_2.rect.left = 1072
 
-        self.all_buttons = [self.button_1, self.button_2,
+        self.all_buttons = [
+                self.button_1,
+                self.button_2,
                 ]
 
         # Prepare Game Objects
@@ -401,20 +523,22 @@ class Game():
         self.dt = 0
     #    whiff_sound = load_sound("whiff.wav")
     #    punch_sound = load_sound("punch.wav")
+
         self.mouse = Mouse(self)
-        self.chimp = Chimp(self)
+#        self.chimp = Chimp(self)
         self.character = Character(self)
 
-        self.all_cells = [Cell(size=(40, 40), position=(500, 100)),
-                          Cell(size=(40, 40), position=(800, 200)),
-                          Cell(size=(40, 40), position=(1000, 300)),
-                          Cell(size=(40, 40), position=(100, 700)),
-                          ]
-#        self.mouse = Mouse(game)
-        self.allsprites = pg.sprite.RenderPlain((self.mouse, self.chimp,
-                                                 self.character))
-#        self.allsprites = pg.sprite.RenderPlain((self.chimp))
-#        self.allsprites.add(self.mouse)
+        self.current_map = Map(self, (0, 0))
+        # create the background, then the interface, then the object
+        self.background_screen = self.current_map.background
+
+        self.all_cells = self.current_map.cells
+
+#        self.allsprites = self.current_map.sprites
+        self.allsprites = pg.sprite.RenderPlain((
+                self.current_map.sprites,
+                self.character, self.mouse,
+                ))  # character always ontop of sprites : not good
 
     def unclick(self):
         for button in self.all_buttons:
@@ -456,24 +580,26 @@ class Game():
                 self.reset_app_screen(event.dict['size'])
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                if self.mouse.clicked(self.chimp):
-                    print("hit chimp")
-                    # punch_sound.play()  # punch
-                    self.chimp.punched()
-                else:
-                    for button in self.all_buttons:
-                        if self.mouse.clicked(button):
-                            button.clicked()
+                for button in self.all_buttons:
+                    if self.mouse.clicked(button):
+                        button.clicked()
+                        break
+                else:  # TODO test pass to del each else
+                    for sprites in self.current_map.sprites:
+                        if self.mouse.clicked(sprites):
+                            print("hit sprite", sprites)
+                            # punch_sound.play()  # punch
+                            sprites.clicked()
                             break
                     else:
                         for cell in self.all_cells:
                             if self.mouse.clicked(cell):
                                 print("hit cell", cell.rect)
-                                self.character.destination(cell.rect.center)
+                                cell.clicked(self.mouse.rect.center)
                                 break
                         else:
                             if self.mouse.clicked(self.game_screen):
-                                print("hit no cells, moving to destination")
+                                print("hit no cells")
                                 self.character.destination(self.mouse.rect.center)
 
                     # whiff_sound.play()  # miss
