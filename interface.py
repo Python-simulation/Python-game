@@ -80,9 +80,9 @@ class Mouse(pg.sprite.Sprite):
     def __init__(self, Game):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)  # call Sprite initializer
-        self.image, self.rect = load_image("mouse.png")  # , -1)
-#        self.image = pg.Surface((1, 1))
-#        self.image.set_colorkey(0)
+#        self.image, self.rect = load_image("mouse.png")  # , -1)
+        self.image = pg.Surface((1, 1))
+        self.image.set_colorkey(0)
         self.rect = self.image.get_rect()
         self.state_clicking = False
 
@@ -217,6 +217,7 @@ class Character(pg.sprite.Sprite):
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
 
         self.image, self.rect = load_image("character.png", -1)
+#        self.image = pg.transform.scale(self.image, (self.image.get_rect().w//2, self.image.get_rect().h//2))
         self.rect.topleft = 0, 100
 
         self.position = self.rect.midbottom
@@ -239,9 +240,12 @@ class Character(pg.sprite.Sprite):
 
         if (self.area.left < real_pos[0] < self.area.right
                 and self.area.top < real_pos[1] < self.area.bottom):
-            self.dest_coord = real_pos
-            print("moving to", real_pos)
-            self.moving = True
+            if self.dest_coord != real_pos:
+                self.dest_coord = real_pos
+                print("moving to", real_pos)
+                self.moving = True
+            else:
+                pass
 
     def _walk(self, dt):
         """move the character across the screen"""
@@ -466,7 +470,11 @@ class Map():
 
         background = BackGround('background.png')
         background.rect.center = self.Game.game_screen.rect.center
-
+#        for i in range(1, 1920):
+#            if 1920 % i == 0 and 1080 % i == 0:
+#                print(i)
+        # posible pixel size for the cell to have int for 1920 and 1080 :
+        # 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 30, 40, 60, 120
         borders = {
             "left": Cell(
                 self.Game, size=(60, self.Game.game_screen.rect.h),
@@ -520,12 +528,28 @@ class Map():
         background = BackGround('background2.png')
         background.rect.center = self.Game.game_screen.rect.center
 
-        cells = [Cell(self.Game, size=(80, 40), position=(1000, 100)),
-                 Cell(self.Game, size=(40, 40), position=(800, 600)),
-                 Cell(self.Game, size=(40, 40), position=(100, 300)),
-                 Cell(self.Game, size=(40, 40), position=(100, 200)),
-                 borders["right"],
-                 ]
+        size = 60
+        cells_dict = dict()
+        cells = []
+        for x in range(1, 32-1):
+            for y in range(1, 18-1-2):  # -2 because not 16/9 :'( damn lowerbar
+                cells_dict[(x, y)] = Cell(
+                    self.Game,
+                    size=(size, size),
+                    position=(x*size+size/2, y*size+size/2),
+                    function=self.Game.character.dest,
+                )
+                cells.append(cells_dict[(x, y)])
+#        cells = [Cell(self.Game, size=(80, 40), position=(1000, 100)),
+#                 Cell(self.Game, size=(40, 40), position=(800, 600)),
+#                 Cell(self.Game, size=(40, 40), position=(100, 300)),
+#                 Cell(self.Game, size=(40, 40), position=(100, 200)),
+#                 borders["right"],
+#                 ]
+#        cells.append(cells_dict)
+        cells.append(borders["right"])
+#        cells_dict.pop((1, 1))
+#        cells.append(borders["bottom"])
 
         chimp2 = Chimp(Game)
         chimp2.speed_x = 5
@@ -574,8 +598,8 @@ class Game():
         GAME_SCREEN_W = 1920
         GAME_SCREEN_H = 1080
 
-        self.ratio_pix_meter_x = GAME_SCREEN_W/16  # pixel/meter
-        self.ratio_pix_meter_y = GAME_SCREEN_H/9  # pixel/meter
+        self.ratio_pix_meter_x = GAME_SCREEN_W/32  # pixel/meter
+        self.ratio_pix_meter_y = GAME_SCREEN_H/16  # pixel/meter
 
         pg.init()
         self.check_border = None
@@ -651,12 +675,12 @@ class Game():
         # create the background, then the interface, then the object
         self.background_screen = self.current_map.background
 
-        self.all_cells = self.current_map.cells
+#        self.all_cells = self.current_map.cells
 
 #        self.allsprites = self.current_map.sprites
         self.allsprites = pg.sprite.RenderPlain((
                 self.current_map.sprites,
-                self.current_map.cells,
+                self.current_map.cells,  # TODO: remove cell from it but keep borders
                 self.character,
                 ))  # character always ontop of sprites : not good
 
@@ -687,34 +711,34 @@ class Game():
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 # tried with allsprites but keep having errors
                 if self.mouse.clicking(self.character):
-                    print("clicked character", self.character.rect)
+#                    print("clicked character", self.character.rect)
                     self.character.clicked()
                 else:
                     for button in self.all_buttons:
                         if self.mouse.clicking(button):
-                            print("hit button", button)
+#                            print("hit button", button)
                             button.clicked()
                             break
                     else:
                         for sprites in self.current_map.sprites:
                             if self.mouse.clicking(sprites):
-                                print("hit sprite", sprites)
+#                                print("hit sprite", sprites)
                                 sprites.clicked()
                                 break
                         else:
-                            for cell in self.all_cells:
+                            for cell in self.current_map.cells:
                                 if self.mouse.clicking(cell):
-                                    print("hit cell", cell.rect)
-                                    for cell_bis in self.all_cells:
+#                                    print("hit cell", cell.rect)
+                                    for cell_bis in self.current_map.cells:
                                         cell_bis.unclicked()
-                                    cell.clicked(self.mouse.rect.center)
+                                    cell.clicked(cell.rect.center)
                                     break
-                            else:
-                                if self.mouse.clicking(self.game_screen):
-                                    print("hit no cells")
-                                    self.character.dest(self.mouse.rect.center)
-                                    for cell in self.all_cells:
-                                        cell.unclicked()
+#                            else:
+#                                if self.mouse.clicking(self.game_screen):
+#                                    print("hit no cells")
+#                                    self.character.dest(self.mouse.rect.center)
+#                                    for cell in self.all_cells:
+#                                        cell.unclicked()
 
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 self.mouse.unclicked()
@@ -725,7 +749,7 @@ class Game():
                     button.unhovered()
                 for sprites in self.current_map.sprites:
                     sprites.unhovered()
-                for cell in self.all_cells:
+                for cell in self.current_map.cells:
                     cell.unhovered()
 
                 if self.mouse.hovering(self.character):
@@ -750,13 +774,15 @@ class Game():
 #                                    print("hover sprite", sprites)
                                     break
                             else:
-                                for cell in self.all_cells:
+                                for cell in self.current_map.cells:
                                     if self.mouse.hovering(cell):
                                         cell.hovered()
                                         break
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside
+        for cell in self.current_map.cells:
+            cell.update(dt)
         self.mouse.update(dt)
 
     def draw(self):
@@ -764,10 +790,11 @@ class Game():
         # self.game_screen.blit(self.bg_image, (0, 0))  # blackground
         self.game_screen.image.blit(self.background_screen.image,
                                     self.background_screen.rect)
-        for cell in self.all_cells:  # TODO: temporary just to test and after can remove
-            self.game_screen.image.blit(cell.image, cell.rect)
-
+#        for cell in self.all_cells:  # TODO: temporary just to test and after can remove
+#            self.game_screen.image.blit(cell.image, cell.rect)
+#        self.allsprites.remove(self.current_map.cells)
         self.allsprites.draw(self.game_screen.image)  # draw moving items
+#        self.allsprites.add(self.current_map.cells)
 
         self.game_screen.image.blit(self.lower_tool_bar.image,
                                     self.lower_tool_bar.rect)
@@ -776,6 +803,9 @@ class Game():
             self.game_screen.image.blit(button.image,
                                         button.rect)
         # self.allsprites.remove(self.chimp)
+
+        self.game_screen.image.blit(self.mouse.image,
+                                    self.mouse.rect)
 
         self.resize_app_screen()  # resize the game size to the app size
 
@@ -837,7 +867,7 @@ class Game():
 #            print(self.current_map_pos)
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
-                self.game_screen.rect.right - self.character.rect.w/2,
+                self.game_screen.rect.right - 60/2,
                 self.character.rect.midbottom[1]
                 )
             self.check_border = None
@@ -857,7 +887,7 @@ class Game():
 #            print(self.current_map_pos)
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
-                self.game_screen.rect.left + self.character.rect.w/2,
+                self.game_screen.rect.left + 60/2,
                 self.character.rect.midbottom[1]
                 )
             self.check_border = None
@@ -879,7 +909,7 @@ class Game():
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
                     self.character.rect.midbottom[0],
-                    self.game_screen.rect.bottom - self.character.rect.h/2
+                    self.game_screen.rect.bottom - 60/2 - 127
                 )
             self.check_border = None
             return None
@@ -900,7 +930,7 @@ class Game():
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
                 self.character.rect.midbottom[0],
-                self.game_screen.rect.top + self.character.rect.h/2
+                self.game_screen.rect.top + 60/2
                 )
             self.check_border = None
             return None
