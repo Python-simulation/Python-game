@@ -224,6 +224,10 @@ class Character(pg.sprite.Sprite):
         self.moving = False
         self.max_speed = 5
 
+        text = "I'm you !"
+        position = self.Game.mouse.rect.center
+        self.message = display_info(self.Game, text, position)
+
     def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""
         if self.moving:
@@ -284,12 +288,16 @@ class Character(pg.sprite.Sprite):
             return False
 
     def hovered(self):
+        self.message.text = "I'm you !"
+        self.message.hovered()
         pass
 
     def unhovered(self):
+        self.message.unhovered()
         pass
 
     def clicked(self):
+        self.message.text = "You just clicked on me !"
         pass
 
     def unclicked(self):
@@ -354,6 +362,33 @@ def function_test(state):
 
 def function_test2(state):
     print("fct 2 do something with state", state)
+
+
+class display_info(pg.sprite.Sprite):
+    def __init__(self, Game, text, position):
+        self.Game = Game
+        self.text = text
+        pg.sprite.Sprite.__init__(self)  # call Sprite intializer
+#        font = pg.font.Font(None, 30)
+#        self.image = font.render(self.text, 1, (10, 10, 10))
+        self.rect = self.image.get_rect().center = position
+
+    @property
+    def text(self):
+        return self._text
+
+    @text.setter
+    def text(self, value):
+        self._text = value
+        font = pg.font.Font(None, 30)
+        self.image = font.render(self._text, 1, (10, 10, 10))
+
+    def hovered(self):
+        self.rect = self.Game.mouse.rect
+        self.Game.allsprites.add(self)
+
+    def unhovered(self):
+        self.Game.allsprites.remove(self)
 
 
 class Button():
