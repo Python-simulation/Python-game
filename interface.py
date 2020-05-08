@@ -224,6 +224,7 @@ class Character(pg.sprite.Sprite):
 
 #        self.position = self.rect.midbottom
         self.dest_coord = self.rect.midbottom
+        self.road = list()
         self.moving = False
         self.max_speed = 10  # 2.5
 
@@ -243,18 +244,29 @@ class Character(pg.sprite.Sprite):
         if (self.area.left < moving_to_pos[0] < self.area.right
                 and self.area.top < moving_to_pos[1] < self.area.bottom):
 #            print("pos", self.rect.midbottom, "dest", moving_to_pos)
-            if self.rect.midbottom != moving_to_pos:
-                self.dest_coord = moving_to_pos
-#                print("moving to", moving_to_pos)
-                self.moving = True
-            else:
-                pass
+            if moving_to_pos != self.rect.midbottom:
+                if self.road == list():
+                    self.road = find_path(self.rect.midbottom, moving_to_pos, 60)  # , all_cells=np.zeros(570))
+                else:
+                    new_road = find_path(self.road[0], moving_to_pos, 60)  # , all_cells=np.zeros(570))
+                    self.road = [self.road[0]]
+                    self.road.extend(new_road)
+
+                if self.road != list():
+                    self.dest_coord = self.road[0]
+                    print("moving to", self.road[-1])
+                    self.moving = True
 
     def _walk(self, dt):
         """move the character across the screen"""
 
         if self.check_pos():
-            return
+            try:
+                self.road.pop(0)
+                self.dest_coord = self.road[0]
+                self.moving = True
+            except IndexError:
+                return
 
         x_length = self.dest_coord[0] - self.rect.midbottom[0]
         y_length = self.dest_coord[1] - self.rect.midbottom[1]
@@ -308,6 +320,61 @@ class Character(pg.sprite.Sprite):
         pass
 
 
+def find_path(begin_cell, dest_cell, cell_size, all_cells=None):
+    if all_cells is None:
+        all_cells = range(560)
+    road = list()
+    previous_cell = begin_cell
+    nbr_step = 0
+
+    while previous_cell != dest_cell:
+
+        nbr_step += 1
+        if nbr_step > len(all_cells):
+            road = list()
+#            print("bad road", road)
+            break
+
+        x_length = dest_cell[0] - previous_cell[0]
+        y_length = dest_cell[1] - previous_cell[1]
+        theta = math.atan2(y_length, x_length)
+#        theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
+        theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
+        if theta == 0:  # ugly but work
+            next_cell = (previous_cell[0]+cell_size,
+                         previous_cell[1]+0)
+        elif theta == np.pi or theta == -np.pi:
+            next_cell = (previous_cell[0]-cell_size,
+                         previous_cell[1]+0)
+        elif theta == np.pi/2:
+            next_cell = (previous_cell[0]+0,
+                         previous_cell[1]+cell_size)
+        elif theta == -np.pi/2:
+            next_cell = (previous_cell[0]+0,
+                         previous_cell[1]-cell_size)
+        elif theta == np.pi/4:
+            next_cell = (previous_cell[0]+cell_size,
+                         previous_cell[1]+cell_size)
+        elif theta == 3*np.pi/4:
+            next_cell = (previous_cell[0]-cell_size,
+                         previous_cell[1]+cell_size)
+        elif theta == -np.pi/4:
+            next_cell = (previous_cell[0]+cell_size,
+                         previous_cell[1]-cell_size)
+        elif theta == -3*np.pi/4:
+            next_cell = (previous_cell[0]-cell_size,
+                         previous_cell[1]-cell_size)
+        else:
+            print("error with angle", theta, theta*180/np.pi)
+#        next_cell = (previous_cell[0]+(math.cos(theta)),
+#                     previous_cell[1]+(math.sin(theta)))
+
+        road.append(next_cell)
+        previous_cell = next_cell
+
+    return road
+
+
 class Cell(pg.sprite.Sprite):
     """simple cell to target movement"""
     def __init__(self, Game, size, position, function=None):
@@ -317,12 +384,17 @@ class Cell(pg.sprite.Sprite):
         self.image = pg.Surface(size)
         self.rect = self.image.get_rect()
         self.rect.center = position
+        self.position_label = None
         color = (50, 50, 50)
         self.alpha_off = 10
         self.alpha_on = 50
         self.image.fill(color)
         self.image.set_alpha(self.alpha_off)
         self.state = False
+
+#        text = str("test")
+#        txt_position = self.Game.mouse.rect.center
+#        self.message = display_info(self.Game, text, txt_position)
 
     def update(self, dt):
         """by default, if no function or if function returns nothing, consider
@@ -334,10 +406,12 @@ class Cell(pg.sprite.Sprite):
                 self.state = False
 
     def hovered(self, *args):
+#        self.message.hovered()
         self.image.set_alpha(self.alpha_on)
         pass
 
     def unhovered(self, *args):
+#        self.message.unhovered()
         self.image.set_alpha(self.alpha_off)
         pass
 
@@ -512,12 +586,17 @@ def all_maps(Game):
     cells_dict = dict()
     for x in range(1, 32-1):
         for y in range(1, 18-1-2):  # -2 because not 16/9 :'( damn lowerbar
-            cells_dict[(x, y)] = Cell(
+            current_cell = Cell(
                 Game,
                 size=(size, size),
                 position=(x*size+size/2, y*size+size/2),
-                function=Game.character.dest,
+                function=Game.character.dest
             )
+            current_cell.position_label = (x, y)
+#            text = str((x, y))
+#            txt_position = Game.mouse.rect.center
+#            current_cell.message = display_info(Game, text, txt_position)
+            cells_dict[(x, y)] = current_cell
 
     cells_visible = [
         Cell(Game, size=(40, 40), position=(500, 100),
@@ -620,7 +699,7 @@ class Game():
 
         self.resized_screen = BackGround()
 
-        self.clock = pg.time.Clock()
+#        self.clock = pg.time.Clock()
 
         pg.display.set_caption("Testing")
         pg.mouse.set_visible(1)
@@ -961,6 +1040,7 @@ class Game():
 
     def run(self):
         self.running = True
+        self.dt = self.clock.tick()/1000  # avoid taking init time into account
         while self.running:
             self.dt = self.clock.tick()/1000  # don't delay the game to 60 Hz
             self.events()  # look for commands
@@ -968,8 +1048,9 @@ class Game():
             step = 0
             while self.dt_accumulator >= self.dt_fixed:
                 step += 1
-                if step > 30:
+                if step > 20:
                     self.dt_fixed *= 2
+                    print("warning, physics can be broken due to too much lagging")
                 self.update(self.dt_fixed)  # update movement
 #                time.sleep(0.02)
 
