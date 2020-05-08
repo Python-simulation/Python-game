@@ -223,11 +223,11 @@ class Character(pg.sprite.Sprite):
         self.position = self.rect.midbottom
         self.dest_coord = self.position
         self.moving = False
-        self.max_speed = 5
+        self.max_speed = 10 # 2.5
 
         text = "I'm you !"
-        position = self.Game.mouse.rect.center
-        self.message = display_info(self.Game, text, position)
+        txt_position = self.Game.mouse.rect.center
+        self.message = display_info(self.Game, text, txt_position)
 
     def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""
@@ -236,13 +236,12 @@ class Character(pg.sprite.Sprite):
         else:
             pass
 
-    def dest(self, real_pos):
-
-        if (self.area.left < real_pos[0] < self.area.right
-                and self.area.top < real_pos[1] < self.area.bottom):
-            if self.dest_coord != real_pos:
-                self.dest_coord = real_pos
-                print("moving to", real_pos)
+    def dest(self, moving_to_pos):
+        if (self.area.left < moving_to_pos[0] < self.area.right
+                and self.area.top < moving_to_pos[1] < self.area.bottom):
+            if self.position != moving_to_pos:
+                self.dest_coord = moving_to_pos
+                print("moving to", moving_to_pos)
                 self.moving = True
             else:
                 pass
@@ -463,130 +462,116 @@ class Button():
             self.state = False
 
 
-class Map():
-    """Contain all the element of a map defined as (x,y)"""
-    def __init__(self, Game, position=(0, 0)):
-        self.Game = Game
+def all_maps(Game):
 
-        background = BackGround('background.png')
-        background.rect.center = self.Game.game_screen.rect.center
+    background = BackGround('background.png')
+    background.rect.center = Game.game_screen.rect.center
 #        for i in range(1, 1920):
 #            if 1920 % i == 0 and 1080 % i == 0:
 #                print(i)
-        # posible pixel size for the cell to have int for 1920 and 1080 :
-        # 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 30, 40, 60, 120
-        borders = {
-            "left": Cell(
-                self.Game, size=(60, self.Game.game_screen.rect.h),
-                position=(self.Game.game_screen.rect.left + 60/2,
-                          self.Game.game_screen.rect.centery),
-                function=self.Game.border_left),
-            "right": Cell(
-                self.Game, size=(60, self.Game.game_screen.rect.h),
-                position=(self.Game.game_screen.rect.right - 60/2,
-                          self.Game.game_screen.rect.centery),
-                function=self.Game.border_right),
-            "top": Cell(
-                self.Game, size=(self.Game.game_screen.rect.w, 60),
-                position=(self.Game.game_screen.rect.centerx,
-                          self.Game.game_screen.rect.top + 60/2),
-                function=self.Game.border_top),
-            "bottom": Cell(
-                self.Game, size=(self.Game.game_screen.rect.w, 60),
-                position=(self.Game.game_screen.rect.centerx,
-                          self.Game.game_screen.rect.bottom
-                          - self.Game.lower_tool_bar.rect.h
-                          + 19
-                          - 60/2),
-                function=self.Game.border_bottom),
-        }
+    # posible pixel size for the cell to have int for 1920 and 1080 :
+    # 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 30, 40, 60, 120
+    borders_list = {
+        "left": Cell(
+            Game, size=(60, Game.game_screen.rect.h),
+            position=(Game.game_screen.rect.left + 60/2,
+                      Game.game_screen.rect.centery),
+            function=Game.border_left),
+        "right": Cell(
+            Game, size=(60, Game.game_screen.rect.h),
+            position=(Game.game_screen.rect.right - 60/2,
+                      Game.game_screen.rect.centery),
+            function=Game.border_right),
+        "top": Cell(
+            Game, size=(Game.game_screen.rect.w, 60),
+            position=(Game.game_screen.rect.centerx,
+                      Game.game_screen.rect.top + 60/2),
+            function=Game.border_top),
+        "bottom": Cell(
+            Game, size=(Game.game_screen.rect.w, 60),
+            position=(Game.game_screen.rect.centerx,
+                      Game.game_screen.rect.bottom - 60/2
+                      - Game.lower_tool_bar.rect.h + 19),
+            function=Game.border_bottom),
+    }
 
-        cells = [Cell(self.Game, size=(40, 40), position=(500, 100),
-                      function=self.Game.character.dest),
-                 Cell(self.Game, size=(40, 40), position=(800, 200),
-                      function=self.Game.character.dest),
-                 Cell(self.Game, size=(40, 40), position=(1000, 300),
-                      function=self.Game.character.dest),
-                 Cell(self.Game, size=(40, 40), position=(100, 700),
-                      function=function_test),
-                 borders["left"],
-                 borders["right"],
-                 borders["top"],
-                 borders["bottom"],
-                 ]
+    size = 60
+    cells_dict = dict()
+    for x in range(1, 32-1):
+        for y in range(1, 18-1-2):  # -2 because not 16/9 :'( damn lowerbar
+            cells_dict[(x, y)] = Cell(
+                Game,
+                size=(size, size),
+                position=(x*size+size/2, y*size+size/2),
+                function=Game.character.dest,
+            )
 
-        chimp = Chimp(Game)
-        sprites = pg.sprite.RenderPlain((
-                chimp,
-                ))
+    cells_visible = [
+        Cell(Game, size=(40, 40), position=(500, 100),
+             function=Game.character.dest),
+        Cell(Game, size=(40, 40), position=(800, 200),
+             function=Game.character.dest),
+        Cell(Game, size=(40, 40), position=(1000, 300),
+             function=Game.character.dest),
+        Cell(Game, size=(40, 40), position=(100, 700),
+             function=function_test),
+        borders_list["left"],
+        borders_list["top"],
+        borders_list["right"],
+        borders_list["bottom"]
+        ]
 
-        map_0_0 = {"background": background,
-                   "cells": cells,
-                   "sprites": sprites}
+    chimp = Chimp(Game)
+    sprites = pg.sprite.RenderPlain((
+            chimp,
+            ))
 
-#
-        background = BackGround('background2.png')
-        background.rect.center = self.Game.game_screen.rect.center
-
-        size = 60
-        cells_dict = dict()
-        cells = []
-        for x in range(1, 32-1):
-            for y in range(1, 18-1-2):  # -2 because not 16/9 :'( damn lowerbar
-                cells_dict[(x, y)] = Cell(
-                    self.Game,
-                    size=(size, size),
-                    position=(x*size+size/2, y*size+size/2),
-                    function=self.Game.character.dest,
-                )
-                cells.append(cells_dict[(x, y)])
-#        cells = [Cell(self.Game, size=(80, 40), position=(1000, 100)),
-#                 Cell(self.Game, size=(40, 40), position=(800, 600)),
-#                 Cell(self.Game, size=(40, 40), position=(100, 300)),
-#                 Cell(self.Game, size=(40, 40), position=(100, 200)),
-#                 borders["right"],
-#                 ]
-#        cells.append(cells_dict)
-        cells.append(borders["right"])
-#        cells_dict.pop((1, 1))
-#        cells.append(borders["bottom"])
-
-        chimp2 = Chimp(Game)
-        chimp2.speed_x = 5
-        sprites = pg.sprite.RenderPlain((
-                chimp2,
-                ))
-
-        map_n1_0 = {"background": background,
-                    "cells": cells,
-                    "sprites": sprites}
+    map_0_0 = {"background": background,
+               "cells": cells_dict,
+               "cells_visible": cells_visible,
+               "sprites": sprites}
 
 #
-        sprites = pg.sprite.RenderPlain()
+    background2 = BackGround('background2.png')
+    background2.rect.center = Game.game_screen.rect.center
 
-        map_1_0 = {"background": background,
-                   "cells": [borders["left"]],
-                   "sprites": sprites}
+    chimp2 = Chimp(Game)
+    chimp2.speed_x = 10
+    sprites = pg.sprite.RenderPlain((
+            chimp2,
+            ))
 
-        map_0_1 = {"background": background,
-                   "cells": [borders["top"]],
-                   "sprites": sprites}
+    map_n1_0 = {"background": background2,
+                "cells": cells_dict,
+                "cells_visible": [borders_list["right"]],
+                "sprites": sprites}
 
-        map_0_n1 = {"background": background,
-                    "cells": [borders["bottom"]],
-                    "sprites": sprites}
+#
+    sprites = pg.sprite.RenderPlain()
 
-        all_maps = {
-                (0, 0): map_0_0,
-                (-1, 0): map_n1_0,
-                (1, 0): map_1_0,
-                (0, 1): map_0_1,
-                (0, -1): map_0_n1,
-                    }
-        current_map = all_maps[position]
-        self.sprites = current_map["sprites"]
-        self.background = current_map["background"]
-        self.cells = current_map["cells"]
+    map_1_0 = {"background": background2,
+               "cells": cells_dict,
+               "cells_visible": [borders_list["left"]],
+               "sprites": sprites}
+
+    map_0_1 = {"background": background2,
+               "cells": cells_dict,
+               "cells_visible": [borders_list["top"]],
+               "sprites": sprites}
+
+    map_0_n1 = {"background": background2,
+                "cells": cells_dict,
+                "cells_visible": [borders_list["bottom"]],
+                "sprites": sprites}
+
+    all_maps = {
+            (0, 0): map_0_0,
+            (-1, 0): map_n1_0,
+            (1, 0): map_1_0,
+            (0, 1): map_0_1,
+            (0, -1): map_0_n1,
+                }
+    return all_maps
 
 
 class Game():
@@ -667,20 +652,22 @@ class Game():
 #        self.chimp = Chimp(self)
         self.character = Character(self)
 
-        self.current_map_pos = (0, 0)
-        self.change_map(self.current_map_pos)
+        self.all_maps = all_maps(self)
+#        self.current_map_pos = (0, 0)
+        self.change_map((0, 0))
 
     def change_map(self, current_map_pos):
-        self.current_map = Map(self, current_map_pos)
-        # create the background, then the interface, then the object
-        self.background_screen = self.current_map.background
+#        self.check_border = None
+        self.current_map_pos = current_map_pos
+        self.current_map = self.all_maps[current_map_pos]
+        self.background_screen = self.current_map["background"]
+        self.cells = self.current_map["cells"]
+        self.cells_visible = self.current_map["cells_visible"]
+        self.sprites = self.current_map["sprites"]
 
-#        self.all_cells = self.current_map.cells
-
-#        self.allsprites = self.current_map.sprites
         self.allsprites = pg.sprite.RenderPlain((
-                self.current_map.sprites,
-                self.current_map.cells,  # TODO: remove cell from it but keep borders
+                self.sprites,
+                self.cells_visible,  # TODO: remove cell from it but keep borders
                 self.character,
                 ))  # character always ontop of sprites : not good
 
@@ -710,29 +697,40 @@ class Game():
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 # tried with allsprites but keep having errors
+                self.check_border = None  # TODO: ugly but necessary for now
                 if self.mouse.clicking(self.character):
-#                    print("clicked character", self.character.rect)
                     self.character.clicked()
+#                    print("clicked character", self.character.rect)
                 else:
                     for button in self.all_buttons:
                         if self.mouse.clicking(button):
-#                            print("hit button", button)
                             button.clicked()
+#                            print("hit button", button)
                             break
                     else:
-                        for sprites in self.current_map.sprites:
+                        for sprites in self.sprites:
                             if self.mouse.clicking(sprites):
-#                                print("hit sprite", sprites)
                                 sprites.clicked()
+#                                print("hit sprite", sprites)
                                 break
                         else:
-                            for cell in self.current_map.cells:
-                                if self.mouse.clicking(cell):
-#                                    print("hit cell", cell.rect)
-                                    for cell_bis in self.current_map.cells:
-                                        cell_bis.unclicked()
-                                    cell.clicked(cell.rect.center)
+                            for cell_visible in self.cells_visible:
+                                if self.mouse.clicking(cell_visible):
+                                    for cell_visible_bis in self.cells_visible:
+                                        cell_visible_bis.unclicked()
+                                    cell_visible.clicked(cell_visible.rect.center)
+                                    print("hit cell", cell_visible.rect)
                                     break
+                            else:
+                                for cell in self.cells.values():
+                                    if self.mouse.clicking(cell):
+                                        for cell_visible in self.cells_visible:
+                                            cell_visible.unclicked()
+                                        for cell_bis in self.cells.values():
+                                            cell_bis.unclicked()
+                                        cell.clicked(cell.rect.center)
+    #                                    print("hit cell", cell.rect)
+                                        break
 #                            else:
 #                                if self.mouse.clicking(self.game_screen):
 #                                    print("hit no cells")
@@ -747,9 +745,11 @@ class Game():
                 self.character.unhovered()
                 for button in self.all_buttons:
                     button.unhovered()
-                for sprites in self.current_map.sprites:
+                for sprites in self.sprites:
                     sprites.unhovered()
-                for cell in self.current_map.cells:
+                for cell_visible in self.cells_visible:
+                    cell_visible.unhovered()
+                for cell in self.cells.values():
                     cell.unhovered()
 
                 if self.mouse.hovering(self.character):
@@ -768,20 +768,25 @@ class Game():
 #                                print("hover button", button)
                                 break
                         else:
-                            for sprites in self.current_map.sprites:
+                            for sprites in self.sprites:
                                 if self.mouse.hovering(sprites):
                                     sprites.hovered()
 #                                    print("hover sprite", sprites)
                                     break
                             else:
-                                for cell in self.current_map.cells:
-                                    if self.mouse.hovering(cell):
-                                        cell.hovered()
+                                for cell_visible in self.cells_visible:
+                                    if self.mouse.hovering(cell_visible):
+                                        cell_visible.hovered()
                                         break
+                                else:
+                                    for cell in self.cells.values():
+                                        if self.mouse.hovering(cell):
+                                            cell.hovered()
+                                            break
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside
-        for cell in self.current_map.cells:
+        for cell in self.cells.values():
             cell.update(dt)
         self.mouse.update(dt)
 
@@ -870,13 +875,16 @@ class Game():
                 self.game_screen.rect.right - 60/2,
                 self.character.rect.midbottom[1]
                 )
+            self.character.position = self.character.rect.midbottom
             self.check_border = None
             return None
         else:
             return False
 
     def border_right(self, *args):
-        if args != self.check_border:
+#        print("arg", args, "previous", self.check_border)
+        if args != self.check_border:  # cause problems but could be usefull
+#            print("ask dest")
             self.character.dest(*args)
             self.check_border = args
 #            print("right")
@@ -890,6 +898,7 @@ class Game():
                 self.game_screen.rect.left + 60/2,
                 self.character.rect.midbottom[1]
                 )
+            self.character.position = self.character.rect.midbottom
             self.check_border = None
             return None
         else:
@@ -911,6 +920,7 @@ class Game():
                     self.character.rect.midbottom[0],
                     self.game_screen.rect.bottom - 60/2 - 127
                 )
+            self.character.position = self.character.rect.midbottom
             self.check_border = None
             return None
         else:
@@ -932,6 +942,7 @@ class Game():
                 self.character.rect.midbottom[0],
                 self.game_screen.rect.top + 60/2
                 )
+            self.character.position = self.character.rect.midbottom
             self.check_border = None
             return None
         else:
