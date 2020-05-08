@@ -217,13 +217,15 @@ class Character(pg.sprite.Sprite):
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
 
         self.image, self.rect = load_image("character.png", -1)
-#        self.image = pg.transform.scale(self.image, (self.image.get_rect().w//2, self.image.get_rect().h//2))
-        self.rect.topleft = 0, 100
+#        self.image = pg.transform.scale(
+#            self.image,
+#            (self.image.get_rect().w//2, self.image.get_rect().h//2))
+        self.rect.midbottom = 60+60/2, 60+60/2
 
-        self.position = self.rect.midbottom
-        self.dest_coord = self.position
+#        self.position = self.rect.midbottom
+        self.dest_coord = self.rect.midbottom
         self.moving = False
-        self.max_speed = 10 # 2.5
+        self.max_speed = 10  # 2.5
 
         text = "I'm you !"
         txt_position = self.Game.mouse.rect.center
@@ -231,6 +233,7 @@ class Character(pg.sprite.Sprite):
 
     def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""
+#        self.position = self.rect.midbottom
         if self.moving:
             self._walk(dt)
         else:
@@ -239,22 +242,22 @@ class Character(pg.sprite.Sprite):
     def dest(self, moving_to_pos):
         if (self.area.left < moving_to_pos[0] < self.area.right
                 and self.area.top < moving_to_pos[1] < self.area.bottom):
-            if self.position != moving_to_pos:
+#            print("pos", self.rect.midbottom, "dest", moving_to_pos)
+            if self.rect.midbottom != moving_to_pos:
                 self.dest_coord = moving_to_pos
-                print("moving to", moving_to_pos)
+#                print("moving to", moving_to_pos)
                 self.moving = True
             else:
                 pass
 
     def _walk(self, dt):
         """move the character across the screen"""
-        self.position = self.rect.midbottom
 
         if self.check_pos():
-            pass
+            return
 
-        x_length = self.dest_coord[0] - self.position[0]
-        y_length = self.dest_coord[1] - self.position[1]
+        x_length = self.dest_coord[0] - self.rect.midbottom[0]
+        y_length = self.dest_coord[1] - self.rect.midbottom[1]
 
         theta = math.atan2(y_length, x_length)
 
@@ -271,20 +274,18 @@ class Character(pg.sprite.Sprite):
         self.rect = newpos
 
     def check_pos(self):
-        self.position = self.rect.midbottom
         acceptance = 10
         interv_low = (self.dest_coord[0] - acceptance,
                       self.dest_coord[1] - acceptance)
         interv_high = (self.dest_coord[0] + acceptance,
                        self.dest_coord[1] + acceptance)
-
-        if (interv_low[0] < self.position[0] < interv_high[0]
-                and interv_low[1] < self.position[1] < interv_high[1]):
-            # if self.position == self.dest_coord:  # not stable
-            self.speed_x = 0  # can remove self
+#        print("position", self.rect.midbottom)
+        if (interv_low[0] < self.rect.midbottom[0] < interv_high[0]
+                and interv_low[1] < self.rect.midbottom[1] < interv_high[1]):
+            self.speed_x = 0
             self.speed_y = 0
-#            self.position = self.dest_coord
-#            self.rect.midbottom = self.position
+            self.rect.midbottom = self.dest_coord
+#            print("position new", self.rect.midbottom)
             self.moving = False
             return True
         else:
@@ -471,28 +472,40 @@ def all_maps(Game):
 #                print(i)
     # posible pixel size for the cell to have int for 1920 and 1080 :
     # 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 30, 40, 60, 120
-    borders_list = {
-        "left": Cell(
+    cell_left = Cell(
             Game, size=(60, Game.game_screen.rect.h),
             position=(Game.game_screen.rect.left + 60/2,
                       Game.game_screen.rect.centery),
-            function=Game.border_left),
-        "right": Cell(
+            function=Game.border_left)
+    cell_left.alpha_off = 0
+
+    cell_right = Cell(
             Game, size=(60, Game.game_screen.rect.h),
             position=(Game.game_screen.rect.right - 60/2,
                       Game.game_screen.rect.centery),
-            function=Game.border_right),
-        "top": Cell(
+            function=Game.border_right)
+    cell_right.alpha_off = 0
+
+    cell_top = Cell(
             Game, size=(Game.game_screen.rect.w, 60),
             position=(Game.game_screen.rect.centerx,
                       Game.game_screen.rect.top + 60/2),
-            function=Game.border_top),
-        "bottom": Cell(
+            function=Game.border_top)
+    cell_top.alpha_off = 0
+
+    cell_bottom = Cell(
             Game, size=(Game.game_screen.rect.w, 60),
             position=(Game.game_screen.rect.centerx,
                       Game.game_screen.rect.bottom - 60/2
                       - Game.lower_tool_bar.rect.h + 19),
-            function=Game.border_bottom),
+            function=Game.border_bottom)
+    cell_bottom.alpha_off = 0
+
+    borders_list = {
+        "left": cell_left,
+        "right": cell_right,
+        "top": cell_top,
+        "bottom": cell_bottom,
     }
 
     size = 60
@@ -655,6 +668,7 @@ class Game():
         self.all_maps = all_maps(self)
 #        self.current_map_pos = (0, 0)
         self.change_map((0, 0))
+#        self.character.rect.midbottom = self.cells[(1,1)].rect.center
 
     def change_map(self, current_map_pos):
 #        self.check_border = None
@@ -668,6 +682,7 @@ class Game():
         self.allsprites = pg.sprite.RenderPlain((
                 self.sprites,
                 self.cells_visible,  # TODO: remove cell from it but keep borders
+#                self.cells[(1,1)],
                 self.character,
                 ))  # character always ontop of sprites : not good
 
@@ -872,10 +887,9 @@ class Game():
 #            print(self.current_map_pos)
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
-                self.game_screen.rect.right - 60/2,
+                self.game_screen.rect.right - 60 - 60/2,
                 self.character.rect.midbottom[1]
                 )
-            self.character.position = self.character.rect.midbottom
             self.check_border = None
             return None
         else:
@@ -895,10 +909,9 @@ class Game():
 #            print(self.current_map_pos)
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
-                self.game_screen.rect.left + 60/2,
+                self.game_screen.rect.left + 60 + 60/2,
                 self.character.rect.midbottom[1]
                 )
-            self.character.position = self.character.rect.midbottom
             self.check_border = None
             return None
         else:
@@ -918,9 +931,8 @@ class Game():
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
                     self.character.rect.midbottom[0],
-                    self.game_screen.rect.bottom - 60/2 - 127
+                    self.game_screen.rect.bottom - 60 - 60/2 - 127
                 )
-            self.character.position = self.character.rect.midbottom
             self.check_border = None
             return None
         else:
@@ -940,9 +952,8 @@ class Game():
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
                 self.character.rect.midbottom[0],
-                self.game_screen.rect.top + 60/2
+                self.game_screen.rect.top + 60 + 60/2
                 )
-            self.character.position = self.character.rect.midbottom
             self.check_border = None
             return None
         else:
