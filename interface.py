@@ -207,6 +207,20 @@ class Chimp(pg.sprite.Sprite):
             self.original = self.image
 
 
+#def speed_for_int_move(ratio_pix_meter_x, dt_fixed, max_speed):
+#    allowed_speed = list()
+#
+#    for i in range(1, int(60/(ratio_pix_meter_x*dt_fixed))):
+#        if 60 % i == 0:  # 60 from the cell size
+#            allowed_speed.append(i/(ratio_pix_meter_x*dt_fixed))
+#
+#    allowed_speed = np.array(allowed_speed)
+#    ind = abs(allowed_speed - max_speed).argmin()
+#    print("all_speed", allowed_speed)
+#
+#    return allowed_speed[ind]
+
+
 class Character(pg.sprite.Sprite):
     """moves a character across the screen."""
 
@@ -226,7 +240,17 @@ class Character(pg.sprite.Sprite):
         self.dest_coord = self.rect.midbottom
         self.road = list()
         self.moving = False
-        self.max_speed = 10  # 2.5
+        self.max_speed = 5  # 2.5  # can't go higher than 60 (cell size)
+        self.previous_theta = None
+#        self.max_speed_x = speed_for_int_move(self.Game.ratio_pix_meter_x,
+#                                              self.Game.dt_fixed,
+#                                              self.max_speed)
+#        print("new_speed_x", self.max_speed_x)
+#
+#        self.max_speed_y = speed_for_int_move(self.Game.ratio_pix_meter_y,
+#                                              self.Game.dt_fixed,
+#                                              self.max_speed)
+#        print("new_speed_y", self.max_speed_y)
 
         text = "I'm you !"
         txt_position = self.Game.mouse.rect.center
@@ -259,15 +283,6 @@ class Character(pg.sprite.Sprite):
 
     def _walk(self, dt):
         """move the character across the screen"""
-
-        if self.check_pos():
-            try:
-                self.road.pop(0)
-                self.dest_coord = self.road[0]
-                self.moving = True
-            except IndexError:
-                return
-
         x_length = self.dest_coord[0] - self.rect.midbottom[0]
         y_length = self.dest_coord[1] - self.rect.midbottom[1]
 
@@ -275,30 +290,50 @@ class Character(pg.sprite.Sprite):
 
 #        theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
         theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
+        # Warning, need to change also theta in the find_path
+
+#        print(x_length, y_length, theta, self.previous_theta)
+        if theta != self.previous_theta and self.previous_theta is not None:
+#            print("theta change")
+            self.rect.midbottom = self.dest_coord  # limit the speed to 60pix/frame because rollback character to the case if go further it
+
+        if self.check_pos():
+            try:
+                self.road.pop(0)
+                self.dest_coord = self.road[0]
+                self.moving = True
+                return
+            except IndexError:
+                return
+
+        self.previous_theta = theta
 
         self.speed_x = self.max_speed * math.cos(theta)
         self.speed_y = self.max_speed * math.sin(theta)  # meter per second
 
         self.move_x = self.speed_x * self.Game.ratio_pix_meter_x * dt
         self.move_y = self.speed_y * self.Game.ratio_pix_meter_y * dt
+#        print(self.move_x, self.move_y)
 
         newpos = self.rect.move((self.move_x, self.move_y))
         self.rect = newpos
 
     def check_pos(self):
-        acceptance = 10
+        acceptance = 0  # Obsolete when added self.previous_theta
         interv_low = (self.dest_coord[0] - acceptance,
                       self.dest_coord[1] - acceptance)
         interv_high = (self.dest_coord[0] + acceptance,
                        self.dest_coord[1] + acceptance)
 #        print("position", self.rect.midbottom)
-        if (interv_low[0] < self.rect.midbottom[0] < interv_high[0]
-                and interv_low[1] < self.rect.midbottom[1] < interv_high[1]):
+        if (interv_low[0] <= self.rect.midbottom[0] <= interv_high[0]
+                and interv_low[1] <= self.rect.midbottom[1] <= interv_high[1]):
             self.speed_x = 0
             self.speed_y = 0
             self.rect.midbottom = self.dest_coord
 #            print("position new", self.rect.midbottom)
             self.moving = False
+            self.previous_theta = None
+#            print("change ok")
             return True
         else:
             return False
@@ -676,7 +711,7 @@ class Game():
         GAME_SCREEN_H = 1080
 
         self.ratio_pix_meter_x = GAME_SCREEN_W/32  # pixel/meter
-        self.ratio_pix_meter_y = GAME_SCREEN_H/16  # pixel/meter
+        self.ratio_pix_meter_y = GAME_SCREEN_H/18  # pixel/meter
 
         pg.init()
         self.check_border = None
@@ -750,7 +785,6 @@ class Game():
 #        self.character.rect.midbottom = self.cells[(1,1)].rect.center
 
     def change_map(self, current_map_pos):
-#        self.check_border = None
         self.current_map_pos = current_map_pos
         self.current_map = self.all_maps[current_map_pos]
         self.background_screen = self.current_map["background"]
@@ -764,6 +798,9 @@ class Game():
 #                self.cells[(1,1)],
                 self.character,
                 ))  # character always ontop of sprites : not good
+#        for cells in self.cells.values():
+#            self.allsprites.add(cells)
+#        self.allsprites.add(self.character)
 
     def unclick(self):
         for button in self.all_buttons:
