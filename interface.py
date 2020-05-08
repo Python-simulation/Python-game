@@ -88,7 +88,6 @@ class Mouse(pg.sprite.Sprite):
 
     def update(self, dt):
         self.position()
-#        print(self.rect.center)
 
     def position(self):
         """move the resized mouse based on the real mouse position"""
@@ -109,9 +108,6 @@ class Mouse(pg.sprite.Sprite):
         real_pos = real_pos_x, real_pos_y
 
         self.rect.center = real_pos
-
-#        if self.state_clicking:
-#            self.rect.move_ip(5, 10)  # good for button
 
     def hovering(self, target):
         hitbox = self.rect
@@ -208,6 +204,10 @@ class Chimp(pg.sprite.Sprite):
 
 
 #def speed_for_int_move(ratio_pix_meter_x, dt_fixed, max_speed):
+#    """
+#    self.max_speed_x = speed_for_int_move(
+#        self.Game.ratio_pix_meter_x, self.Game.dt_fixed, self.max_speed)
+#    """
 #    allowed_speed = list()
 #
 #    for i in range(1, int(60/(ratio_pix_meter_x*dt_fixed))):
@@ -240,17 +240,8 @@ class Character(pg.sprite.Sprite):
         self.dest_coord = self.rect.midbottom
         self.road = list()
         self.moving = False
-        self.max_speed = 5  # 2.5  # can't go higher than 60 (cell size)
+        self.max_speed = 10  # 2.5  # can't go higher than 60 (cell size)
         self.previous_theta = None
-#        self.max_speed_x = speed_for_int_move(self.Game.ratio_pix_meter_x,
-#                                              self.Game.dt_fixed,
-#                                              self.max_speed)
-#        print("new_speed_x", self.max_speed_x)
-#
-#        self.max_speed_y = speed_for_int_move(self.Game.ratio_pix_meter_y,
-#                                              self.Game.dt_fixed,
-#                                              self.max_speed)
-#        print("new_speed_y", self.max_speed_y)
 
         text = "I'm you !"
         txt_position = self.Game.mouse.rect.center
@@ -258,28 +249,30 @@ class Character(pg.sprite.Sprite):
 
     def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""
-#        self.position = self.rect.midbottom
         if self.moving:
             self._walk(dt)
         else:
             pass
 
     def dest(self, moving_to_pos):
-        if (self.area.left < moving_to_pos[0] < self.area.right
-                and self.area.top < moving_to_pos[1] < self.area.bottom):
-#            print("pos", self.rect.midbottom, "dest", moving_to_pos)
-            if moving_to_pos != self.rect.midbottom:
-                if self.road == list():
-                    self.road = find_path(self.rect.midbottom, moving_to_pos, 60)  # , all_cells=np.zeros(570))
-                else:
-                    new_road = find_path(self.road[0], moving_to_pos, 60)  # , all_cells=np.zeros(570))
-                    self.road = [self.road[0]]
-                    self.road.extend(new_road)
 
-                if self.road != list():
-                    self.dest_coord = self.road[0]
-                    print("moving to", self.road[-1])
-                    self.moving = True
+        if (self.area.left < moving_to_pos[0] < self.area.right
+                and self.area.top < moving_to_pos[1] < self.area.bottom
+                and moving_to_pos != self.rect.midbottom):
+
+            if self.road == list():
+                self.road = find_path(self.rect.midbottom,
+                                      moving_to_pos, 60)  # , all_cells=np.zeros(570))
+            else:
+                new_road = find_path(self.road[0], moving_to_pos, 60)
+                self.road = [self.road[0]]
+                self.road.extend(new_road)
+
+            if self.road != list():
+                self.dest_coord = self.road[0]
+                print("moving to", self.road[-1])
+#                print("road", self.road)
+                self.moving = True
 
     def _walk(self, dt):
         """move the character across the screen"""
@@ -292,13 +285,13 @@ class Character(pg.sprite.Sprite):
         theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
         # Warning, need to change also theta in the find_path
 
-#        print(x_length, y_length, theta, self.previous_theta)
+#        print(theta, self.previous_theta)
         if theta != self.previous_theta and self.previous_theta is not None:
-#            print("theta change")
-            self.rect.midbottom = self.dest_coord  # limit the speed to 60pix/frame because rollback character to the case if go further it
+            self.rect.midbottom = self.dest_coord
 
         if self.check_pos():
             try:
+#                print("choose next")
                 self.road.pop(0)
                 self.dest_coord = self.road[0]
                 self.moving = True
@@ -313,7 +306,6 @@ class Character(pg.sprite.Sprite):
 
         self.move_x = self.speed_x * self.Game.ratio_pix_meter_x * dt
         self.move_y = self.speed_y * self.Game.ratio_pix_meter_y * dt
-#        print(self.move_x, self.move_y)
 
         newpos = self.rect.move((self.move_x, self.move_y))
         self.rect = newpos
@@ -324,16 +316,16 @@ class Character(pg.sprite.Sprite):
                       self.dest_coord[1] - acceptance)
         interv_high = (self.dest_coord[0] + acceptance,
                        self.dest_coord[1] + acceptance)
-#        print("position", self.rect.midbottom)
+
+#        print("condition1", interv_low[0],self.rect.midbottom[0], interv_high[0])
+#        print("condition2", interv_low[1],self.rect.midbottom[1], interv_high[1])
         if (interv_low[0] <= self.rect.midbottom[0] <= interv_high[0]
                 and interv_low[1] <= self.rect.midbottom[1] <= interv_high[1]):
             self.speed_x = 0
             self.speed_y = 0
             self.rect.midbottom = self.dest_coord
-#            print("position new", self.rect.midbottom)
             self.moving = False
             self.previous_theta = None
-#            print("change ok")
             return True
         else:
             return False
@@ -375,6 +367,7 @@ def find_path(begin_cell, dest_cell, cell_size, all_cells=None):
         theta = math.atan2(y_length, x_length)
 #        theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
         theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
+
         if theta == 0:  # ugly but work
             next_cell = (previous_cell[0]+cell_size,
                          previous_cell[1]+0)
@@ -401,8 +394,8 @@ def find_path(begin_cell, dest_cell, cell_size, all_cells=None):
                          previous_cell[1]-cell_size)
         else:
             print("error with angle", theta, theta*180/np.pi)
-#        next_cell = (previous_cell[0]+(math.cos(theta)),
-#                     previous_cell[1]+(math.sin(theta)))
+#        next_cell = (previous_cell[0]+(math.cos(theta)),  # good looking but
+#                     previous_cell[1]+(math.sin(theta)))  # don't work
 
         road.append(next_cell)
         previous_cell = next_cell
@@ -415,11 +408,11 @@ class Cell(pg.sprite.Sprite):
     def __init__(self, Game, size, position, function=None):
         self.Game = Game
         self.function = function
-        pg.sprite.Sprite.__init__(self)  # call Sprite intializer
+        pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface(size)
         self.rect = self.image.get_rect()
         self.rect.center = position
-        self.position_label = None
+#        self.position_label = None  # useless
         color = (50, 50, 50)
         self.alpha_off = 10
         self.alpha_on = 50
@@ -432,7 +425,7 @@ class Cell(pg.sprite.Sprite):
 #        self.message = display_info(self.Game, text, txt_position)
 
     def update(self, dt):
-        """by default, if no function or if function returns nothing, consider
+        """by default, if function returns nothing, consider
         the cell has done its purpuse and set state to False"""
         if self.function is not None and self.state:
             output = self.function(*self.args, **self.kwargs)
@@ -581,41 +574,42 @@ def all_maps(Game):
 #                print(i)
     # posible pixel size for the cell to have int for 1920 and 1080 :
     # 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 30, 40, 60, 120
-    cell_left = Cell(
-            Game, size=(60, Game.game_screen.rect.h),
-            position=(Game.game_screen.rect.left + 60/2,
-                      Game.game_screen.rect.centery),
-            function=Game.border_left)
-    cell_left.alpha_off = 0
 
-    cell_right = Cell(
-            Game, size=(60, Game.game_screen.rect.h),
-            position=(Game.game_screen.rect.right - 60/2,
-                      Game.game_screen.rect.centery),
-            function=Game.border_right)
-    cell_right.alpha_off = 0
-
-    cell_top = Cell(
-            Game, size=(Game.game_screen.rect.w, 60),
-            position=(Game.game_screen.rect.centerx,
-                      Game.game_screen.rect.top + 60/2),
-            function=Game.border_top)
-    cell_top.alpha_off = 0
-
-    cell_bottom = Cell(
-            Game, size=(Game.game_screen.rect.w, 60),
-            position=(Game.game_screen.rect.centerx,
-                      Game.game_screen.rect.bottom - 60/2
-                      - Game.lower_tool_bar.rect.h + 19),
-            function=Game.border_bottom)
-    cell_bottom.alpha_off = 0
-
-    borders_list = {
-        "left": cell_left,
-        "right": cell_right,
-        "top": cell_top,
-        "bottom": cell_bottom,
-    }
+#    cell_left = Cell(
+#            Game, size=(60, Game.game_screen.rect.h),
+#            position=(Game.game_screen.rect.left + 60/2,
+#                      Game.game_screen.rect.centery),
+#            function=Game.border_left)
+#    cell_left.alpha_off = 0
+#
+#    cell_right = Cell(
+#            Game, size=(60, Game.game_screen.rect.h),
+#            position=(Game.game_screen.rect.right - 60/2,
+#                      Game.game_screen.rect.centery),
+#            function=Game.border_right)
+#    cell_right.alpha_off = 0
+#
+#    cell_top = Cell(
+#            Game, size=(Game.game_screen.rect.w, 60),
+#            position=(Game.game_screen.rect.centerx,
+#                      Game.game_screen.rect.top + 60/2),
+#            function=Game.border_top)
+#    cell_top.alpha_off = 0
+#
+#    cell_bottom = Cell(
+#            Game, size=(Game.game_screen.rect.w, 60),
+#            position=(Game.game_screen.rect.centerx,
+#                      Game.game_screen.rect.bottom - 60/2
+#                      - Game.lower_tool_bar.rect.h + 19),
+#            function=Game.border_bottom)
+#    cell_bottom.alpha_off = 0
+#
+#    borders_list = {
+#        "left": cell_left,
+#        "right": cell_right,
+#        "top": cell_top,
+#        "bottom": cell_bottom,
+#    }
 
     size = 60
     cells_dict = dict()
@@ -627,11 +621,59 @@ def all_maps(Game):
                 position=(x*size+size/2, y*size+size/2),
                 function=Game.character.dest
             )
-            current_cell.position_label = (x, y)
+#            current_cell.position_label = (x, y)  # useless
 #            text = str((x, y))
 #            txt_position = Game.mouse.rect.center
 #            current_cell.message = display_info(Game, text, txt_position)
             cells_dict[(x, y)] = current_cell
+
+    borders_left = list()
+    x = 0
+    for y in range(1-1, 18-2-1+1):  # -2 because not 16/9 :'( damn lowerbar
+        current_cell = Cell(
+            Game,
+            size=(size, size),
+            position=(x*size+size/2, y*size+size/2),
+            function=Game.border_left
+        )
+        current_cell.alpha_off = 0
+        borders_left.append(current_cell)
+
+    borders_top = list()
+    y = 0  # -2 because not 16/9 :'( damn lowerbar
+    for x in range(1, 32-1):
+        current_cell = Cell(
+            Game,
+            size=(size, size),
+            position=(x*size+size/2, y*size+size/2),
+            function=Game.border_top
+        )
+        current_cell.alpha_off = 0
+        borders_top.append(current_cell)
+
+    borders_right = list()
+    x = 32-1
+    for y in range(1-1, 18-2-1+1):  # -2 because not 16/9 :'( damn lowerbar
+        current_cell = Cell(
+            Game,
+            size=(size, size),
+            position=(x*size+size/2, y*size+size/2),
+            function=Game.border_right
+        )
+        current_cell.alpha_off = 0
+        borders_right.append(current_cell)
+
+    borders_bottom = list()
+    y = 18-2-1  # -2 because not 16/9 :'( damn lowerbar
+    for x in range(1, 32-1):
+        current_cell = Cell(
+            Game,
+            size=(size, size),
+            position=(x*size+size/2, y*size+size/2),
+            function=Game.border_bottom
+        )
+        current_cell.alpha_off = 0
+        borders_bottom.append(current_cell)
 
     cells_visible = [
         Cell(Game, size=(40, 40), position=(500, 100),
@@ -642,11 +684,15 @@ def all_maps(Game):
              function=Game.character.dest),
         Cell(Game, size=(40, 40), position=(100, 700),
              function=function_test),
-        borders_list["left"],
-        borders_list["top"],
-        borders_list["right"],
-        borders_list["bottom"]
+#        borders_list["left"],
+#        borders_list["top"],
+#        borders_list["right"],
+#        borders_list["bottom"]
         ]
+    cells_visible.extend(borders_left)
+    cells_visible.extend(borders_top)
+    cells_visible.extend(borders_right)
+    cells_visible.extend(borders_bottom)
 
     chimp = Chimp(Game)
     sprites = pg.sprite.RenderPlain((
@@ -670,7 +716,8 @@ def all_maps(Game):
 
     map_n1_0 = {"background": background2,
                 "cells": cells_dict,
-                "cells_visible": [borders_list["right"]],
+#                "cells_visible": [borders_list["right"]],
+                "cells_visible": borders_right,
                 "sprites": sprites}
 
 #
@@ -678,17 +725,20 @@ def all_maps(Game):
 
     map_1_0 = {"background": background2,
                "cells": cells_dict,
-               "cells_visible": [borders_list["left"]],
+#               "cells_visible": [borders_list["left"]],
+               "cells_visible": borders_left,
                "sprites": sprites}
 
     map_0_1 = {"background": background2,
                "cells": cells_dict,
-               "cells_visible": [borders_list["top"]],
+#               "cells_visible": [borders_list["top"]],
+               "cells_visible": borders_top,
                "sprites": sprites}
 
     map_0_n1 = {"background": background2,
                 "cells": cells_dict,
-                "cells_visible": [borders_list["bottom"]],
+#                "cells_visible": [borders_list["bottom"]],
+                "cells_visible": borders_bottom,
                 "sprites": sprites}
 
     all_maps = {
@@ -796,11 +846,11 @@ class Game():
                 self.sprites,
                 self.cells_visible,  # TODO: remove cell from it but keep borders
 #                self.cells[(1,1)],
-                self.character,
+#                self.character,
                 ))  # character always ontop of sprites : not good
 #        for cells in self.cells.values():
 #            self.allsprites.add(cells)
-#        self.allsprites.add(self.character)
+        self.allsprites.add(self.character)
 
     def unclick(self):
         for button in self.all_buttons:
@@ -997,7 +1047,7 @@ class Game():
             self.check_border = args
 #            print("left")
 
-        if self.character.check_pos():
+        if self.character.rect.midbottom == args[0] and self.character.road == list():
             self.current_map_pos = (self.current_map_pos[0] - 1,
                                     self.current_map_pos[1])
 #            print(self.current_map_pos)
@@ -1018,8 +1068,8 @@ class Game():
             self.character.dest(*args)
             self.check_border = args
 #            print("right")
-
-        if self.character.check_pos():
+#        print("test", self.character.rect.midbottom, args[0])
+        if self.character.rect.midbottom == args[0] and self.character.road == list():
             self.current_map_pos = (self.current_map_pos[0] + 1,
                                     self.current_map_pos[1])
 #            print(self.current_map_pos)
@@ -1040,14 +1090,14 @@ class Game():
             self.check_border = args
 #            print("top")
 
-        if self.character.check_pos():
+        if self.character.rect.midbottom == args[0] and self.character.road == list():
             self.current_map_pos = (self.current_map_pos[0],
                                     self.current_map_pos[1] - 1)
 #            print(self.current_map_pos)
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
                     self.character.rect.midbottom[0],
-                    self.game_screen.rect.bottom - 60 - 60/2 - 127
+                    self.game_screen.rect.bottom - 60 - 60/2 - 60*2
                 )
             self.check_border = None
             return None
@@ -1061,7 +1111,7 @@ class Game():
             self.check_border = args
 #            print("bottom")
 
-        if self.character.check_pos():
+        if self.character.rect.midbottom == args[0] and self.character.road == list():
             self.current_map_pos = (self.current_map_pos[0],
                                     self.current_map_pos[1] + 1)
 #            print(self.current_map_pos)
