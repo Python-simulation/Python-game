@@ -1,18 +1,17 @@
-
 import os
 from interface.cell import Cell
 import pygame as pg
-from interface.character import Character
 from interface.chimp import Chimp
 from .background import BackGround
 from .interface_functions import NeededFunctions
-nf=NeededFunctions()
+
+nf = NeededFunctions()
 
 
 class MapFunctions:
     def all_maps(self, Game):
 
-        name=os.path.join(Game.data_dir,'background.png')
+        name = os.path.join(Game.data_dir, 'background.png')
         background = BackGround(name)
         background.rect.center = Game.game_screen.rect.center
     #        for i in range(1, 1920):
@@ -87,13 +86,13 @@ class MapFunctions:
 
         cells_visible = [
             Cell(Game, size=(40, 40), position=(500, 100),
-                function=Game.character.dest),
+                 function=Game.character.dest),
             Cell(Game, size=(40, 40), position=(800, 200),
-                function=Game.character.dest),
+                 function=Game.character.dest),
             Cell(Game, size=(40, 40), position=(1000, 300),
-                function=Game.character.dest),
+                 function=Game.character.dest),
             Cell(Game, size=(40, 40), position=(100, 700),
-                function=nf.function_test),
+                 function=nf.function_test),
             ]
         cells_visible.extend(borders_left)
         cells_visible.extend(borders_top)
@@ -106,12 +105,12 @@ class MapFunctions:
                 ))
 
         map_0_0 = {"background": background,
-                "cells": cells_dict,
-                "cells_visible": cells_visible,
-                "sprites": sprites}
+                   "cells": cells_dict,
+                   "cells_visible": cells_visible,
+                   "sprites": sprites}
 
     #
-        name=os.path.join(Game.data_dir,'background2.png')
+        name = os.path.join(Game.data_dir, 'background2.png')
         background2 = BackGround(name)
         background2.rect.center = Game.game_screen.rect.center
 
@@ -130,14 +129,14 @@ class MapFunctions:
         sprites = pg.sprite.RenderPlain()
 
         map_1_0 = {"background": background2,
-                "cells": cells_dict,
-                "cells_visible": borders_left,
-                "sprites": sprites}
+                   "cells": cells_dict,
+                   "cells_visible": borders_left,
+                   "sprites": sprites}
 
         map_0_1 = {"background": background2,
-                "cells": cells_dict,
-                "cells_visible": borders_top,
-                "sprites": sprites}
+                   "cells": cells_dict,
+                   "cells_visible": borders_top,
+                   "sprites": sprites}
 
         map_0_n1 = {"background": background2,
                     "cells": cells_dict,

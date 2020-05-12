@@ -5,14 +5,17 @@ Note there are comments here, but for the full explanation,
 follow along in the tutorial.
 """
 
-
 # Import Modules
 import os
-import time
 import pygame as pg
-from pygame.compat import geterror
-import math
-import numpy as np
+
+from interface.button import Button
+from interface.mouse import Mouse
+from interface.character import Character
+from interface.interface_functions import NeededFunctions
+
+from interface.background import BackGround
+from interface.map_functions import MapFunctions
 
 if not pg.font:
     print("Warning, fonts disabled")
@@ -21,20 +24,12 @@ if not pg.mixer:
 
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50, 50)
 
-
-
-from interface.button import Button
-from interface.mouse import Mouse
-from interface.chimp import Chimp
-from interface.character import Character
-from interface.interface_functions import NeededFunctions
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 data_dir = os.path.join(main_dir, "data")
-nf=NeededFunctions()
 
-from interface.background import BackGround
-from interface.map_functions import MapFunctions
-mp=MapFunctions()
+nf = NeededFunctions()
+mp = MapFunctions()
+
 
 class Game():
     """this function is called when the program starts.
@@ -81,7 +76,7 @@ class Game():
 #        background_color = (200, 200, 200)
 #        self.bg_image.fill(background_color)
 
-        name=os.path.join(self.data_dir,'lower_bar.png')
+        name = os.path.join(self.data_dir, 'lower_bar.png')
         self.lower_tool_bar = BackGround(name, -1)
         self.lower_tool_bar.rect.midbottom = self.game_screen.rect.midbottom
 
@@ -116,7 +111,6 @@ class Game():
         self.mouse = Mouse(self)
         self.character = Character(self)
 
-
         self.all_maps = self.all_maps_fct(self)
 #        self.current_map_pos = (0, 0)
         self.change_map((0, 0))
@@ -125,14 +119,11 @@ class Game():
 
 #        self.character.rect.midbottom = self.cells[(1,1)].rect.center
 
-
     def loader(self):
-        self.data_dir=data_dir
-        self.all_maps_fct=mp.all_maps
-        self.function_test=nf.function_test
-        self.function_test2=nf.function_test2
-
-
+        self.data_dir = data_dir
+        self.all_maps_fct = mp.all_maps
+        self.function_test = nf.function_test
+        self.function_test2 = nf.function_test2
 
     def change_map(self, current_map_pos):
         self.current_map_pos = current_map_pos

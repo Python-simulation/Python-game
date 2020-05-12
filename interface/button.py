@@ -1,8 +1,5 @@
 import os
-import time
 import pygame as pg
-from pygame.compat import geterror
-import math
 import numpy as np
 from interface.interface_functions import NeededFunctions
 

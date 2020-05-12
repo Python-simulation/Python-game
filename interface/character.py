@@ -1,12 +1,11 @@
 import os
-import time
 import pygame as pg
-from pygame.compat import geterror
 import math
 import numpy as np
 from .interface_functions import NeededFunctions
 from .display import display_info
-nf=NeededFunctions()
+nf = NeededFunctions()
+
 
 class Character(pg.sprite.Sprite):
     """moves a character across the screen."""
@@ -16,7 +15,7 @@ class Character(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
         self.area = self.Game.game_screen.rect.copy()  # walkable space
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
-        name=os.path.join(Game.data_dir,"character.png")
+        name=os.path.join(Game.data_dir, "character.png")
         self.image, self.rect = nf.load_image(name, colorkey=-1)
 #        self.image = pg.transform.scale(
 #            self.image,
@@ -49,7 +48,8 @@ class Character(pg.sprite.Sprite):
 
             if self.road == list():
                 self.road = nf.find_path(self.rect.midbottom,
-                                      moving_to_pos, 60)  # , all_cells=np.zeros(570))
+                                         moving_to_pos, 60
+                                         )  # , all_cells=np.zeros(570))
             else:
                 new_road = nf.find_path(self.road[0], moving_to_pos, 60)
                 self.road = [self.road[0]]
@@ -109,8 +109,6 @@ class Character(pg.sprite.Sprite):
         interv_high = (self.dest_coord[0] + acceptance,
                        self.dest_coord[1] + acceptance)
 
-#        print("condition1", interv_low[0],self.rect.midbottom[0], interv_high[0])
-#        print("condition2", interv_low[1],self.rect.midbottom[1], interv_high[1])
         if (interv_low[0] <= self.rect.midbottom[0] <= interv_high[0]
                 and interv_low[1] <= self.rect.midbottom[1] <= interv_high[1]):
             self.speed_x = 0
@@ -137,3 +135,21 @@ class Character(pg.sprite.Sprite):
 
     def unclicked(self):
         pass
+
+
+# def speed_for_int_move(ratio_pix_meter_x, dt_fixed, max_speed):
+#    """
+#    self.max_speed_x = speed_for_int_move(
+#        self.Game.ratio_pix_meter_x, self.Game.dt_fixed, self.max_speed)
+#    """
+#    allowed_speed = list()
+#
+#    for i in range(1, int(60/(ratio_pix_meter_x*dt_fixed))):
+#        if 60 % i == 0:  # 60 from the cell size
+#            allowed_speed.append(i/(ratio_pix_meter_x*dt_fixed))
+#
+#    allowed_speed = np.array(allowed_speed)
+#    ind = abs(allowed_speed - max_speed).argmin()
+#    print("all_speed", allowed_speed)
+#
+#    return allowed_speed[ind]

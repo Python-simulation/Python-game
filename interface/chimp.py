@@ -1,8 +1,5 @@
 import os
-import time
 import pygame as pg
-from pygame.compat import geterror
-import math
 import numpy as np
 from .interface_functions import NeededFunctions
 
@@ -12,12 +9,12 @@ class Chimp(pg.sprite.Sprite):
        monkey when it is clicked."""
 
     def __init__(self, Game):
-        self.nf=NeededFunctions()
+        self.nf = NeededFunctions()
         self.Game = Game  # add real-time variable change from the Game class
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
         self.area = self.Game.game_screen.rect.copy()  # walkable space
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
-        name=os.path.join(Game.data_dir,"chimp.png")
+        name = os.path.join(Game.data_dir, "chimp.png")
         self.image, self.rect = self.nf.load_image(name, colorkey=-1)
 #        self.image = pg.transform.scale(self.image, (200, 100))
 #        self.rect = self.image.get_rect()
@@ -82,21 +79,3 @@ class Chimp(pg.sprite.Sprite):
         if not self.dizzy:
             self.dizzy = 1
             self.original = self.image
-
-
-#def speed_for_int_move(ratio_pix_meter_x, dt_fixed, max_speed):
-#    """
-#    self.max_speed_x = speed_for_int_move(
-#        self.Game.ratio_pix_meter_x, self.Game.dt_fixed, self.max_speed)
-#    """
-#    allowed_speed = list()
-#
-#    for i in range(1, int(60/(ratio_pix_meter_x*dt_fixed))):
-#        if 60 % i == 0:  # 60 from the cell size
-#            allowed_speed.append(i/(ratio_pix_meter_x*dt_fixed))
-#
-#    allowed_speed = np.array(allowed_speed)
-#    ind = abs(allowed_speed - max_speed).argmin()
-#    print("all_speed", allowed_speed)
-#
-#    return allowed_speed[ind]

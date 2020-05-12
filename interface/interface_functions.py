@@ -1,10 +1,9 @@
-
 import os
-import time
 import pygame as pg
 from pygame.compat import geterror
 import math
 import numpy as np
+
 
 class NeededFunctions:
     # functions to create our resources
@@ -78,28 +77,28 @@ class NeededFunctions:
 
             if theta == 0:  # ugly but work
                 next_cell = (previous_cell[0]+cell_size,
-                            previous_cell[1]+0)
+                             previous_cell[1]+0)
             elif theta == np.pi or theta == -np.pi:
                 next_cell = (previous_cell[0]-cell_size,
-                            previous_cell[1]+0)
+                             previous_cell[1]+0)
             elif theta == np.pi/2:
                 next_cell = (previous_cell[0]+0,
-                            previous_cell[1]+cell_size)
+                             previous_cell[1]+cell_size)
             elif theta == -np.pi/2:
                 next_cell = (previous_cell[0]+0,
-                            previous_cell[1]-cell_size)
+                             previous_cell[1]-cell_size)
             elif theta == np.pi/4:
                 next_cell = (previous_cell[0]+cell_size,
-                            previous_cell[1]+cell_size)
+                             previous_cell[1]+cell_size)
             elif theta == 3*np.pi/4:
                 next_cell = (previous_cell[0]-cell_size,
-                            previous_cell[1]+cell_size)
+                             previous_cell[1]+cell_size)
             elif theta == -np.pi/4:
                 next_cell = (previous_cell[0]+cell_size,
-                            previous_cell[1]-cell_size)
+                             previous_cell[1]-cell_size)
             elif theta == -3*np.pi/4:
                 next_cell = (previous_cell[0]-cell_size,
-                            previous_cell[1]-cell_size)
+                             previous_cell[1]-cell_size)
             else:
                 print("error with angle", theta, theta*180/np.pi)
     #        next_cell = (previous_cell[0]+(math.cos(theta)),  # good looking but
@@ -110,9 +109,8 @@ class NeededFunctions:
 
         return road
 
-    def function_test(self,state):
+    def function_test(self, state):
         print("fct 1 do something with state", state)
 
-
-    def function_test2(self,state):
+    def function_test2(self, state):
         print("fct 2 do something with state", state)

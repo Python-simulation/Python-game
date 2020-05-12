@@ -1,6 +1,8 @@
 import pygame as pg
 from .interface_functions import NeededFunctions
-nf=NeededFunctions()
+
+nf = NeededFunctions()
+
 
 class BackGround():
     """image of the map"""
