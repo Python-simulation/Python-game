@@ -5,8 +5,9 @@ from pygame.compat import geterror
 import math
 import numpy as np
 
+
 class display_info(pg.sprite.Sprite):
-    
+
     def __init__(self, Game, text, position):
         self.Game = Game
         self.text = text

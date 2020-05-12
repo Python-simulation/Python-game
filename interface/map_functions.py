@@ -1,4 +1,5 @@
 
+import os
 from interface.cell import Cell
 import pygame as pg
 from interface.character import Character
@@ -7,52 +8,18 @@ from .background import BackGround
 from .interface_functions import NeededFunctions
 nf=NeededFunctions()
 
-class MapFunctions:
-    def all_maps(self,Game):
 
-        background = BackGround('background.png')
+class MapFunctions:
+    def all_maps(self, Game):
+
+        name=os.path.join(Game.data_dir,'background.png')
+        background = BackGround(name)
         background.rect.center = Game.game_screen.rect.center
     #        for i in range(1, 1920):
     #            if 1920 % i == 0 and 1080 % i == 0:
     #                print(i)
         # posible pixel size for the cell to have int for 1920 and 1080 :
         # 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 30, 40, 60, 120
-
-    #    cell_left = Cell(
-    #            Game, size=(60, Game.game_screen.rect.h),
-    #            position=(Game.game_screen.rect.left + 60/2,
-    #                      Game.game_screen.rect.centery),
-    #            function=Game.border_left)
-    #    cell_left.alpha_off = 0
-    #
-    #    cell_right = Cell(
-    #            Game, size=(60, Game.game_screen.rect.h),
-    #            position=(Game.game_screen.rect.right - 60/2,
-    #                      Game.game_screen.rect.centery),
-    #            function=Game.border_right)
-    #    cell_right.alpha_off = 0
-    #
-    #    cell_top = Cell(
-    #            Game, size=(Game.game_screen.rect.w, 60),
-    #            position=(Game.game_screen.rect.centerx,
-    #                      Game.game_screen.rect.top + 60/2),
-    #            function=Game.border_top)
-    #    cell_top.alpha_off = 0
-    #
-    #    cell_bottom = Cell(
-    #            Game, size=(Game.game_screen.rect.w, 60),
-    #            position=(Game.game_screen.rect.centerx,
-    #                      Game.game_screen.rect.bottom - 60/2
-    #                      - Game.lower_tool_bar.rect.h + 19),
-    #            function=Game.border_bottom)
-    #    cell_bottom.alpha_off = 0
-    #
-    #    borders_list = {
-    #        "left": cell_left,
-    #        "right": cell_right,
-    #        "top": cell_top,
-    #        "bottom": cell_bottom,
-    #    }
 
         size = 60
         cells_dict = dict()
@@ -62,7 +29,7 @@ class MapFunctions:
                     Game,
                     size=(size, size),
                     position=(x*size+size/2, y*size+size/2),
-                    function=Character.dest
+                    function=Game.character.dest
                 )
     #            current_cell.position_label = (x, y)  # useless
     #            text = str((x, y))
@@ -120,17 +87,13 @@ class MapFunctions:
 
         cells_visible = [
             Cell(Game, size=(40, 40), position=(500, 100),
-                function=Character.dest),
+                function=Game.character.dest),
             Cell(Game, size=(40, 40), position=(800, 200),
-                function=Character.dest),
+                function=Game.character.dest),
             Cell(Game, size=(40, 40), position=(1000, 300),
-                function=Character.dest),
+                function=Game.character.dest),
             Cell(Game, size=(40, 40), position=(100, 700),
                 function=nf.function_test),
-    #        borders_list["left"],
-    #        borders_list["top"],
-    #        borders_list["right"],
-    #        borders_list["bottom"]
             ]
         cells_visible.extend(borders_left)
         cells_visible.extend(borders_top)
@@ -148,7 +111,8 @@ class MapFunctions:
                 "sprites": sprites}
 
     #
-        background2 = BackGround('background2.png')
+        name=os.path.join(Game.data_dir,'background2.png')
+        background2 = BackGround(name)
         background2.rect.center = Game.game_screen.rect.center
 
         chimp2 = Chimp(Game)
@@ -159,7 +123,6 @@ class MapFunctions:
 
         map_n1_0 = {"background": background2,
                     "cells": cells_dict,
-    #                "cells_visible": [borders_list["right"]],
                     "cells_visible": borders_right,
                     "sprites": sprites}
 
@@ -168,19 +131,16 @@ class MapFunctions:
 
         map_1_0 = {"background": background2,
                 "cells": cells_dict,
-    #               "cells_visible": [borders_list["left"]],
                 "cells_visible": borders_left,
                 "sprites": sprites}
 
         map_0_1 = {"background": background2,
                 "cells": cells_dict,
-    #               "cells_visible": [borders_list["top"]],
                 "cells_visible": borders_top,
                 "sprites": sprites}
 
         map_0_n1 = {"background": background2,
                     "cells": cells_dict,
-    #                "cells_visible": [borders_list["bottom"]],
                     "cells_visible": borders_bottom,
                     "sprites": sprites}
 

@@ -9,8 +9,8 @@ import numpy as np
 class NeededFunctions:
     # functions to create our resources
 
-    def load_image(self,name, colorkey=None):
-        
+    def load_image(self, name, colorkey=None):
+
         """Load images to the pygame variables space"""
         fullname = name
 
@@ -34,8 +34,7 @@ class NeededFunctions:
 
         return image, image.get_rect()
 
-
-    def load_sound(self,name):
+    def load_sound(self, name):
         """Load sounds to the pygame variables space"""
         class NoneSound:
             def play(self):
@@ -44,7 +43,8 @@ class NeededFunctions:
         if not pg.mixer or not pg.mixer.get_init():
             return NoneSound()
 
-        fullname = os.path.join(self.data_dir, name)
+        fullname = name
+#        fullname = os.path.join(self.data_dir, name)
 
         try:
             sound = pg.mixer.Sound(fullname)
@@ -55,7 +55,7 @@ class NeededFunctions:
 
         return sound
 
-    def find_path(self,begin_cell, dest_cell, cell_size, all_cells=None):
+    def find_path(self, begin_cell, dest_cell, cell_size, all_cells=None):
         if all_cells is None:
             all_cells = range(560)
         road = list()

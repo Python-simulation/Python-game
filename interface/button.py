@@ -7,13 +7,12 @@ import numpy as np
 from interface.interface_functions import NeededFunctions
 
 
-
 class Button:
     """buttons"""
     def __init__(self, Game, function, name=""):
         self.Game = Game
         self.function = function
-        nf= NeededFunctions()
+        nf = NeededFunctions()
         name=os.path.join(Game.data_dir, name)
         self.image, self.rect = nf.load_image(name)
 

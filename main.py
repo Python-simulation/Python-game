@@ -81,7 +81,8 @@ class Game():
 #        background_color = (200, 200, 200)
 #        self.bg_image.fill(background_color)
 
-        self.lower_tool_bar = BackGround('lower_bar.png', -1)
+        name=os.path.join(self.data_dir,'lower_bar.png')
+        self.lower_tool_bar = BackGround(name, -1)
         self.lower_tool_bar.rect.midbottom = self.game_screen.rect.midbottom
 
 #        self.button_1 = Button(self, self.function_test,
@@ -114,23 +115,23 @@ class Game():
     #    punch_sound = load_sound("punch.wav")
         self.mouse = Mouse(self)
         self.character = Character(self)
-        
+
 
         self.all_maps = self.all_maps_fct(self)
 #        self.current_map_pos = (0, 0)
         self.change_map((0, 0))
-        
+
     #    self.chimp = Chimp(self)
-        
+
 #        self.character.rect.midbottom = self.cells[(1,1)].rect.center
-        
+
 
     def loader(self):
         self.data_dir=data_dir
         self.all_maps_fct=mp.all_maps
         self.function_test=nf.function_test
         self.function_test2=nf.function_test2
-        
+
 
 
     def change_map(self, current_map_pos):
@@ -143,9 +144,7 @@ class Game():
 
         self.allsprites = pg.sprite.RenderPlain((
                 self.sprites,
-                self.cells_visible,  # TODO: remove cell from it but keep borders
-#                self.cells[(1,1)],
-#                self.character,
+                self.cells_visible,
                 ))  # character always ontop of sprites : not good
 #        for cells in self.cells.values():
 #            self.allsprites.add(cells)
@@ -177,7 +176,6 @@ class Game():
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 # tried with allsprites but keep having errors
-                self.check_border = None  # TODO: ugly but necessary for now
                 if self.mouse.clicking(self.character):
                     self.character.clicked()
 #                    print("clicked character", self.character.rect)
@@ -188,12 +186,13 @@ class Game():
 #                            print("hit button", button)
                             break
                     else:
+                        self.check_border = None  # TODO: ugly but necessary for now
                         for sprites in self.sprites:
                             if self.mouse.clicking(sprites):
                                 sprites.clicked()
 #                                print("hit sprite", sprites)
                                 break
-                        else:
+                        else:  # TODO: ugly, check if need to unclicked cell
                             for cell_visible in self.cells_visible:
                                 if self.mouse.clicking(cell_visible):
                                     for cell_visible_bis in self.cells_visible:
@@ -215,7 +214,7 @@ class Game():
 #                                if self.mouse.clicking(self.game_screen):
 #                                    print("hit no cells")
 #                                    self.character.dest(self.mouse.rect.center)
-#                                    for cell in self.all_cells:
+#                                    for cell in self.cells_values():
 #                                        cell.unclicked()
 
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
@@ -309,30 +308,23 @@ class Game():
     def resize_app_screen(self):
         """Scale the game images to fit the app size respecting a
         constant ratio."""
-        if self.window_stretched:  # don't want this but keep in code in cell
-            # scale the game screen to the window size
-            self.resized_screen.image = pg.transform.scale(
-                self.game_screen.image, self.app_screen_rect.size)
-        else:  # allows to keep ratio
-            # compare aspect ratios
-            game_ratio = self.game_screen.rect.w / self.game_screen.rect.h
-            app_ratio = self.app_screen_rect.w / self.app_screen_rect.h
+        game_ratio = self.game_screen.rect.w / self.game_screen.rect.h
+        app_ratio = self.app_screen_rect.w / self.app_screen_rect.h
 
-            if game_ratio < app_ratio:
-                width = int(self.app_screen_rect.h / self.game_screen.rect.h
-                            * self.game_screen.rect.w)
-                height = self.app_screen_rect.h
-            else:
-                width = self.app_screen_rect.w
-                height = int(self.app_screen_rect.w / self.game_screen.rect.w
-                             * self.game_screen.rect.h)
-            self.resized_screen.image = pg.transform.scale(
-                self.game_screen.image, (width, height))
+        if game_ratio < app_ratio:
+            width = int(self.app_screen_rect.h / self.game_screen.rect.h
+                        * self.game_screen.rect.w)
+            height = self.app_screen_rect.h
+        else:
+            width = self.app_screen_rect.w
+            height = int(self.app_screen_rect.w / self.game_screen.rect.w
+                         * self.game_screen.rect.h)
+        self.resized_screen.image = pg.transform.scale(
+            self.game_screen.image, (width, height))
         # get the rect of the resized screen for blitting
         # and center it to the window screen
         self.resized_screen.rect = self.resized_screen.image.get_rect()
         self.resized_screen.rect.center = self.app_screen_rect.center
-#        return self.resized_screen.image, self.resized_screen.rect
 
     def reset_app_screen(self, size):
         self.app_screen = pg.display.set_mode(size, self.flags)
@@ -346,10 +338,10 @@ class Game():
             self.check_border = args
 #            print("left")
 
-        if self.character.rect.midbottom == args[0] and self.character.road == list():
+        if (self.character.rect.midbottom == args[0]
+                and self.character.road == list()):
             self.current_map_pos = (self.current_map_pos[0] - 1,
                                     self.current_map_pos[1])
-#            print(self.current_map_pos)
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
                 self.game_screen.rect.right - 60 - 60/2,
@@ -361,17 +353,15 @@ class Game():
             return False
 
     def border_right(self, *args):
-#        print("arg", args, "previous", self.check_border)
-        if args != self.check_border:  # cause problems but could be usefull
-#            print("ask dest")
+        if args != self.check_border:
             self.character.dest(*args)
             self.check_border = args
 #            print("right")
-#        print("test", self.character.rect.midbottom, args[0])
-        if self.character.rect.midbottom == args[0] and self.character.road == list():
+
+        if (self.character.rect.midbottom == args[0]
+                and self.character.road == list()):
             self.current_map_pos = (self.current_map_pos[0] + 1,
                                     self.current_map_pos[1])
-#            print(self.current_map_pos)
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
                 self.game_screen.rect.left + 60 + 60/2,
@@ -389,10 +379,10 @@ class Game():
             self.check_border = args
 #            print("top")
 
-        if self.character.rect.midbottom == args[0] and self.character.road == list():
+        if (self.character.rect.midbottom == args[0]
+                and self.character.road == list()):
             self.current_map_pos = (self.current_map_pos[0],
                                     self.current_map_pos[1] - 1)
-#            print(self.current_map_pos)
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
                     self.character.rect.midbottom[0],
@@ -410,10 +400,10 @@ class Game():
             self.check_border = args
 #            print("bottom")
 
-        if self.character.rect.midbottom == args[0] and self.character.road == list():
+        if (self.character.rect.midbottom == args[0]
+                and self.character.road == list()):
             self.current_map_pos = (self.current_map_pos[0],
                                     self.current_map_pos[1] + 1)
-#            print(self.current_map_pos)
             self.change_map(self.current_map_pos)
             self.character.rect.midbottom = (
                 self.character.rect.midbottom[0],
@@ -428,21 +418,27 @@ class Game():
         self.running = True
         self.dt = self.clock.tick()/1000  # avoid taking init time into account
         while self.running:
-            self.dt = self.clock.tick()/1000  # don't delay the game to 60 Hz
+            self.dt = self.clock.tick()/1000  # time from the last computation
             self.events()  # look for commands
             self.dt_accumulator += self.dt
             step = 0
             while self.dt_accumulator >= self.dt_fixed:
                 step += 1
-                if step > 20:
-                    self.dt_fixed *= 2
-                    print("warning, physics can be broken due to too much lagging")
+#                if step > 20:
+#                    self.dt_fixed *= 2
                 self.update(self.dt_fixed)  # update movement
 #                time.sleep(0.02)
 
                 self.dt -= self.dt_fixed
                 self.dt_accumulator -= self.dt_fixed
 
+            if step > 50:
+                print("game is broken due to too much lagging")
+#                print("saving data to temporary files")
+                self.running = False
+#            if step > 20:
+#                print("warning",
+#                      "physics can be broken due to too much lagging")
 #            print(step, self.dt_fixed)
 
             self.draw()  # draw everything after the movements

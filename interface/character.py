@@ -48,10 +48,10 @@ class Character(pg.sprite.Sprite):
                 and moving_to_pos != self.rect.midbottom):
 
             if self.road == list():
-                self.road = find_path(self.rect.midbottom,
+                self.road = nf.find_path(self.rect.midbottom,
                                       moving_to_pos, 60)  # , all_cells=np.zeros(570))
             else:
-                new_road = find_path(self.road[0], moving_to_pos, 60)
+                new_road = nf.find_path(self.road[0], moving_to_pos, 60)
                 self.road = [self.road[0]]
                 self.road.extend(new_road)
 
@@ -67,16 +67,30 @@ class Character(pg.sprite.Sprite):
         y_length = self.dest_coord[1] - self.rect.midbottom[1]
 
         theta = math.atan2(y_length, x_length)
-
 #        theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
         theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
         # Warning, need to change also theta in the find_path
+
+        self.speed_x = self.max_speed * math.cos(theta)
+        self.speed_y = self.max_speed * math.sin(theta)  # meter per second
+
+        self.move_x = self.speed_x * self.Game.ratio_pix_meter_x * dt
+        self.move_y = self.speed_y * self.Game.ratio_pix_meter_y * dt
+        # TODO: could add a memory for the movement left to add up to the
+        # next frame ? like the time has a accumulator.
+        # I tried but rise a issues with the number of cases than the character
+        # can go in advance. To be continue... (reminder: if go further,
+        # keep position, if same angle with while loop for each cases ?, if not
+        # teleport to case as it is)
+
+        newpos = self.rect.move((self.move_x, self.move_y))
+        self.rect = newpos
 
 #        print(theta, self.previous_theta)
         if theta != self.previous_theta and self.previous_theta is not None:
             self.rect.midbottom = self.dest_coord
 
-        if self.check_pos():
+        if self._check_pos():
             try:
 #                print("choose next")
                 self.road.pop(0)
@@ -88,16 +102,7 @@ class Character(pg.sprite.Sprite):
 
         self.previous_theta = theta
 
-        self.speed_x = self.max_speed * math.cos(theta)
-        self.speed_y = self.max_speed * math.sin(theta)  # meter per second
-
-        self.move_x = self.speed_x * self.Game.ratio_pix_meter_x * dt
-        self.move_y = self.speed_y * self.Game.ratio_pix_meter_y * dt
-
-        newpos = self.rect.move((self.move_x, self.move_y))
-        self.rect = newpos
-
-    def check_pos(self):
+    def _check_pos(self):
         acceptance = 0  # Obsolete when added self.previous_theta
         interv_low = (self.dest_coord[0] - acceptance,
                       self.dest_coord[1] - acceptance)
