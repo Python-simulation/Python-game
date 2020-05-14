@@ -145,9 +145,10 @@ class MapFunctions:
         cells_dict2 = dict(cells_dict)
         cells_dict2.pop((5, 5))
         name = os.path.join(Game.data_dir, 'tree.png')
-        tree = BackGround(name)
+        tree = BackGround(name, -1)
         tree.rect.midbottom = (5*size+size/2, 5*size+size/2)
         # borders_bottom.update({(5, 5):[tree]})
+        sprites = pg.sprite.RenderPlain()
         sprites.add(tree)
         map_0_n1 = {"background": background2,
                     "cells": cells_dict2,

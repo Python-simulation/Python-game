@@ -186,7 +186,7 @@ class Game():
                                 sprites.clicked()
 #                                print("hit sprite", sprites)
                                 break
-                        else:  # TODO: ugly, check if need to unclicked cell
+                        else:  # TODO: ugly, check if need to unclicked cell, also need to change to all_cells
                             for cell_visible in self.cells_visible.values():
                                 if self.mouse.clicking(cell_visible):
                                     for cell_visible_bis in self.cells_visible.values():
@@ -429,6 +429,7 @@ class Game():
 
             if step > 50:
                 print("game is broken due to too much lagging")
+                # BUG: when setting fullscreen, can break the game
 #                print("saving data to temporary files")
                 self.running = False
 #            if step > 20:

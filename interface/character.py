@@ -52,7 +52,7 @@ class Character(pg.sprite.Sprite):
                                          all_cells=self.Game.all_cells)
             else:
                 new_road = nf.find_path(self.road[0], moving_to_pos, 60,
-                                         all_cells=self.Game.all_cells)
+                                        all_cells=self.Game.all_cells)
                 self.road = [self.road[0]]
                 self.road.extend(new_road)
 

@@ -1,10 +1,15 @@
 import os
 import pygame as pg
 import numpy as np
+from .interface_functions import NeededFunctions
+from .display import display_info
+
+nf = NeededFunctions()
 
 
 class Cell(pg.sprite.Sprite):
     """simple cell to target movement"""
+
     def __init__(self, Game, size, position, function=None):
         self.Game = Game
         self.function = function
@@ -19,10 +24,12 @@ class Cell(pg.sprite.Sprite):
         self.image.fill(color)
         self.image.set_alpha(self.alpha_off)
         self.state = False
+        self.road = list()
+        self.show_path = True
 
-#        text = str("test")
-#        txt_position = self.Game.mouse.rect.center
-#        self.message = display_info(self.Game, text, txt_position)
+        # text = str("Display path")
+        # txt_position = self.Game.mouse.rect.center
+        # self.message = display_info(self.Game, text, txt_position)
 
     def update(self, dt):
         """by default, if function returns nothing, consider
@@ -34,14 +41,34 @@ class Cell(pg.sprite.Sprite):
                 self.state = False
 
     def hovered(self, *args):
-#        self.message.hovered()
-        self.image.set_alpha(self.alpha_on)
-        pass
+        if self.show_path:
+            self.image.set_alpha(self.alpha_on)
+            self.road = nf.find_path(self.Game.character.rect.midbottom,
+                                     self.rect.center, self.rect.w,
+                                     all_cells=self.Game.all_cells)
+            for next_cell in self.road:
+                unit_pos = (int((next_cell[0]-self.rect.w/2)/self.rect.w),
+                            int((next_cell[1]-self.rect.w/2)/self.rect.w))
+                try:
+                    self.Game.allsprites.add(self.Game.cells[unit_pos])
+                except KeyError:
+                    pass
+            # self.message.hovered()
+            pass
 
     def unhovered(self, *args):
-#        self.message.unhovered()
-        self.image.set_alpha(self.alpha_off)
-        pass
+        if self.show_path:
+            self.image.set_alpha(self.alpha_off)
+            for next_cell in self.road:
+                unit_pos = (int((next_cell[0]-self.rect.w/2)/self.rect.w),
+                            int((next_cell[1]-self.rect.w/2)/self.rect.w))
+                try:
+                    self.Game.allsprites.remove(self.Game.cells[unit_pos])
+                except KeyError:
+                    pass
+            self.road = list()
+            # self.message.unhovered()
+            pass
 
     def clicked(self, *args, **kwargs):
         self.args = args
