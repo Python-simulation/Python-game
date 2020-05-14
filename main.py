@@ -112,10 +112,7 @@ class Game():
         self.character = Character(self)
 
         self.all_maps = self.all_maps_fct(self)
-#        self.current_map_pos = (0, 0)
         self.change_map((0, 0))
-
-    #    self.chimp = Chimp(self)
 
 #        self.character.rect.midbottom = self.cells[(1,1)].rect.center
 
@@ -129,13 +126,19 @@ class Game():
         self.current_map_pos = current_map_pos
         self.current_map = self.all_maps[current_map_pos]
         self.background_screen = self.current_map["background"]
-        self.cells = self.current_map["cells"]
-        self.cells_visible = self.current_map["cells_visible"]
+        self.cells = self.current_map["cells"]  # dict
+        self.cells_visible = self.current_map["borders"]  # dict
+        self.all_cells = dict(self.cells)
+        self.all_cells.update(self.cells_visible)
         self.sprites = self.current_map["sprites"]
 
         self.allsprites = pg.sprite.RenderPlain((
                 self.sprites,
-                self.cells_visible,
+                self.cells_visible.values(), #TODO pas un iterable
+                # self.cells[(5,6)],
+                # self.cells[(5,4)],
+                # self.cells[(4,5)],
+                # self.cells[(6,5)],
                 ))  # character always ontop of sprites : not good
 #        for cells in self.cells.values():
 #            self.allsprites.add(cells)
@@ -184,9 +187,9 @@ class Game():
 #                                print("hit sprite", sprites)
                                 break
                         else:  # TODO: ugly, check if need to unclicked cell
-                            for cell_visible in self.cells_visible:
+                            for cell_visible in self.cells_visible.values():
                                 if self.mouse.clicking(cell_visible):
-                                    for cell_visible_bis in self.cells_visible:
+                                    for cell_visible_bis in self.cells_visible.values():
                                         cell_visible_bis.unclicked()
                                     cell_visible.clicked(cell_visible.rect.center)
                                     print("hit cell", cell_visible.rect)
@@ -194,7 +197,7 @@ class Game():
                             else:
                                 for cell in self.cells.values():
                                     if self.mouse.clicking(cell):
-                                        for cell_visible in self.cells_visible:
+                                        for cell_visible in self.cells_visible.values():
                                             cell_visible.unclicked()
                                         for cell_bis in self.cells.values():
                                             cell_bis.unclicked()
@@ -217,7 +220,7 @@ class Game():
                     button.unhovered()
                 for sprites in self.sprites:
                     sprites.unhovered()
-                for cell_visible in self.cells_visible:
+                for cell_visible in self.cells_visible.values():
                     cell_visible.unhovered()
                 for cell in self.cells.values():
                     cell.unhovered()
@@ -244,7 +247,7 @@ class Game():
 #                                    print("hover sprite", sprites)
                                     break
                             else:
-                                for cell_visible in self.cells_visible:
+                                for cell_visible in self.cells_visible.values():
                                     if self.mouse.hovering(cell_visible):
                                         cell_visible.hovered()
                                         break
@@ -415,7 +418,8 @@ class Game():
             step = 0
             while self.dt_accumulator >= self.dt_fixed:
                 step += 1
-#                if step > 20:
+                if step > 50:
+                    break
 #                    self.dt_fixed *= 2
                 self.update(self.dt_fixed)  # update movement
 #                time.sleep(0.02)

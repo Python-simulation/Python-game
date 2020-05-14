@@ -9,7 +9,6 @@ class NeededFunctions:
     # functions to create our resources
 
     def load_image(self, name, colorkey=None):
-
         """Load images to the pygame variables space"""
         fullname = name
 
@@ -55,6 +54,7 @@ class NeededFunctions:
         return sound
 
     def find_path(self, begin_cell, dest_cell, cell_size, all_cells=None):
+        # print(all_cells)
         if all_cells is None:
             all_cells = range(560)
         road = list()
@@ -103,6 +103,14 @@ class NeededFunctions:
                 print("error with angle", theta, theta*180/np.pi)
     #        next_cell = (previous_cell[0]+(math.cos(theta)),  # good looking but
     #                     previous_cell[1]+(math.sin(theta)))  # don't work
+
+            unit_pos = (int((next_cell[0]-cell_size/2)/cell_size),
+                        int((next_cell[1]-cell_size/2)/cell_size))
+            try:
+                all_cells[unit_pos]
+            except KeyError:
+                # print("can't walk here, stop before it")
+                break
 
             road.append(next_cell)
             previous_cell = next_cell

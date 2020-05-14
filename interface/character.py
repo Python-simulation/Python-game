@@ -15,7 +15,7 @@ class Character(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
         self.area = self.Game.game_screen.rect.copy()  # walkable space
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
-        name=os.path.join(Game.data_dir, "character.png")
+        name = os.path.join(Game.data_dir, "character.png")
         self.image, self.rect = nf.load_image(name, colorkey=-1)
 #        self.image = pg.transform.scale(
 #            self.image,
@@ -48,10 +48,11 @@ class Character(pg.sprite.Sprite):
 
             if self.road == list():
                 self.road = nf.find_path(self.rect.midbottom,
-                                         moving_to_pos, 60
-                                         )  # , all_cells=np.zeros(570))
+                                         moving_to_pos, 60,
+                                         all_cells=self.Game.all_cells)
             else:
-                new_road = nf.find_path(self.road[0], moving_to_pos, 60)
+                new_road = nf.find_path(self.road[0], moving_to_pos, 60,
+                                         all_cells=self.Game.all_cells)
                 self.road = [self.road[0]]
                 self.road.extend(new_road)
 
@@ -92,10 +93,10 @@ class Character(pg.sprite.Sprite):
 
         if self._check_pos():
             try:
-#                print("choose next")
                 self.road.pop(0)
                 self.dest_coord = self.road[0]
                 self.moving = True
+#                print("choose next")
                 return
             except IndexError:
                 return

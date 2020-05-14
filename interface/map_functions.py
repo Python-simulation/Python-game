@@ -36,7 +36,7 @@ class MapFunctions:
     #            current_cell.message = display_info(Game, text, txt_position)
                 cells_dict[(x, y)] = current_cell
 
-        borders_left = list()
+        borders_left = dict()
         x = 0
         for y in range(1-1, 18-2-1+1):  # -2 because not 16/9 :'( damn lowerbar
             current_cell = Cell(
@@ -46,9 +46,10 @@ class MapFunctions:
                 function=Game.border_left
             )
             current_cell.alpha_off = 0
-            borders_left.append(current_cell)
+            borders_left[(x, y)] = current_cell
+            # borders_left.append(current_cell)
 
-        borders_top = list()
+        borders_top = dict()
         y = 0  # -2 because not 16/9 :'( damn lowerbar
         for x in range(1, 32-1):
             current_cell = Cell(
@@ -58,9 +59,10 @@ class MapFunctions:
                 function=Game.border_top
             )
             current_cell.alpha_off = 0
-            borders_top.append(current_cell)
+            borders_top[(x, y)] = current_cell
+            # borders_top.append(current_cell)
 
-        borders_right = list()
+        borders_right = dict()
         x = 32-1
         for y in range(1-1, 18-2-1+1):  # -2 because not 16/9 :'( damn lowerbar
             current_cell = Cell(
@@ -70,9 +72,10 @@ class MapFunctions:
                 function=Game.border_right
             )
             current_cell.alpha_off = 0
-            borders_right.append(current_cell)
+            borders_right[(x, y)] = current_cell
+            # borders_right.append(current_cell)
 
-        borders_bottom = list()
+        borders_bottom = dict()
         y = 18-2-1  # -2 because not 16/9 :'( damn lowerbar
         for x in range(1, 32-1):
             current_cell = Cell(
@@ -82,22 +85,23 @@ class MapFunctions:
                 function=Game.border_bottom
             )
             current_cell.alpha_off = 0
-            borders_bottom.append(current_cell)
+            borders_bottom[(x, y)] = current_cell
+            # borders_bottom.append(current_cell)
 
-        cells_visible = [
-            Cell(Game, size=(40, 40), position=(500, 100),
-                 function=Game.character.dest),
-            Cell(Game, size=(40, 40), position=(800, 200),
-                 function=Game.character.dest),
-            Cell(Game, size=(40, 40), position=(1000, 300),
-                 function=Game.character.dest),
-            Cell(Game, size=(40, 40), position=(100, 700),
-                 function=nf.function_test),
-            ]
-        cells_visible.extend(borders_left)
-        cells_visible.extend(borders_top)
-        cells_visible.extend(borders_right)
-        cells_visible.extend(borders_bottom)
+        borders = dict()
+        # Cell(Game, size=(40, 40), position=(500, 100),
+        #      function=Game.character.dest),
+        # Cell(Game, size=(40, 40), position=(800, 200),
+        #      function=Game.character.dest),
+        # Cell(Game, size=(40, 40), position=(1000, 300),
+        #      function=Game.character.dest),
+        # Cell(Game, size=(40, 40), position=(100, 700),
+        #      function=nf.function_test),
+        # ]
+        borders.update(borders_left)
+        borders.update(borders_top)
+        borders.update(borders_right)
+        borders.update(borders_bottom)
 
         chimp = Chimp(Game)
         sprites = pg.sprite.RenderPlain((
@@ -106,7 +110,7 @@ class MapFunctions:
 
         map_0_0 = {"background": background,
                    "cells": cells_dict,
-                   "cells_visible": cells_visible,
+                   "borders": borders,
                    "sprites": sprites}
 
     #
@@ -122,7 +126,7 @@ class MapFunctions:
 
         map_n1_0 = {"background": background2,
                     "cells": cells_dict,
-                    "cells_visible": borders_right,
+                    "borders": borders_right,
                     "sprites": sprites}
 
     #
@@ -130,17 +134,24 @@ class MapFunctions:
 
         map_1_0 = {"background": background2,
                    "cells": cells_dict,
-                   "cells_visible": borders_left,
+                   "borders": borders_left,
                    "sprites": sprites}
 
         map_0_1 = {"background": background2,
                    "cells": cells_dict,
-                   "cells_visible": borders_top,
+                   "borders": borders_top,
                    "sprites": sprites}
 
+        cells_dict2 = dict(cells_dict)
+        cells_dict2.pop((5, 5))
+        name = os.path.join(Game.data_dir, 'tree.png')
+        tree = BackGround(name)
+        tree.rect.midbottom = (5*size+size/2, 5*size+size/2)
+        # borders_bottom.update({(5, 5):[tree]})
+        sprites.add(tree)
         map_0_n1 = {"background": background2,
-                    "cells": cells_dict,
-                    "cells_visible": borders_bottom,
+                    "cells": cells_dict2,
+                    "borders": borders_bottom,
                     "sprites": sprites}
 
         all_maps = {
