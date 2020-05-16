@@ -4,6 +4,8 @@ import math
 import numpy as np
 from .interface_functions import NeededFunctions
 from .display import display_info
+from .animation import image_animate
+
 nf = NeededFunctions()
 
 
@@ -16,7 +18,10 @@ class Character(pg.sprite.Sprite):
         self.area = self.Game.game_screen.rect.copy()  # walkable space
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
         name = os.path.join(Game.data_dir, "character.png")
-        self.image, self.rect = nf.load_image(name, colorkey=-1)
+        # self.image, self.rect = nf.load_image(name, colorkey=-1)
+        self.animation = image_animate(name, -1, frames=8)
+        self.image = self.animation[0]
+        self.rect = self.image.get_rect()
 #        self.image = pg.transform.scale(
 #            self.image,
 #            (self.image.get_rect().w//2, self.image.get_rect().h//2))
@@ -27,6 +32,7 @@ class Character(pg.sprite.Sprite):
         self.road = list()
         self.moving = False
         self.max_speed = 10  # 2.5  # can't go higher than 60 (cell size)
+        # INFO: Dofus goes at 8.3 m/s (30km/h)
         self.previous_theta = None
 
         text = "I'm you !"
@@ -84,6 +90,13 @@ class Character(pg.sprite.Sprite):
         # keep position, if same angle with while loop for each cases ?, if not
         # teleport to case as it is)
 
+        self.move_animation()
+
+        old_rect = self.rect.copy()
+        self.rect = self.image.get_rect()
+        self.rect = old_rect.copy()
+        del old_rect
+
         newpos = self.rect.move((self.move_x, self.move_y))
         self.rect = newpos
 
@@ -120,6 +133,25 @@ class Character(pg.sprite.Sprite):
             return True
         else:
             return False
+
+    def move_animation(self):
+        if self.previous_theta == np.pi/2:
+            self.image = self.animation[0]
+        elif self.previous_theta == 0:
+            self.image = self.animation[1]
+        elif self.previous_theta == -np.pi/2:
+            self.image = self.animation[2]
+        elif self.previous_theta == np.pi or self.previous_theta == -np.pi:
+            self.image = self.animation[3]
+
+        elif self.previous_theta == np.pi/4:
+            self.image = self.animation[4]
+        elif self.previous_theta == -np.pi/4:
+            self.image = self.animation[5]
+        elif self.previous_theta == -3*np.pi/4:
+            self.image = self.animation[6]
+        elif self.previous_theta == 3*np.pi/4:
+            self.image = self.animation[7]
 
     def hovered(self):
         self.message.text = "I'm you !"
