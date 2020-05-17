@@ -1,17 +1,17 @@
 import os
 import pygame as pg
 import numpy as np
-from interface.interface_functions import NeededFunctions
+from .interface_functions import NeededFunctions
 
 
 class Button:
     """buttons"""
+
     def __init__(self, Game, function, name=""):
         self.Game = Game
         self.function = function
-        nf = NeededFunctions()
-        name=os.path.join(Game.data_dir, name)
-        self.image, self.rect = nf.load_image(name)
+        self.nf = NeededFunctions()
+        self.image, self.rect = self.nf.load_image(name)
 
         self.position = self.rect  # same id until clicked occured, then copy
         self.image_original = self.image
@@ -24,6 +24,18 @@ class Button:
         self.highligh.fill((255, 255, 255))
         self.highligh.set_alpha(10)
 
+    def add_image(self, *args, center=None):
+
+        image, rect = self.nf.load_image(*args)
+        if center is None:
+            imagepos = image.get_rect(centery=self.rect.h/2,
+                                      centerx=self.rect.w/2)
+        else:
+            imagepos = image.get_rect().center
+
+        self.image.blit(image, imagepos)
+        self.image_original = self.image
+
     def add_text(self, text, center=None):
         font = pg.font.Font(None, 30)
         msg = font.render(text, 1, (10, 10, 10))
@@ -32,7 +44,7 @@ class Button:
             textpos = msg.get_rect(centery=self.rect.h/2,
                                    centerx=self.rect.w/2)
         else:
-            textpos = msg.get_rect().center = center
+            textpos = msg.get_rect().center
 
         self.image.blit(msg, textpos)
         self.image_original = self.image
@@ -55,8 +67,12 @@ class Button:
             self.change_size()
 
     def unclicked(self):
+        was_clicked = True if self.state_clicked else False
         self.state_clicked = False
         self.set_back_size()
+
+        if was_clicked:
+            self.hovered()
 
         if self.Game.mouse.hovering(self):
             self.state = True
