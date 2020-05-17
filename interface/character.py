@@ -20,7 +20,7 @@ class Character(pg.sprite.Sprite):
         name = os.path.join(Game.data_dir, "character.png")
         # self.image, self.rect = nf.load_image(name, colorkey=-1)
         self.cardinal = 8  # mvt alloyed (8 means cros+diag, 4 means cross)
-        self.frames = 1  # number of frame for an animation
+        self.frames = 6  # number of frame for an animation
         self.animation = image_animate(name, -1,
                                        frames=self.cardinal*self.frames)
         self.image = self.animation[0]
@@ -39,6 +39,9 @@ class Character(pg.sprite.Sprite):
         # 1,2,3,4,5,6,10,12,15,20,30,60
         # INFO: Dofus goes at 8.3 m/s (30km/h)
         self.previous_theta = None
+
+        self.animation_time = 0
+        self.step = 0
 
         text = "I'm you !"
         txt_position = self.Game.mouse.rect.center
@@ -83,13 +86,13 @@ class Character(pg.sprite.Sprite):
         theta = math.atan2(y_length, x_length)
 
         if self.cardinal == 4:
-            theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
+            theta = np.pi/2 * (theta // (np.pi/2))
         elif self.cardinal == 8:
-            theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
+            theta = np.pi/4 * (theta // (np.pi/4))
         else:
-            raise ValueError("error with alloyed direction, cardinal="+ \
-                str(cardinal)+". Alloyed values: 4 and 8")
-
+            raise ValueError("error with alloyed direction, cardinal="
+                             + str(self.cardinal)
+                             + ". Alloyed values: 4 and 8")
 
         self.speed_x = self.max_speed * math.cos(theta)
         self.speed_y = self.max_speed * math.sin(theta)  # meter per second
@@ -103,7 +106,9 @@ class Character(pg.sprite.Sprite):
         # keep position, if same angle with while loop for each cases ?, if not
         # teleport to case as it is)
 
-        self._move_animation()
+        # frames = cell_size/(self.max_speed*self.Game.ratio_pix_meter_x*dt)
+        # time = frames * dt
+        self._move_animation(0.1, self.frames, dt)
 
         old_rect = self.rect.copy()
         self.rect = self.image.get_rect()
@@ -118,6 +123,13 @@ class Character(pg.sprite.Sprite):
             self.rect.midbottom = self.dest_coord
 
         if self._check_pos():
+            self.speed_x = 0
+            self.speed_y = 0
+            self.rect.midbottom = self.dest_coord
+            self.moving = False
+            previous_theta_buffer = self.previous_theta
+            self.previous_theta = None
+
             try:
                 self.road.pop(0)
                 self.dest_coord = self.road[0]
@@ -125,6 +137,9 @@ class Character(pg.sprite.Sprite):
 #                print("choose next")
                 return
             except IndexError:
+                self.previous_theta = previous_theta_buffer
+                self._move_animation(0.1, self.frames, 0)  # reset anim
+                self.previous_theta = None
                 return
 
         self.previous_theta = theta
@@ -138,33 +153,44 @@ class Character(pg.sprite.Sprite):
 
         if (interv_low[0] <= self.rect.midbottom[0] <= interv_high[0]
                 and interv_low[1] <= self.rect.midbottom[1] <= interv_high[1]):
-            self.speed_x = 0
-            self.speed_y = 0
-            self.rect.midbottom = self.dest_coord
-            self.moving = False
-            self.previous_theta = None
             return True
         else:
             return False
 
-    def _move_animation(self):
+    def _move_animation(self, anim_time, frames, dt):
+        time_frame = anim_time / frames
+
+        if dt == 0:
+            self.animation_time = 0
+            self.step = 0
+        else:
+            self.animation_time += dt
+            while self.animation_time > self.step*time_frame:
+                self.step += 1
+                if self.step >= frames:
+                    self.step = 0
+                    self.animation_time = 0
+
         if self.previous_theta == np.pi/2:
-            self.image = self.animation[0]
+            self.image = self.animation[0+self.step]
         elif self.previous_theta == 0:
-            self.image = self.animation[1]
+            self.image = self.animation[frames+self.step]
         elif self.previous_theta == -np.pi/2:
-            self.image = self.animation[2]
+            self.image = self.animation[2*frames+self.step]
         elif self.previous_theta == np.pi or self.previous_theta == -np.pi:
-            self.image = self.animation[3]
+            self.image = self.animation[3*frames+self.step]
 
         elif self.previous_theta == np.pi/4:
-            self.image = self.animation[4]
+            self.image = self.animation[4*frames+self.step]
         elif self.previous_theta == -np.pi/4:
-            self.image = self.animation[5]
+            self.image = self.animation[5*frames+self.step]
         elif self.previous_theta == -3*np.pi/4:
-            self.image = self.animation[6]
+            self.image = self.animation[6*frames+self.step]
         elif self.previous_theta == 3*np.pi/4:
-            self.image = self.animation[7]
+            self.image = self.animation[7*frames+self.step]  # BUG: erreur ici
+        # else:
+        #     print("is None :", self.previous_theta,
+        #           "but still moving:", self.moving)
 
     def hovered(self):
         self.message.text = "I'm you !"
