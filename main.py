@@ -134,7 +134,7 @@ class Game():
 
         self.allsprites = pg.sprite.RenderPlain((
                 self.sprites,
-                self.cells_visible.values(), #TODO pas un iterable
+                self.cells_visible.values(),
                 # self.cells[(5,6)],
                 # self.cells[(5,4)],
                 # self.cells[(4,5)],
@@ -186,30 +186,20 @@ class Game():
                                 sprites.clicked()
 #                                print("hit sprite", sprites)
                                 break
-                        else:  # TODO: ugly, check if need to unclicked cell, also need to change to all_cells
-                            for cell_visible in self.cells_visible.values():
-                                if self.mouse.clicking(cell_visible):
-                                    for cell_visible_bis in self.cells_visible.values():
+                        else:
+                            for cell in self.all_cells.values():
+                                if self.mouse.clicking(cell):
+                                    for cell_visible_bis in self.all_cells.values():
                                         cell_visible_bis.unclicked()
-                                    cell_visible.clicked(cell_visible.rect.center)
-                                    print("hit cell", cell_visible.rect)
+                                    cell.clicked(cell.rect.center)
+                                    # print("hit cell", cell.rect)
                                     break
-                            else:
-                                for cell in self.cells.values():
-                                    if self.mouse.clicking(cell):
-                                        for cell_visible in self.cells_visible.values():
-                                            cell_visible.unclicked()
-                                        for cell_bis in self.cells.values():
-                                            cell_bis.unclicked()
-                                        cell.clicked(cell.rect.center)
-    #                                    print("hit cell", cell.rect)
-                                        break
-#                            else:
-#                                if self.mouse.clicking(self.game_screen):
-#                                    print("hit no cells")
-#                                    self.character.dest(self.mouse.rect.center)
-#                                    for cell in self.cells_values():
-#                                        cell.unclicked()
+                            # else:
+                            #     if self.mouse.clicking(self.game_screen):
+                            #         print("hit no cells")
+                            #         self.character.dest(self.mouse.rect.center)
+                            #         for cell in self.all_cells.values():
+                            #             cell.unclicked()
 
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 self.mouse.unclicked()
@@ -220,42 +210,35 @@ class Game():
                     button.unhovered()
                 for sprites in self.sprites:
                     sprites.unhovered()
-                for cell_visible in self.cells_visible.values():
-                    cell_visible.unhovered()
-                for cell in self.cells.values():
+                for cell in self.all_cells.values():
                     cell.unhovered()
 
                 if self.mouse.hovering(self.character):
                     self.character.hovered()
 #                    print("hover character", self.character.rect)
-                else:
+                # else:  # Not usefull, I think
+#                     for button in self.all_buttons:
+#                         if button.state_clicked:
+#                             button.hovered()
+# #                            print("special hover button", button)
+#                             break
+                else:  # OPTIMIZE: tried without succes to do one for loop
                     for button in self.all_buttons:
-                        if button.state_clicked:
+                        if self.mouse.hovering(button):
                             button.hovered()
-#                            print("special hover button", button)
+#                                print("hover button", button)
                             break
                     else:
-                        for button in self.all_buttons:
-                            if self.mouse.hovering(button):
-                                button.hovered()
-#                                print("hover button", button)
+                        for sprites in self.sprites:
+                            if self.mouse.hovering(sprites):
+                                sprites.hovered()
+#                                    print("hover sprite", sprites)
                                 break
                         else:
-                            for sprites in self.sprites:
-                                if self.mouse.hovering(sprites):
-                                    sprites.hovered()
-#                                    print("hover sprite", sprites)
+                            for cell in self.all_cells.values():
+                                if self.mouse.hovering(cell):
+                                    cell.hovered()
                                     break
-                            else:
-                                for cell_visible in self.cells_visible.values():
-                                    if self.mouse.hovering(cell_visible):
-                                        cell_visible.hovered()
-                                        break
-                                else:
-                                    for cell in self.cells.values():
-                                        if self.mouse.hovering(cell):
-                                            cell.hovered()
-                                            break
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside

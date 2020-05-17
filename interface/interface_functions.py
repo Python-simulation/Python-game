@@ -53,7 +53,8 @@ class NeededFunctions:
 
         return sound
 
-    def find_path(self, begin_cell, dest_cell, cell_size, all_cells=None):
+    def find_path(self, begin_cell, dest_cell, cell_size,
+                  all_cells=None, cardinal=4):
         # print(all_cells)
         if all_cells is None:
             all_cells = range(560)
@@ -72,8 +73,14 @@ class NeededFunctions:
             x_length = dest_cell[0] - previous_cell[0]
             y_length = dest_cell[1] - previous_cell[1]
             theta = math.atan2(y_length, x_length)
-    #        theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
-            theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
+
+            if cardinal == 4:
+                theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
+            elif cardinal == 8:
+                theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
+            else:
+                raise ValueError("error with alloyed direction, cardinal="+ \
+                    str(cardinal)+". Alloyed values: 4 and 8")
 
             if theta == 0:  # ugly but work
                 next_cell = (previous_cell[0]+cell_size,

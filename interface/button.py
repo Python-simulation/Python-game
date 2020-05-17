@@ -18,6 +18,7 @@ class Button:
 
         self.state = False
         self.state_clicked = False
+        self.is_hovered = False
 
         self.highligh = pg.Surface(self.rect.size)
         self.highligh.fill((255, 255, 255))
@@ -37,37 +38,43 @@ class Button:
         self.image_original = self.image
 
     def hovered(self):
+        self.is_hovered = True
         self.image_original = self.image.copy()
         self.image.blit(self.highligh, self.highligh.get_rect())
-        pass
+
+        if self.state_clicked:
+            self.change_size()
 
     def unhovered(self):
-        self.image = self.image_original
-#        self.image_original = self.image  # same id from now
-        pass
+        self.is_hovered = False
+        self.set_back_size()
 
     def clicked(self):
         if self.Game.mouse.state_clicking:
             self.state_clicked = True
-            self.position = self.rect.copy()
-#            self.image_original = self.image.copy()
-#            self.rect.move_ip(1, 1)
-            offset = 6
-            self.image = pg.transform.scale(
-                self.image, (self.rect.w - offset, self.rect.h - offset))
-            self.rect.move_ip(offset/2, offset/2)
-#            self.state = not self.state  " good for memory button
+            self.change_size()
 
     def unclicked(self):
         self.state_clicked = False
+        self.set_back_size()
+
+        if self.Game.mouse.hovering(self):
+            self.state = True
+            self.function(self.state)
+            # TODO: could be nice to have args and kwargs here. But why ?
+        else:
+            self.state = False
+
+    def change_size(self):
+        self.position = self.rect.copy()
+        offset = 6
+        self.image = pg.transform.scale(
+            self.image, (self.rect.w - offset, self.rect.h - offset))
+        self.rect.move_ip(offset/2, offset/2)
+
+    def set_back_size(self):
         self.image = self.image_original
         self.rect = self.position
 
         self.position = self.rect  # same id from now
         self.image_original = self.image  # same id from now
-        if self.Game.mouse.hovering(self):
-            self.state = True
-            self.function(self.state)
-            # TODO: could be nice to have args and kwargs here
-        else:
-            self.state = False

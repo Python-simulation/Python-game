@@ -45,7 +45,8 @@ class Cell(pg.sprite.Sprite):
             self.image.set_alpha(self.alpha_on)
             self.road = nf.find_path(self.Game.character.rect.midbottom,
                                      self.rect.center, self.rect.w,
-                                     all_cells=self.Game.all_cells)
+                                     all_cells=self.Game.all_cells,
+                                     cardinal=self.Game.character.cardinal)  # only works for the player
             for next_cell in self.road:
                 unit_pos = (int((next_cell[0]-self.rect.w/2)/self.rect.w),
                             int((next_cell[1]-self.rect.w/2)/self.rect.w))

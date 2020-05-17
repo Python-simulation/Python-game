@@ -19,7 +19,10 @@ class Character(pg.sprite.Sprite):
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
         name = os.path.join(Game.data_dir, "character.png")
         # self.image, self.rect = nf.load_image(name, colorkey=-1)
-        self.animation = image_animate(name, -1, frames=8)
+        self.cardinal = 8  # mvt alloyed (8 means cros+diag, 4 means cross)
+        self.frames = 1  # number of frame for an animation
+        self.animation = image_animate(name, -1,
+                                       frames=self.cardinal*self.frames)
         self.image = self.animation[0]
         self.rect = self.image.get_rect()
 #        self.image = pg.transform.scale(
@@ -31,7 +34,9 @@ class Character(pg.sprite.Sprite):
         self.dest_coord = self.rect.midbottom
         self.road = list()
         self.moving = False
-        self.max_speed = 10  # 2.5  # can't go higher than 60 (cell size)
+        self.max_speed = 10  # m/s, can't go higher than 60 (1 frame per cell)
+        # and best to have multiple of 60 (cell size):
+        # 1,2,3,4,5,6,10,12,15,20,30,60
         # INFO: Dofus goes at 8.3 m/s (30km/h)
         self.previous_theta = None
 
@@ -55,10 +60,12 @@ class Character(pg.sprite.Sprite):
             if self.road == list():
                 self.road = nf.find_path(self.rect.midbottom,
                                          moving_to_pos, 60,
-                                         all_cells=self.Game.all_cells)
+                                         all_cells=self.Game.all_cells,
+                                         cardinal=self.cardinal)
             else:
                 new_road = nf.find_path(self.road[0], moving_to_pos, 60,
-                                        all_cells=self.Game.all_cells)
+                                        all_cells=self.Game.all_cells,
+                                        cardinal=self.cardinal)
                 self.road = [self.road[0]]
                 self.road.extend(new_road)
 
@@ -74,9 +81,15 @@ class Character(pg.sprite.Sprite):
         y_length = self.dest_coord[1] - self.rect.midbottom[1]
 
         theta = math.atan2(y_length, x_length)
-#        theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
-        theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
-        # Warning, need to change also theta in the find_path
+
+        if self.cardinal == 4:
+            theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
+        elif self.cardinal == 8:
+            theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
+        else:
+            raise ValueError("error with alloyed direction, cardinal="+ \
+                str(cardinal)+". Alloyed values: 4 and 8")
+
 
         self.speed_x = self.max_speed * math.cos(theta)
         self.speed_y = self.max_speed * math.sin(theta)  # meter per second
@@ -90,7 +103,7 @@ class Character(pg.sprite.Sprite):
         # keep position, if same angle with while loop for each cases ?, if not
         # teleport to case as it is)
 
-        self.move_animation()
+        self._move_animation()
 
         old_rect = self.rect.copy()
         self.rect = self.image.get_rect()
@@ -134,7 +147,7 @@ class Character(pg.sprite.Sprite):
         else:
             return False
 
-    def move_animation(self):
+    def _move_animation(self):
         if self.previous_theta == np.pi/2:
             self.image = self.animation[0]
         elif self.previous_theta == 0:
