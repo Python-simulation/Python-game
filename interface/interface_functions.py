@@ -42,7 +42,6 @@ class NeededFunctions:
             return NoneSound()
 
         fullname = name
-#        fullname = os.path.join(self.data_dir, name)
 
         try:
             sound = pg.mixer.Sound(fullname)
@@ -79,8 +78,8 @@ class NeededFunctions:
             elif cardinal == 8:
                 theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
             else:
-                raise ValueError("error with alloyed direction, cardinal="+ \
-                    str(cardinal)+". Alloyed values: 4 and 8")
+                raise ValueError("error with alloyed direction, cardinal="
+                                 + str(cardinal) + ". Alloyed values: 4 and 8")
 
             if theta == 0:  # ugly but work
                 next_cell = (previous_cell[0]+cell_size,

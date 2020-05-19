@@ -7,6 +7,7 @@ follow along in the tutorial.
 
 # Import Modules
 import os
+import time
 import pygame as pg
 
 from interface.mouse import Mouse
@@ -38,20 +39,26 @@ class Game():
        a loop until the function returns."""
 
     def __init__(self, WINDOW_W=1920, WINDOW_H=1080):
+        pg.init()
+        self.loader()
+        name = os.path.join(self.data_dir, "logo32x32.png")
+        logo = pg.image.load(name)
+        pg.display.set_icon(logo)
+
         GAME_SCREEN_W = 1920
         GAME_SCREEN_H = 1080
 
         self.ratio_pix_meter_x = GAME_SCREEN_W/32  # pixel/meter
         self.ratio_pix_meter_y = GAME_SCREEN_H/18  # pixel/meter
 
-        pg.init()
+
         self.check_border = None
         self.flags = (
                 pg.RESIZABLE |
                 pg.DOUBLEBUF
                 )
 
-        self.loader()
+
 
         # application window surface
         self.app_screen = pg.display.set_mode((WINDOW_W, WINDOW_H), self.flags)
@@ -81,6 +88,7 @@ class Game():
         self.dt_fixed = 1 / 60  # fps fixed for all computations (!= seen fps)
         self.dt_accumulator = 0
         self.dt = 0
+        self.time_warning = 0
         # whiff_sound = load_sound("whiff.wav")
         # punch_sound = load_sound("punch.wav")
         self.mouse = Mouse(self)
@@ -90,6 +98,9 @@ class Game():
         self.change_map((0, 0))
 
         # self.character.rect.midbottom = self.cells[(1,1)].rect.center
+
+        self.game_screen.image.blit(self.background_screen.image,
+                                    self.background_screen.rect)
 
     def loader(self):
         self.data_dir = data_dir
@@ -220,10 +231,47 @@ class Game():
             cell.update(dt)
         self.mouse.update(dt)
 
+    def rect_coverage(self, *args):
+        """args are rect"""
+        rect_list = list()
+
+        for arg in args:
+            # print(type(arg), type(pg.sprite.Group()))
+            if type(arg) is type(list()):
+                # print("liste")
+                for sprite in arg:
+                    rect_list.append(sprite.rect.copy())
+            elif type(arg) is type(dict()):
+                # print("dict")
+                for sprite in arg.values():
+                    rect_list.append(sprite.rect.copy())
+            elif type(arg) is type(pg.sprite.Group()):
+                # print("sprite group")
+                for sprite in arg:
+                    rect_list.append(sprite.rect.copy())
+                # rect_list.extend(arg)
+            else:
+                # print("exist-il ce cas là ?")
+                # rect_list.append(arg)
+                for sprite in arg:
+                    rect_list.append(sprite.rect.copy())
+        # print(rect_list)
+        return rect_list
+
     def draw(self):
         """Draw Everything"""
         self.game_screen.image.blit(self.background_screen.image,
                                     self.background_screen.rect)
+        # for rect in self.old_rects:
+        #     self.game_screen.image.blit(self.background_screen.image,
+        #                                 rect, rect)
+
+        # self.new_rects = self.rect_coverage(
+        #     self.allsprites)#, self.all_buttons)
+
+        # for rect in self.new_rects:
+        #     self.game_screen.image.blit(self.background_screen.image,
+        #                                 rect, rect)
 
         self.allsprites.draw(self.game_screen.image)  # draw moving items
 
@@ -368,26 +416,31 @@ class Game():
             self.events()  # look for commands
             self.dt_accumulator += self.dt
             step = 0
+
+            # self.old_rects = self.rect_coverage(
+            #     self.allsprites)#, self.all_buttons)
+
             while self.dt_accumulator >= self.dt_fixed:
                 step += 1
-                if step > 100:
-                    break
+                # if step > 100:
+                #     break
 #                    self.dt_fixed *= 2
                 self.update(self.dt_fixed)  # update movement
-#                time.sleep(0.02)
+                # time.sleep(0.02)
 
                 self.dt -= self.dt_fixed
                 self.dt_accumulator -= self.dt_fixed
 
-            if step > 100:
+            if step > 20:
+                self.time_warning += 1
+            else:
+                self.time_warning = 0
+
+            if self.time_warning > 5:
                 print("game is broken due to too much lagging")
-                # BUG: when setting fullscreen, can break the game
 #                print("saving data to temporary files")
                 self.running = False
-#            if step > 20:
-#                print("warning",
-#                      "physics can be broken due to too much lagging")
-#            print(step, self.dt_fixed)
+            # print(step, self.dt_fixed)
 
             self.draw()  # draw everything after the movements
 
@@ -401,8 +454,8 @@ if __name__ == "__main__":
 
     # wanted resolution (knowing that the game will have a different resolution
     # and will resize to match this size)
-    WINDOW_W = 500
-    WINDOW_H = 400
+    WINDOW_W = 1024
+    WINDOW_H = 768
 
     game = Game(WINDOW_W=WINDOW_W, WINDOW_H=WINDOW_H)
     game.run()

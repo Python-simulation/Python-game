@@ -65,6 +65,10 @@ class Cell(pg.sprite.Sprite):
                             int((next_cell[1]-self.rect.w/2)/self.rect.w))
                 try:
                     self.Game.allsprites.remove(self.Game.cells[unit_pos])
+                    # rect = self.Game.cells[unit_pos].rect
+                    # self.Game.game_screen.image.blit(
+                    #     self.Game.background_screen.image,
+                    #     rect, rect)
                 except KeyError:
                     pass
             self.road = list()

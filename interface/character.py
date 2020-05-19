@@ -187,7 +187,7 @@ class Character(pg.sprite.Sprite):
         elif self.previous_theta == -3*np.pi/4:
             self.image = self.animation[6*frames+self.step]
         elif self.previous_theta == 3*np.pi/4:
-            self.image = self.animation[7*frames+self.step]  # BUG: erreur ici
+            self.image = self.animation[7*frames+self.step]
         # else:
         #     print("is None :", self.previous_theta,
         #           "but still moving:", self.moving)
