@@ -92,7 +92,9 @@ class Game():
         # whiff_sound = load_sound("whiff.wav")
         # punch_sound = load_sound("punch.wav")
         self.mouse = Mouse(self)
-        self.character = Character(self)
+
+        file_name = os.path.join(self.data_dir, "character.png")
+        self.character = Character(self, file_name, cardinal=8, npc=False)
 
         self.all_maps = self.all_maps_fct(self)
         self.change_map((0, 0))
@@ -236,26 +238,19 @@ class Game():
         rect_list = list()
 
         for arg in args:
-            # print(type(arg), type(pg.sprite.Group()))
-            if type(arg) is type(list()):
-                # print("liste")
+            if isinstance(arg, list):
                 for sprite in arg:
                     rect_list.append(sprite.rect.copy())
-            elif type(arg) is type(dict()):
+            elif isinstance(arg, dict):
                 # print("dict")
                 for sprite in arg.values():
                     rect_list.append(sprite.rect.copy())
-            elif type(arg) is type(pg.sprite.Group()):
-                # print("sprite group")
+            elif isinstance(arg, pg.sprite.Group):
                 for sprite in arg:
                     rect_list.append(sprite.rect.copy())
-                # rect_list.extend(arg)
             else:
-                # print("exist-il ce cas là ?")
-                # rect_list.append(arg)
                 for sprite in arg:
                     rect_list.append(sprite.rect.copy())
-        # print(rect_list)
         return rect_list
 
     def draw(self):

@@ -4,6 +4,7 @@ import pygame as pg
 from interface.chimp import Chimp
 from .background import BackGround
 from .interface_functions import NeededFunctions
+from .character import Character
 
 nf = NeededFunctions()
 
@@ -17,20 +18,19 @@ class MapFunctions:
     #        for i in range(1, 1920):
     #            if 1920 % i == 0 and 1080 % i == 0:
     #                print(i)
-        # posible pixel size for the cell to have int for 1920 and 1080 :
+        # posible pixel cell_size for the cell to have int for 1920 and 1080 :
         # 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 30, 40, 60, 120
 
-        size = 60
+        cell_size = 60
         cells_dict = dict()
         for x in range(1, 32-1):
             for y in range(1, 18-1-2):  # -2 because not 16/9 :'( damn lowerbar
                 current_cell = Cell(
                     Game,
-                    size=(size, size),
-                    position=(x*size+size/2, y*size+size/2),
+                    size=(cell_size, cell_size),
+                    position=(x*cell_size+cell_size/2, y*cell_size+cell_size/2),
                     function=Game.character.dest
                 )
-    #            current_cell.position_label = (x, y)  # useless
     #            text = str((x, y))
     #            txt_position = Game.mouse.rect.center
     #            current_cell.message = display_info(Game, text, txt_position)
@@ -41,8 +41,8 @@ class MapFunctions:
         for y in range(1-1, 18-2-1+1):  # -2 because not 16/9 :'( damn lowerbar
             current_cell = Cell(
                 Game,
-                size=(size, size),
-                position=(x*size+size/2, y*size+size/2),
+                size=(cell_size, cell_size),
+                position=(x*cell_size+cell_size/2, y*cell_size+cell_size/2),
                 function=Game.border_left
             )
             current_cell.alpha_off = 0
@@ -54,8 +54,8 @@ class MapFunctions:
         for x in range(1, 32-1):
             current_cell = Cell(
                 Game,
-                size=(size, size),
-                position=(x*size+size/2, y*size+size/2),
+                size=(cell_size, cell_size),
+                position=(x*cell_size+cell_size/2, y*cell_size+cell_size/2),
                 function=Game.border_top
             )
             current_cell.alpha_off = 0
@@ -67,8 +67,8 @@ class MapFunctions:
         for y in range(1-1, 18-2-1+1):  # -2 because not 16/9 :'( damn lowerbar
             current_cell = Cell(
                 Game,
-                size=(size, size),
-                position=(x*size+size/2, y*size+size/2),
+                size=(cell_size, cell_size),
+                position=(x*cell_size+cell_size/2, y*cell_size+cell_size/2),
                 function=Game.border_right
             )
             current_cell.alpha_off = 0
@@ -80,8 +80,8 @@ class MapFunctions:
         for x in range(1, 32-1):
             current_cell = Cell(
                 Game,
-                size=(size, size),
-                position=(x*size+size/2, y*size+size/2),
+                size=(cell_size, cell_size),
+                position=(x*cell_size+cell_size/2, y*cell_size+cell_size/2),
                 function=Game.border_bottom
             )
             current_cell.alpha_off = 0
@@ -89,23 +89,23 @@ class MapFunctions:
             # borders_bottom.append(current_cell)
 
         borders = dict()
-        # Cell(Game, size=(40, 40), position=(500, 100),
-        #      function=Game.character.dest),
-        # Cell(Game, size=(40, 40), position=(800, 200),
-        #      function=Game.character.dest),
-        # Cell(Game, size=(40, 40), position=(1000, 300),
-        #      function=Game.character.dest),
-        # Cell(Game, size=(40, 40), position=(100, 700),
-        #      function=nf.function_test),
-        # ]
         borders.update(borders_left)
         borders.update(borders_top)
         borders.update(borders_right)
         borders.update(borders_bottom)
 
         chimp = Chimp(Game)
+        file_name = os.path.join(Game.data_dir, "npc.png")
+        npc = Character(Game, file_name)
+        npc.rect.midbottom = (10*cell_size+cell_size/2,
+                              5*cell_size+cell_size/2)
+        npc.area = pg.Rect(npc.rect.topleft,
+                           (cell_size*3, cell_size*3))
+        # npc._npc_time = 1
+
         sprites = pg.sprite.RenderPlain((
                 chimp,
+                npc,
                 ))
 
         map_0_0 = {"background": background,
@@ -146,7 +146,7 @@ class MapFunctions:
         cells_dict2.pop((5, 5))
         name = os.path.join(Game.data_dir, 'tree.png')
         tree = BackGround(name, -1)
-        tree.rect.midbottom = (5*size+size/2, 5*size+size/2)
+        tree.rect.midbottom = (5*cell_size+cell_size/2, 5*cell_size+cell_size/2)
         # borders_bottom.update({(5, 5):[tree]})
         sprites = pg.sprite.RenderPlain()
         sprites.add(tree)

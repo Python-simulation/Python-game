@@ -5,6 +5,7 @@ import numpy as np
 from .interface_functions import NeededFunctions
 from .display import display_info
 from .animation import image_animate
+import random
 
 nf = NeededFunctions()
 
@@ -12,16 +13,16 @@ nf = NeededFunctions()
 class Character(pg.sprite.Sprite):
     """moves a character across the screen."""
 
-    def __init__(self, Game):
+    def __init__(self, Game, file_name, cardinal=4, npc=True):
         self.Game = Game  # add real-time variable change from the Game class
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
         self.area = self.Game.game_screen.rect.copy()  # walkable space
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
-        name = os.path.join(Game.data_dir, "character.png")
         # self.image, self.rect = nf.load_image(name, colorkey=-1)
-        self.cardinal = 8  # mvt alloyed (8 means cros+diag, 4 means cross)
+        self.cardinal = cardinal  # mvt alloyed (8 means cros+diag, 4 means cross)
+        self._npc = npc  # if is a npc or the player
         self.frames = 6  # number of frame for an animation
-        self.animation = image_animate(name, -1,
+        self.animation = image_animate(file_name, -1,
                                        frames=self.cardinal*self.frames)
         self.image = self.animation[0]
         self.rect = self.image.get_rect()
@@ -43,6 +44,9 @@ class Character(pg.sprite.Sprite):
         self.animation_time = 0
         self.step = 0
 
+        self._npc_clock = 0
+        self._npc_time = 10
+
         text = "I'm you !"
         txt_position = self.Game.mouse.rect.center
         self.message = display_info(self.Game, text, txt_position)
@@ -52,6 +56,8 @@ class Character(pg.sprite.Sprite):
         if self.moving:
             self._walk(dt)
         else:
+            if self._npc:
+                self._auto_dest(dt)
             pass
 
     def dest(self, moving_to_pos):
@@ -74,7 +80,10 @@ class Character(pg.sprite.Sprite):
 
             if self.road != list():
                 self.dest_coord = self.road[0]
-                print("moving to", self.road[-1])
+                if self._npc:
+                    print("npc is moving to", self.road[-1])
+                else:
+                    print("you are moving to", self.road[-1])
 #                print("road", self.road)
                 self.moving = True
 
@@ -192,8 +201,38 @@ class Character(pg.sprite.Sprite):
         #     print("is None :", self.previous_theta,
         #           "but still moving:", self.moving)
 
+    def _auto_dest(self, dt):
+        self._npc_clock += dt
+        left_mvt = (self.rect.midbottom[0] - self.area.left) // 60
+        right_mvt = (self.area.right - self.rect.midbottom[0]) // 60
+        up_mvt = (self.rect.midbottom[1] - self.area.top) // 60
+        bottom_mvt = (self.area.bottom - self.rect.midbottom[1]) // 60
+        cells = (0, 0)
+
+        # move = random.randint(0, math.ceil(time/self.Game.dt_fixed))
+        # if move == 0:
+        if self._npc_clock > self._npc_time:
+            self._npc_clock = 0
+            move_direction = random.randint(1, self.cardinal//2)
+            if move_direction == 1:
+                cells = (random.randint(-left_mvt, right_mvt), 0)
+            elif move_direction == 2:
+                cells = (0, random.randint(-up_mvt, bottom_mvt))
+            else:
+                cells = (random.randint(-left_mvt, right_mvt),
+                         random.randint(-up_mvt, bottom_mvt))
+
+                # print(-up_mvt, bottom_mvt, cells_y)
+        # print(cells)
+        moving_to_pos = (cells[0]*60+self.rect.midbottom[0],
+                         cells[1]*60+self.rect.midbottom[1])
+        self.dest(moving_to_pos)
+
     def hovered(self):
-        self.message.text = "I'm you !"
+        if self._npc:
+            self.message.text = "I'm a npc !"
+        else:
+            self.message.text = "I'm you !"
         self.message.hovered()
         pass
 
