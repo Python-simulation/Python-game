@@ -7,7 +7,7 @@ from .interface_functions import NeededFunctions
 class Button:
     """buttons"""
 
-    def __init__(self, Game, function, name=""):
+    def __init__(self, Game, function=None, name=""):
         self.Game = Game
         self.function = function
         self.nf = NeededFunctions()
@@ -71,10 +71,8 @@ class Button:
         self.state_clicked = False
         self.set_back_size()
 
-        if was_clicked:
+        if was_clicked and self.Game.mouse.hovering(self):
             self.hovered()
-
-        if self.Game.mouse.hovering(self):
             self.state = True
             self.function(self.state)
             # TODO: could be nice to have args and kwargs here. But why ?

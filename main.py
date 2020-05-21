@@ -164,16 +164,31 @@ class Game():
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 # tried with allsprites but keep having errors
                 if self.mouse.clicking(self.character):
-                    self.character.clicked()
 #                    print("clicked character", self.character.rect)
+                    for sprite in self.allsprites:  # BUG: pas bon !
+                        try:
+                            sprite.unclicked()
+                            # print("unclicking", sprite)
+                        except AttributeError:  # TODO: ugly, need to add unclicked to all sprites...
+                            pass
+                    self.character.clicked()
                 else:
                     for button in self.all_buttons:
                         if self.mouse.clicking(button):
+                            # for button_bis in self.all_buttons:
+                            #     if button_bis != button:
+                            #         button_bis.unclicked()
                             button.clicked()
 #                            print("hit button", button)
                             break
                     else:
                         self.check_border = None  # TODO: ugly but necessary for now
+                        for sprite in self.allsprites:  # BUG: pas bon !
+                            try:
+                                sprite.unclicked()
+                                # print("unclicking", sprite)
+                            except AttributeError:  # TODO: ugly, need to add unclicked to all sprites...
+                                pass
                         for sprites in self.sprites:
                             if self.mouse.clicking(sprites):
                                 sprites.clicked()

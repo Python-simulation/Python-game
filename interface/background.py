@@ -12,6 +12,7 @@ class BackGround(pg.sprite.Sprite):
             self.image, self.rect = nf.load_image(*args)
         except Exception:
             self.image = pg.Surface(size)
+            # self.image.set_colorkey(0)
             self.rect = self.image.get_rect()
 
     def hovered(self, *args):

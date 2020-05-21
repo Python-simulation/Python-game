@@ -2,10 +2,14 @@ import os
 import pygame as pg
 import math
 import numpy as np
+import random
+
 from .interface_functions import NeededFunctions
 from .display import display_info
 from .animation import image_animate
-import random
+from .flying_menu import FlyingMenu
+from .button import Button
+from .background import BackGround
 
 nf = NeededFunctions()
 
@@ -50,6 +54,27 @@ class Character(pg.sprite.Sprite):
         text = "I'm you !"
         txt_position = self.Game.mouse.rect.center
         self.message = display_info(self.Game, text, txt_position)
+
+        name = os.path.join(self.Game.data_dir, 'button_1.png')
+        button_1 = Button(self.Game, nf.function_test, name)
+        button_1.add_text("carac")
+
+        button_2 = Button(self.Game, nf.function_test2, name)
+        inventory_image = os.path.join(self.Game.data_dir, 'inventory.png')
+        button_2.add_image(inventory_image, -1)
+
+        # button_blank_1 = BackGround(size=(button_1.rect.size[0], button_1.rect.size[1]-30))
+        # button_blank_1.image.set_colorkey(0)
+
+        # button_blank_2 = BackGround(size=(button_1.rect.size[0], button_1.rect.size[1]-30))
+
+        name = os.path.join(self.Game.data_dir, 'button_1.png')
+        button_3 = Button(self.Game, nf.function_test, name)
+        button_3.add_text("talk")
+
+        self.menu = FlyingMenu(self.Game, button_1, button_2,
+                               # button_blank_1, button_blank_2,
+                               button_3)
 
     def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""
@@ -242,9 +267,11 @@ class Character(pg.sprite.Sprite):
 
     def clicked(self):
         self.message.text = "You just clicked on me !"
+        self.menu.clicked()
         pass
 
     def unclicked(self):
+        self.menu.unclicked()
         pass
 
 

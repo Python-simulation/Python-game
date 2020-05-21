@@ -102,10 +102,16 @@ class MapFunctions:
         npc.area = pg.Rect(npc.rect.topleft,
                            (cell_size*3, cell_size*3))
         # npc._npc_time = 1
+        npc_2 = Character(Game, file_name)
+        npc_2.rect.midbottom = (16*cell_size+cell_size/2,
+                              6*cell_size+cell_size/2)
+        npc_2.area = pg.Rect(npc_2.rect.topleft,
+                           (cell_size*3, cell_size*3))
 
         sprites = pg.sprite.RenderPlain((
                 chimp,
                 npc,
+                npc_2,
                 ))
 
         map_0_0 = {"background": background,
