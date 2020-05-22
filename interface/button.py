@@ -1,6 +1,4 @@
-import os
 import pygame as pg
-import numpy as np
 from .interface_functions import NeededFunctions
 
 
@@ -9,8 +7,9 @@ class Button:
 
     def __init__(self, Game, function=None, name=""):
         self.Game = Game
-        self.function = function
         self.nf = NeededFunctions()
+
+        self.function = function
         self.image, self.rect = self.nf.load_image(name)
 
         self.position = self.rect  # same id until clicked occured, then copy

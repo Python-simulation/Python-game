@@ -164,8 +164,10 @@ class Game():
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 # tried with allsprites but keep having errors
                 if self.mouse.clicking(self.character):
-#                    print("clicked character", self.character.rect)
-                    for sprite in self.allsprites:  # BUG: pas bon !
+                    # OPTIMIZE: could remove from it by using
+                    # list(reversed(sprites)) but Group is not a callable
+                    # print("clicked character", self.character.rect)
+                    for sprite in self.allsprites:
                         try:
                             sprite.unclicked()
                             # print("unclicking", sprite)
@@ -183,7 +185,7 @@ class Game():
                             break
                     else:
                         self.check_border = None  # TODO: ugly but necessary for now
-                        for sprite in self.allsprites:  # BUG: pas bon !
+                        for sprite in self.allsprites:
                             try:
                                 sprite.unclicked()
                                 # print("unclicking", sprite)

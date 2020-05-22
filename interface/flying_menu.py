@@ -5,31 +5,21 @@ class FlyingMenu(pg.sprite.Sprite):
     """Menu that pop when a npc is clicked"""
 
     def __init__(self, Game, *args):
+        """args being a list of all the buttons that contain the menu.
+        Each element can be a button, a background or any class containing
+        a Rect and a image subclass"""
         self.Game = Game
         pg.sprite.Sprite.__init__(self)
-        self.buttons = list()
 
-        for button in args:
-            self.add_button(button)
-
-    def remove_button(self, target_button):
-        try:
-            self.buttons.remove(target_button)
-            self._update_menu()
-        except ValueError:
-            pass
-
-    def add_button(self, new_button):
-        self.buttons.append(new_button)
-        self._update_menu()
+        self._margin = 3  # (bottom = top = left = right = margin)
+        self.buttons = args
 
     def _update_menu(self):
-        self.border = 5
-        width = self.border
-        height = self.border
+        width = 2*self._margin
+        height = 2*self._margin
 
         for button in self.buttons:
-            width_temp = button.rect.w + self.border
+            width_temp = button.rect.w + 2*self._margin
             height += button.rect.h
 
             if width_temp >= width:
@@ -47,14 +37,15 @@ class FlyingMenu(pg.sprite.Sprite):
         height = 0
 
         for i, button in enumerate(self.buttons):
-            button.rect.topleft = (self.rect.topleft[0] + self.border/2,
-                                   self.rect.topleft[1] + self.border/2)
+            button.rect.topleft = (self.rect.topleft[0] + self._margin,
+                                   self.rect.topleft[1] + self._margin)
             button.image.set_alpha(200)
             if i != 0:
                 height += self.buttons[i-1].rect.h
                 button.rect.y += height
 
     def clicked(self):
+        self._update_menu()
         self.position(self.Game.mouse.rect.topleft)
         self.Game.allsprites.add(self)
         self.Game.all_buttons.extend(self.buttons)
