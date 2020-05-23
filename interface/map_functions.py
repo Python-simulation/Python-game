@@ -1,10 +1,11 @@
 import os
-from interface.cell import Cell
 import pygame as pg
-from interface.chimp import Chimp
+from .cell import Cell
+from .chimp import Chimp
 from .background import BackGround
 from .interface_functions import NeededFunctions
 from .character import Character
+from .house import House
 
 nf = NeededFunctions()
 
@@ -28,7 +29,8 @@ class MapFunctions:
                 current_cell = Cell(
                     Game,
                     size=(cell_size, cell_size),
-                    position=(x*cell_size+cell_size/2, y*cell_size+cell_size/2),
+                    position=(x*cell_size+cell_size/2,
+                              y*cell_size+cell_size/2),
                     function=Game.character.dest
                 )
     #            text = str((x, y))
@@ -42,7 +44,8 @@ class MapFunctions:
             current_cell = Cell(
                 Game,
                 size=(cell_size, cell_size),
-                position=(x*cell_size+cell_size/2, y*cell_size+cell_size/2),
+                position=(x*cell_size+cell_size/2,
+                          y*cell_size+cell_size/2),
                 function=Game.border_left
             )
             current_cell.alpha_off = 0
@@ -55,7 +58,8 @@ class MapFunctions:
             current_cell = Cell(
                 Game,
                 size=(cell_size, cell_size),
-                position=(x*cell_size+cell_size/2, y*cell_size+cell_size/2),
+                position=(x*cell_size+cell_size/2,
+                          y*cell_size+cell_size/2),
                 function=Game.border_top
             )
             current_cell.alpha_off = 0
@@ -68,7 +72,8 @@ class MapFunctions:
             current_cell = Cell(
                 Game,
                 size=(cell_size, cell_size),
-                position=(x*cell_size+cell_size/2, y*cell_size+cell_size/2),
+                position=(x*cell_size+cell_size/2,
+                          y*cell_size+cell_size/2),
                 function=Game.border_right
             )
             current_cell.alpha_off = 0
@@ -81,7 +86,8 @@ class MapFunctions:
             current_cell = Cell(
                 Game,
                 size=(cell_size, cell_size),
-                position=(x*cell_size+cell_size/2, y*cell_size+cell_size/2),
+                position=(x*cell_size+cell_size/2,
+                          y*cell_size+cell_size/2),
                 function=Game.border_bottom
             )
             current_cell.alpha_off = 0
@@ -143,19 +149,32 @@ class MapFunctions:
                    "borders": borders_left,
                    "sprites": sprites}
 
-        map_0_1 = {"background": background2,
-                   "cells": cells_dict,
+    #
+        name = os.path.join(Game.data_dir, 'background2.png')
+        background3 = BackGround(name)
+        background3.rect.center = Game.game_screen.rect.center
+
+        position = (1*cell_size,
+                    1*cell_size)
+        cells_dict2 = dict(cells_dict)
+        house = House(Game, background3, position, cells_dict2, borders_top)
+        sprites = pg.sprite.RenderPlain()
+
+        map_0_1 = {"background": background3,
+                   "cells": cells_dict2,
                    "borders": borders_top,
                    "sprites": sprites}
 
+    #
         cells_dict2 = dict(cells_dict)
         cells_dict2.pop((5, 5))
         name = os.path.join(Game.data_dir, 'tree.png')
         tree = BackGround(name, -1)
-        tree.rect.midbottom = (5*cell_size+cell_size/2, 5*cell_size+cell_size/2)
+        tree.rect.midbottom = (5*cell_size+cell_size/2,
+                               5*cell_size+cell_size/2)
         # borders_bottom.update({(5, 5):[tree]})
-        sprites = pg.sprite.RenderPlain()
-        sprites.add(tree)
+
+        sprites = pg.sprite.RenderPlain(tree)
         map_0_n1 = {"background": background2,
                     "cells": cells_dict2,
                     "borders": borders_bottom,
@@ -167,5 +186,6 @@ class MapFunctions:
                 (1, 0): map_1_0,
                 (0, 1): map_0_1,
                 (0, -1): map_0_n1,
+                house.inside: house.map
                     }
         return all_maps

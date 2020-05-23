@@ -222,13 +222,14 @@ class Game():
                     sprites.unhovered()
                 for cell in self.all_cells.values():
                     cell.unhovered()
-
+                pg.mouse.set_cursor(*pg.cursors.diamond)
                 if self.mouse.hovering(self.character):
                     self.character.hovered()
 #                    print("hover character", self.character.rect)
                 else:  # OPTIMIZE: tried without succes to do one for loop
                     for button in self.all_buttons:
                         if self.mouse.hovering(button):
+                            pg.mouse.set_cursor(*pg.cursors.ball)
                             button.hovered()
                             # print("hover button", button)
                             break
@@ -243,6 +244,8 @@ class Game():
                                 if self.mouse.hovering(cell):
                                     cell.hovered()
                                     break
+                            else:
+                                pg.mouse.set_cursor(*pg.cursors.arrow)
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside
@@ -337,88 +340,56 @@ class Game():
         self.app_screen_rect = self.app_screen.get_rect()
         pg.display.update()
 
-    def border_left(self, *args):
-
+    def teleportation(self, new_map_pos, new_char_pos, *args):
         if args != self.check_border:
             self.character.dest(*args)
             self.check_border = args
-#            print("left")
 
         if (self.character.rect.midbottom == args[0]
                 and self.character.road == list()):
-            self.current_map_pos = (self.current_map_pos[0] - 1,
-                                    self.current_map_pos[1])
-            self.change_map(self.current_map_pos)
-            self.character.rect.midbottom = (
-                self.game_screen.rect.right - 60 - 60/2,
-                self.character.rect.midbottom[1]
-                )
+            self.change_map(new_map_pos)
+            self.character.rect.midbottom = new_char_pos
             self.check_border = None
             return None
         else:
+
             return False
+
+    def border_left(self, *args):
+        new_map_pos = (self.current_map_pos[0] - 1,
+                       self.current_map_pos[1])
+        new_char_pos = (
+                self.game_screen.rect.right - 60/2,
+                self.character.rect.midbottom[1]
+                )
+        return self.teleportation(new_map_pos, new_char_pos, *args)
 
     def border_right(self, *args):
-        if args != self.check_border:
-            self.character.dest(*args)
-            self.check_border = args
-#            print("right")
-
-        if (self.character.rect.midbottom == args[0]
-                and self.character.road == list()):
-            self.current_map_pos = (self.current_map_pos[0] + 1,
-                                    self.current_map_pos[1])
-            self.change_map(self.current_map_pos)
-            self.character.rect.midbottom = (
-                self.game_screen.rect.left + 60 + 60/2,
+        new_map_pos = (self.current_map_pos[0] + 1,
+                       self.current_map_pos[1])
+        new_char_pos = (
+                self.game_screen.rect.left + 60/2,
                 self.character.rect.midbottom[1]
                 )
-            self.check_border = None
-            return None
-        else:
-            return False
+        return self.teleportation(new_map_pos, new_char_pos, *args)
 
     def border_top(self, *args):
-
-        if args != self.check_border:
-            self.character.dest(*args)
-            self.check_border = args
-#            print("top")
-
-        if (self.character.rect.midbottom == args[0]
-                and self.character.road == list()):
-            self.current_map_pos = (self.current_map_pos[0],
-                                    self.current_map_pos[1] - 1)
-            self.change_map(self.current_map_pos)
-            self.character.rect.midbottom = (
+        new_map_pos = (self.current_map_pos[0],
+                       self.current_map_pos[1] - 1)
+        new_char_pos = (
                     self.character.rect.midbottom[0],
-                    self.game_screen.rect.bottom - 60 - 60/2 - 60*2
+                    self.game_screen.rect.bottom - 60/2 - 60*2  # toolbar size
                 )
-            self.check_border = None
-            return None
-        else:
-            return False
+        return self.teleportation(new_map_pos, new_char_pos, *args)
 
     def border_bottom(self, *args):
-
-        if args != self.check_border:
-            self.character.dest(*args)
-            self.check_border = args
-#            print("bottom")
-
-        if (self.character.rect.midbottom == args[0]
-                and self.character.road == list()):
-            self.current_map_pos = (self.current_map_pos[0],
-                                    self.current_map_pos[1] + 1)
-            self.change_map(self.current_map_pos)
-            self.character.rect.midbottom = (
+        new_map_pos = (self.current_map_pos[0],
+                       self.current_map_pos[1] + 1)
+        new_char_pos = (
                 self.character.rect.midbottom[0],
-                self.game_screen.rect.top + 60 + 60/2
+                self.game_screen.rect.top + 60/2
                 )
-            self.check_border = None
-            return None
-        else:
-            return False
+        return self.teleportation(new_map_pos, new_char_pos, *args)
 
     def run(self):
         self.running = True

@@ -20,6 +20,7 @@ class NeededFunctions:
             raise SystemExit(str(geterror()))
 
         image = image.convert()
+        # image = image.convert_alpha()
 
         if colorkey is not None:
 
