@@ -1,8 +1,5 @@
-import os
 import pygame as pg
 from pygame.compat import geterror
-import math
-import numpy as np
 
 
 class NeededFunctions:
@@ -52,77 +49,6 @@ class NeededFunctions:
             raise SystemExit(str(geterror()))
 
         return sound
-
-    def find_path(self, begin_cell, dest_cell, cell_size,
-                  all_cells=None, cardinal=4):
-        # print(all_cells)
-        if all_cells is None:
-            all_cells = range(560)
-        road = list()
-        previous_cell = begin_cell
-        nbr_step = 0
-
-        while previous_cell != dest_cell:
-
-            nbr_step += 1
-            if nbr_step > len(all_cells):
-                road = list()
-    #            print("bad road", road)
-                break
-
-            x_length = dest_cell[0] - previous_cell[0]
-            y_length = dest_cell[1] - previous_cell[1]
-            theta = math.atan2(y_length, x_length)
-
-            if cardinal == 4:
-                theta = np.pi/2 * (theta // (np.pi/2))  # allows only cross movement
-            elif cardinal == 8:
-                theta = np.pi/4 * (theta // (np.pi/4))  # allows cross + diagonal mov
-            else:
-                raise ValueError("error with alloyed direction, cardinal="
-                                 + str(cardinal) + ". Alloyed values: 4 and 8")
-
-            if theta == 0:  # ugly but work
-                next_cell = (previous_cell[0]+cell_size,
-                             previous_cell[1]+0)
-            elif theta == np.pi or theta == -np.pi:
-                next_cell = (previous_cell[0]-cell_size,
-                             previous_cell[1]+0)
-            elif theta == np.pi/2:
-                next_cell = (previous_cell[0]+0,
-                             previous_cell[1]+cell_size)
-            elif theta == -np.pi/2:
-                next_cell = (previous_cell[0]+0,
-                             previous_cell[1]-cell_size)
-            elif theta == np.pi/4:
-                next_cell = (previous_cell[0]+cell_size,
-                             previous_cell[1]+cell_size)
-            elif theta == 3*np.pi/4:
-                next_cell = (previous_cell[0]-cell_size,
-                             previous_cell[1]+cell_size)
-            elif theta == -np.pi/4:
-                next_cell = (previous_cell[0]+cell_size,
-                             previous_cell[1]-cell_size)
-            elif theta == -3*np.pi/4:
-                next_cell = (previous_cell[0]-cell_size,
-                             previous_cell[1]-cell_size)
-            else:
-                print("error with angle", theta, theta*180/np.pi)
-    #        next_cell = (previous_cell[0]+(math.cos(theta)),  # good looking but
-    #                     previous_cell[1]+(math.sin(theta)))  # don't work
-
-            unit_pos = (int((next_cell[0]-cell_size/2)/cell_size),
-                        int((next_cell[1]-cell_size/2)/cell_size))
-            try:
-                all_cells[unit_pos]
-            except KeyError:
-                # print("can't walk here, stop before it")
-                break
-
-            road.append(next_cell)
-            previous_cell = next_cell
-
-        return road
 
     def function_test(self, state):
         print("fct 1 do something with state", state)

@@ -5,6 +5,7 @@ import numpy as np
 import random
 
 from .interface_functions import NeededFunctions
+from .findpath import FindPath
 from .display import display_info
 from .animation import image_animate
 from .flying_menu import FlyingMenu
@@ -12,7 +13,10 @@ from .button import Button
 from .background import BackGround
 
 nf = NeededFunctions()
+fp = FindPath()
 
+from .findpath import cell_size as cell_sizes
+from .findpath import authorized_angle
 
 class Character(pg.sprite.Sprite):
     """moves a character across the screen."""
@@ -33,7 +37,8 @@ class Character(pg.sprite.Sprite):
 #        self.image = pg.transform.scale(
 #            self.image,
 #            (self.image.get_rect().w//2, self.image.get_rect().h//2))
-        self.rect.midbottom = 60+60/2, 60+60/2
+        self.rect.midbottom = (2*cell_sizes[0], 2*cell_sizes[1])
+        # self.rect.midbottom = 60+60/2, 60+60/2
 
 #        self.position = self.rect.midbottom
         self.dest_coord = self.rect.midbottom
@@ -75,6 +80,8 @@ class Character(pg.sprite.Sprite):
         self.menu = FlyingMenu(self.Game, button_1, button_2,
                                # button_blank_1, button_blank_2,
                                button_3)
+        if npc:
+            self.allowed_mvt()
 
     def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""
@@ -86,18 +93,20 @@ class Character(pg.sprite.Sprite):
             pass
 
     def dest(self, moving_to_pos):
-
-        if (self.area.left < moving_to_pos[0] < self.area.right
-                and self.area.top < moving_to_pos[1] < self.area.bottom
+        if (self.area.left <= moving_to_pos[0] <= self.area.right
+                and self.area.top <= moving_to_pos[1] <= self.area.bottom
                 and moving_to_pos != self.rect.midbottom):
 
             if self.road == list():
-                self.road = nf.find_path(self.rect.midbottom,
-                                         moving_to_pos, 60,
+                self.road = fp.find_path(self.rect.midbottom,
+                                         moving_to_pos,
                                          all_cells=self.Game.all_cells,
                                          cardinal=self.cardinal)
+                # if not self._npc:
+                #     print(self.road)
             else:
-                new_road = nf.find_path(self.road[0], moving_to_pos, 60,
+                new_road = fp.find_path(self.road[0],
+                                        moving_to_pos,
                                         all_cells=self.Game.all_cells,
                                         cardinal=self.cardinal)
                 self.road = [self.road[0]]
@@ -119,14 +128,7 @@ class Character(pg.sprite.Sprite):
 
         theta = math.atan2(y_length, x_length)
 
-        if self.cardinal == 4:
-            theta = np.pi/2 * (theta // (np.pi/2))
-        elif self.cardinal == 8:
-            theta = np.pi/4 * (theta // (np.pi/4))
-        else:
-            raise ValueError("error with alloyed direction, cardinal="
-                             + str(self.cardinal)
-                             + ". Alloyed values: 4 and 8")
+        theta = fp.theta_cardinal(theta, self.cardinal)
 
         self.speed_x = self.max_speed * math.cos(theta)
         self.speed_y = self.max_speed * math.sin(theta)  # meter per second
@@ -206,52 +208,60 @@ class Character(pg.sprite.Sprite):
                     self.animation_time = 0
 
         if self.previous_theta == np.pi/2:
-            self.image = self.animation[0+self.step]
-        elif self.previous_theta == 0:
-            self.image = self.animation[frames+self.step]
-        elif self.previous_theta == -np.pi/2:
-            self.image = self.animation[2*frames+self.step]
-        elif self.previous_theta == np.pi or self.previous_theta == -np.pi:
-            self.image = self.animation[3*frames+self.step]
-
-        elif self.previous_theta == np.pi/4:
             self.image = self.animation[4*frames+self.step]
-        elif self.previous_theta == -np.pi/4:
+        elif self.previous_theta == 0:
             self.image = self.animation[5*frames+self.step]
-        elif self.previous_theta == -3*np.pi/4:
+        elif self.previous_theta == -np.pi/2:
             self.image = self.animation[6*frames+self.step]
-        elif self.previous_theta == 3*np.pi/4:
+        elif self.previous_theta == np.pi or self.previous_theta == -np.pi:
             self.image = self.animation[7*frames+self.step]
+
+        elif self.previous_theta == authorized_angle:
+            self.image = self.animation[0*frames+self.step]
+        elif self.previous_theta == -authorized_angle:
+            self.image = self.animation[1*frames+self.step]
+        elif self.previous_theta == -np.pi + authorized_angle:
+            self.image = self.animation[2*frames+self.step]
+        elif self.previous_theta == np.pi - authorized_angle:
+            self.image = self.animation[3*frames+self.step]
         # else:
         #     print("is None :", self.previous_theta,
         #           "but still moving:", self.moving)
 
     def _auto_dest(self, dt):
         self._npc_clock += dt
-        left_mvt = (self.rect.midbottom[0] - self.area.left) // 60
-        right_mvt = (self.area.right - self.rect.midbottom[0]) // 60
-        up_mvt = (self.rect.midbottom[1] - self.area.top) // 60
-        bottom_mvt = (self.area.bottom - self.rect.midbottom[1]) // 60
+        left_mvt = (self.rect.midbottom[0]
+                    - self.area.left) // (cell_sizes[0]/2)
+        right_mvt = (self.area.right
+                     - self.rect.midbottom[0]) // (cell_sizes[0]/2)
+        up_mvt = (self.rect.midbottom[1]
+                  - self.area.top) // (cell_sizes[1]/2)
+        bottom_mvt = (self.area.bottom
+                      - self.rect.midbottom[1]) // (cell_sizes[1]/2)
         cells = (0, 0)
-
-        # move = random.randint(0, math.ceil(time/self.Game.dt_fixed))
-        # if move == 0:
+        # print(left_mvt, right_mvt, up_mvt, bottom_mvt)
+        # if right_mvt == 0 and up_mvt == 0:
+        #     raise ValueError  # OPTIMZE: this configuration allows the npc to
+        #     # go through walls because its findpath that determine the path
+        #     # and not the allowed mvt
         if self._npc_clock > self._npc_time:
             self._npc_clock = 0
-            move_direction = random.randint(1, self.cardinal//2)
-            if move_direction == 1:
-                cells = (random.randint(-left_mvt, right_mvt), 0)
-            elif move_direction == 2:
-                cells = (0, random.randint(-up_mvt, bottom_mvt))
-            else:
-                cells = (random.randint(-left_mvt, right_mvt),
-                         random.randint(-up_mvt, bottom_mvt))
 
-                # print(-up_mvt, bottom_mvt, cells_y)
-        # print(cells)
-        moving_to_pos = (cells[0]*60+self.rect.midbottom[0],
-                         cells[1]*60+self.rect.midbottom[1])
+            cells = (random.randint(-left_mvt, right_mvt),  # OPTIMIZE: Not great but work
+                     random.randint(-up_mvt, bottom_mvt))
+
+        moving_to_pos = (cells[0]*(cell_sizes[0]/2)+self.rect.midbottom[0],
+                         cells[1]*(cell_sizes[1]/2)+self.rect.midbottom[1])
+        # print(self.rect.midbottom, moving_to_pos)
         self.dest(moving_to_pos)
+
+    def allowed_mvt(self, allowed_cell=0):
+        topleft = (self.rect.midbottom[0] - allowed_cell*cell_sizes[0]/2,
+                   self.rect.midbottom[1] - allowed_cell*cell_sizes[1]/2)
+        self.area = pg.Rect(topleft,
+                           (allowed_cell*cell_sizes[0],
+                            allowed_cell*cell_sizes[1]))
+        # print(self.rect.midbottom, self.area)
 
     def hovered(self):
         if self._npc:

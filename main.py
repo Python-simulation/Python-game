@@ -19,6 +19,8 @@ from interface.map_functions import MapFunctions
 
 from interface.lower_bar import LowerBar
 
+from interface.findpath import cell_size as cell_sizes
+
 if not pg.font:
     print("Warning, fonts disabled")
 if not pg.mixer:
@@ -116,8 +118,10 @@ class Game():
         self.background_screen = self.current_map["background"]
         self.cells = self.current_map["cells"]  # dict
         self.cells_visible = self.current_map["borders"]  # dict
-        self.all_cells = dict(self.cells)
-        self.all_cells.update(self.cells_visible)
+        # self.all_cells = dict(self.cells)
+        # self.all_cells.update(self.cells_visible)
+        self.all_cells = dict(self.cells_visible)  # TODO : change order warning, must redo
+        self.all_cells.update(self.cells)
         self.sprites = self.current_map["sprites"]
 
         self.allsprites = pg.sprite.RenderPlain((
@@ -128,8 +132,8 @@ class Game():
                 # self.cells[(4,5)],
                 # self.cells[(6,5)],
                 ))  # character always ontop of sprites : not good
-#        for cells in self.cells.values():
-#            self.allsprites.add(cells)
+        # for cells in self.cells.values():
+        #     self.allsprites.add(cells)
         self.allsprites.add(self.character)
 
     def unclick(self):
@@ -359,7 +363,7 @@ class Game():
         new_map_pos = (self.current_map_pos[0] - 1,
                        self.current_map_pos[1])
         new_char_pos = (
-                self.game_screen.rect.right - 60/2,
+                (self.game_screen.rect.right//cell_sizes[0])*cell_sizes[0] - cell_sizes[0]/2,
                 self.character.rect.midbottom[1]
                 )
         return self.teleportation(new_map_pos, new_char_pos, *args)
@@ -368,7 +372,7 @@ class Game():
         new_map_pos = (self.current_map_pos[0] + 1,
                        self.current_map_pos[1])
         new_char_pos = (
-                self.game_screen.rect.left + 60/2,
+                self.game_screen.rect.left + cell_sizes[0]/2,
                 self.character.rect.midbottom[1]
                 )
         return self.teleportation(new_map_pos, new_char_pos, *args)
@@ -378,7 +382,7 @@ class Game():
                        self.current_map_pos[1] - 1)
         new_char_pos = (
                     self.character.rect.midbottom[0],
-                    self.game_screen.rect.bottom - 60/2 - 60*2  # toolbar size
+                    (self.game_screen.rect.bottom//cell_sizes[1])*cell_sizes[1] - cell_sizes[1]/2 - cell_sizes[1]  # toolbar size
                 )
         return self.teleportation(new_map_pos, new_char_pos, *args)
 
@@ -387,7 +391,7 @@ class Game():
                        self.current_map_pos[1] + 1)
         new_char_pos = (
                 self.character.rect.midbottom[0],
-                self.game_screen.rect.top + 60/2
+                self.game_screen.rect.top + cell_sizes[1]/2
                 )
         return self.teleportation(new_map_pos, new_char_pos, *args)
 
