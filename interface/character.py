@@ -15,15 +15,15 @@ from .background import BackGround
 nf = NeededFunctions()
 fp = FindPath()
 
-from .findpath import cell_size as cell_sizes
+from .findpath import cell_sizes
 from .findpath import authorized_angle
 
 class Character(pg.sprite.Sprite):
     """moves a character across the screen."""
 
     def __init__(self, Game, file_name, cardinal=4, npc=True):
-        self.Game = Game  # add real-time variable change from the Game class
-        pg.sprite.Sprite.__init__(self)  # call Sprite intializer
+        self.Game = Game
+        pg.sprite.Sprite.__init__(self)
         self.area = self.Game.game_screen.rect.copy()  # walkable space
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
         # self.image, self.rect = nf.load_image(name, colorkey=-1)
@@ -38,15 +38,13 @@ class Character(pg.sprite.Sprite):
 #            self.image,
 #            (self.image.get_rect().w//2, self.image.get_rect().h//2))
         self.rect.midbottom = (2*cell_sizes[0], 2*cell_sizes[1])
-        # self.rect.midbottom = 60+60/2, 60+60/2
 
 #        self.position = self.rect.midbottom
         self.dest_coord = self.rect.midbottom
         self.road = list()
         self.moving = False
-        self.max_speed = 10  # m/s, can't go higher than 60 (1 frame per cell)
-        # and best to have multiple of 60 (cell size):
-        # 1,2,3,4,5,6,10,12,15,20,30,60
+        self.max_speed = 10  # m/s, can't go higher than 64 (1 frame per cell)
+        # and best to have multiple of 64 (cell size)
         # INFO: Dofus goes at 8.3 m/s (30km/h)
         self.previous_theta = None
 
@@ -181,7 +179,7 @@ class Character(pg.sprite.Sprite):
         self.previous_theta = theta
 
     def _check_pos(self):
-        acceptance = 0  # Obsolete when added self.previous_theta
+        acceptance = 0  # OPTIMZE: Obsolete when added self.previous_theta
         interv_low = (self.dest_coord[0] - acceptance,
                       self.dest_coord[1] - acceptance)
         interv_high = (self.dest_coord[0] + acceptance,
@@ -224,9 +222,6 @@ class Character(pg.sprite.Sprite):
             self.image = self.animation[2*frames+self.step]
         elif self.previous_theta == np.pi - authorized_angle:
             self.image = self.animation[3*frames+self.step]
-        # else:
-        #     print("is None :", self.previous_theta,
-        #           "but still moving:", self.moving)
 
     def _auto_dest(self, dt):
         self._npc_clock += dt
@@ -239,20 +234,15 @@ class Character(pg.sprite.Sprite):
         bottom_mvt = (self.area.bottom
                       - self.rect.midbottom[1]) // (cell_sizes[1]/2)
         cells = (0, 0)
-        # print(left_mvt, right_mvt, up_mvt, bottom_mvt)
-        # if right_mvt == 0 and up_mvt == 0:
-        #     raise ValueError  # OPTIMZE: this configuration allows the npc to
-        #     # go through walls because its findpath that determine the path
-        #     # and not the allowed mvt
+
         if self._npc_clock > self._npc_time:
             self._npc_clock = 0
 
-            cells = (random.randint(-left_mvt, right_mvt),  # OPTIMIZE: Not great but work
+            cells = (random.randint(-left_mvt, right_mvt),
                      random.randint(-up_mvt, bottom_mvt))
 
         moving_to_pos = (cells[0]*(cell_sizes[0]/2)+self.rect.midbottom[0],
                          cells[1]*(cell_sizes[1]/2)+self.rect.midbottom[1])
-        # print(self.rect.midbottom, moving_to_pos)
         self.dest(moving_to_pos)
 
     def allowed_mvt(self, allowed_cell=0):
@@ -261,13 +251,12 @@ class Character(pg.sprite.Sprite):
         self.area = pg.Rect(topleft,
                            (allowed_cell*cell_sizes[0],
                             allowed_cell*cell_sizes[1]))
-        # print(self.rect.midbottom, self.area)
 
     def hovered(self):
         if self._npc:
-            self.message.text = "I'm a npc !"
+            self.message.text("I'm a npc !")
         else:
-            self.message.text = "I'm you !"
+            self.message.text("I'm you !")
         self.message.hovered()
         pass
 
@@ -276,28 +265,10 @@ class Character(pg.sprite.Sprite):
         pass
 
     def clicked(self):
-        self.message.text = "You just clicked on me !"
+        self.message.text("You just clicked on me !")
         self.menu.clicked()
         pass
 
     def unclicked(self):
         self.menu.unclicked()
         pass
-
-
-# def speed_for_int_move(ratio_pix_meter_x, dt_fixed, max_speed):
-#    """
-#    self.max_speed_x = speed_for_int_move(
-#        self.Game.ratio_pix_meter_x, self.Game.dt_fixed, self.max_speed)
-#    """
-#    allowed_speed = list()
-#
-#    for i in range(1, int(60/(ratio_pix_meter_x*dt_fixed))):
-#        if 60 % i == 0:  # 60 from the cell size
-#            allowed_speed.append(i/(ratio_pix_meter_x*dt_fixed))
-#
-#    allowed_speed = np.array(allowed_speed)
-#    ind = abs(allowed_speed - max_speed).argmin()
-#    print("all_speed", allowed_speed)
-#
-#    return allowed_speed[ind]

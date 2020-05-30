@@ -7,7 +7,7 @@ follow along in the tutorial.
 
 # Import Modules
 import os
-import time
+# import time
 import pygame as pg
 
 from interface.mouse import Mouse
@@ -19,7 +19,7 @@ from interface.map_functions import MapFunctions
 
 from interface.lower_bar import LowerBar
 
-from interface.findpath import cell_size as cell_sizes
+from interface.findpath import cell_sizes
 
 if not pg.font:
     print("Warning, fonts disabled")
@@ -53,14 +53,11 @@ class Game():
         self.ratio_pix_meter_x = GAME_SCREEN_W/32  # pixel/meter
         self.ratio_pix_meter_y = GAME_SCREEN_H/18  # pixel/meter
 
-
         self.check_border = None
         self.flags = (
                 pg.RESIZABLE |
                 pg.DOUBLEBUF
                 )
-
-
 
         # application window surface
         self.app_screen = pg.display.set_mode((WINDOW_W, WINDOW_H), self.flags)
@@ -98,6 +95,7 @@ class Game():
         file_name = os.path.join(self.data_dir, "character.png")
         self.character = Character(self, file_name, cardinal=8, npc=False)
 
+        self.allsprites = pg.sprite.RenderPlain(())  # init -> cell use it befo
         self.all_maps = self.all_maps_fct(self)
         self.change_map((0, 0))
 
@@ -108,20 +106,22 @@ class Game():
 
     def loader(self):
         self.data_dir = data_dir
-        self.all_maps_fct = mp.all_maps
+        self.all_maps_fct = mp.create_maps
         self.function_test = nf.function_test
         self.function_test2 = nf.function_test2
 
-    def change_map(self, current_map_pos):
-        self.current_map_pos = current_map_pos
-        self.current_map = self.all_maps[current_map_pos]
+    def change_map(self, new_map_pos):
+        self.current_map_pos = new_map_pos
+        map_class = self.all_maps[new_map_pos]
+        map_class.refresh()
+        self.current_map = map_class.map_info
         self.background_screen = self.current_map["background"]
         self.cells = self.current_map["cells"]  # dict
         self.cells_visible = self.current_map["borders"]  # dict
-        # self.all_cells = dict(self.cells)
-        # self.all_cells.update(self.cells_visible)
-        self.all_cells = dict(self.cells_visible)  # TODO : change order warning, must redo
-        self.all_cells.update(self.cells)
+        self.all_cells = dict(self.cells)
+        self.all_cells.update(self.cells_visible)
+        # self.all_cells = dict(self.cells_visible)  # TODO : change order warning, must redo
+        # self.all_cells.update(self.cells)
         self.sprites = self.current_map["sprites"]
 
         self.allsprites = pg.sprite.RenderPlain((
@@ -172,7 +172,7 @@ class Game():
                     # list(reversed(sprites)) but Group is not a callable
                     # print("clicked character", self.character.rect)
                     for sprite in self.allsprites:
-                        try:
+                        try:  # BUG: set state=False to cells and can't teleport if click on menu
                             sprite.unclicked()
                             # print("unclicking", sprite)
                         except AttributeError:  # TODO: ugly, need to add unclicked to all sprites...
@@ -257,25 +257,25 @@ class Game():
             cell.update(dt)
         self.mouse.update(dt)
 
-    def rect_coverage(self, *args):
-        """args are rect"""
-        rect_list = list()
+    # def rect_coverage(self, *args):
+    #     """args are rect"""
+    #     rect_list = list()
 
-        for arg in args:
-            if isinstance(arg, list):
-                for sprite in arg:
-                    rect_list.append(sprite.rect.copy())
-            elif isinstance(arg, dict):
-                # print("dict")
-                for sprite in arg.values():
-                    rect_list.append(sprite.rect.copy())
-            elif isinstance(arg, pg.sprite.Group):
-                for sprite in arg:
-                    rect_list.append(sprite.rect.copy())
-            else:
-                for sprite in arg:
-                    rect_list.append(sprite.rect.copy())
-        return rect_list
+    #     for arg in args:
+    #         if isinstance(arg, list):
+    #             for sprite in arg:
+    #                 rect_list.append(sprite.rect.copy())
+    #         elif isinstance(arg, dict):
+    #             # print("dict")
+    #             for sprite in arg.values():
+    #                 rect_list.append(sprite.rect.copy())
+    #         elif isinstance(arg, pg.sprite.Group):
+    #             for sprite in arg:
+    #                 rect_list.append(sprite.rect.copy())
+    #         else:
+    #             for sprite in arg:
+    #                 rect_list.append(sprite.rect.copy())
+    #     return rect_list
 
     def draw(self):
         """Draw Everything"""
@@ -362,37 +362,39 @@ class Game():
     def border_left(self, *args):
         new_map_pos = (self.current_map_pos[0] - 1,
                        self.current_map_pos[1])
+        right = (self.game_screen.rect.right//cell_sizes[0])*cell_sizes[0]
         new_char_pos = (
-                (self.game_screen.rect.right//cell_sizes[0])*cell_sizes[0] - cell_sizes[0]/2,
-                self.character.rect.midbottom[1]
-                )
+            right - cell_sizes[0]/2,
+            self.character.rect.midbottom[1]
+        )
         return self.teleportation(new_map_pos, new_char_pos, *args)
 
     def border_right(self, *args):
         new_map_pos = (self.current_map_pos[0] + 1,
                        self.current_map_pos[1])
         new_char_pos = (
-                self.game_screen.rect.left + cell_sizes[0]/2,
-                self.character.rect.midbottom[1]
-                )
+            self.game_screen.rect.left + cell_sizes[0]/2,
+            self.character.rect.midbottom[1]
+        )
         return self.teleportation(new_map_pos, new_char_pos, *args)
 
     def border_top(self, *args):
         new_map_pos = (self.current_map_pos[0],
                        self.current_map_pos[1] - 1)
+        bottom = (self.game_screen.rect.bottom//cell_sizes[1])*cell_sizes[1]
         new_char_pos = (
-                    self.character.rect.midbottom[0],
-                    (self.game_screen.rect.bottom//cell_sizes[1])*cell_sizes[1] - cell_sizes[1]/2 - cell_sizes[1]  # toolbar size
-                )
+            self.character.rect.midbottom[0],
+            bottom - cell_sizes[1]/2 - cell_sizes[1]  # toolbar size
+        )
         return self.teleportation(new_map_pos, new_char_pos, *args)
 
     def border_bottom(self, *args):
         new_map_pos = (self.current_map_pos[0],
                        self.current_map_pos[1] + 1)
         new_char_pos = (
-                self.character.rect.midbottom[0],
-                self.game_screen.rect.top + cell_sizes[1]/2
-                )
+            self.character.rect.midbottom[0],
+            self.game_screen.rect.top + cell_sizes[1]/2
+        )
         return self.teleportation(new_map_pos, new_char_pos, *args)
 
     def run(self):

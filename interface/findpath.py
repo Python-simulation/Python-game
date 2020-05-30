@@ -2,10 +2,32 @@
 import math
 from math import pi
 
-cell_size = (128, 64)
+cell_sizes = (128, 64)
 authorized_angle = math.atan(0.5)
 
 class FindPath:
+
+    def cell_to_pos(self, cell):
+        cart_x = cell[0] * cell_sizes[0]/2
+        cart_y = cell[1] * cell_sizes[0]/2  # x not a mistake
+        iso_x = (cart_x - cart_y)
+        iso_y = (cart_x + cart_y)/2
+
+        pos = (iso_x + 7.5*cell_sizes[0],
+               iso_y - 7.5*cell_sizes[1])
+
+        return pos
+
+    def pos_to_cell(self, pos):
+        iso = (pos[0] - 7.5*cell_sizes[0],
+               pos[1] + 7.5*cell_sizes[1])
+        cart = (iso[0]/2 + iso[1],
+                -iso[0]/2 + iso[1])
+        row = (2*cart[0]/cell_sizes[0],
+               2*cart[1]/cell_sizes[0])
+        cell = (int(row[0]), int(row[1]))
+
+        return cell
 
     def theta_cardinal(self, theta, cardinal):
         if cardinal == 4:  # allows only cross
@@ -93,49 +115,40 @@ class FindPath:
             theta = self.theta_cardinal(theta, cardinal)
 
             if theta == 0:  # ugly but work
-                next_cell = (previous_cell[0]+cell_size[0],
+                next_cell = (previous_cell[0]+cell_sizes[0],
                              previous_cell[1])
             elif theta == pi or theta == -pi:
-                next_cell = (previous_cell[0]-cell_size[0],
+                next_cell = (previous_cell[0]-cell_sizes[0],
                              previous_cell[1])
             elif theta == pi/2:
                 next_cell = (previous_cell[0],
-                             previous_cell[1]+cell_size[1])
+                             previous_cell[1]+cell_sizes[1])
             elif theta == -pi/2:
                 next_cell = (previous_cell[0],
-                             previous_cell[1]-cell_size[1])
+                             previous_cell[1]-cell_sizes[1])
             elif theta == authorized_angle:
-                next_cell = (previous_cell[0]+cell_size[0]/2,
-                             previous_cell[1]+cell_size[1]/2)
+                next_cell = (previous_cell[0]+cell_sizes[0]/2,
+                             previous_cell[1]+cell_sizes[1]/2)
             elif theta == (pi - authorized_angle):
-                next_cell = (previous_cell[0]-cell_size[0]/2,
-                             previous_cell[1]+cell_size[1]/2)
+                next_cell = (previous_cell[0]-cell_sizes[0]/2,
+                             previous_cell[1]+cell_sizes[1]/2)
             elif theta == -authorized_angle:
-                next_cell = (previous_cell[0]+cell_size[0]/2,
-                             previous_cell[1]-cell_size[1]/2)
+                next_cell = (previous_cell[0]+cell_sizes[0]/2,
+                             previous_cell[1]-cell_sizes[1]/2)
             elif theta == -(pi - authorized_angle):
-                next_cell = (previous_cell[0]-cell_size[0]/2,
-                             previous_cell[1]-cell_size[1]/2)
+                next_cell = (previous_cell[0]-cell_sizes[0]/2,
+                             previous_cell[1]-cell_sizes[1]/2)
             else:
                 print("error with angle", theta, theta*180/pi)
                 # road = [dest_cell]  # BUG: temporaire just pour test
                 break
 
-            iso = (next_cell[0] - 7.5*cell_size[0],
-                   next_cell[1] + 7.5*cell_size[1])
-            cart = (iso[0]/2 + iso[1],
-                    -iso[0]/2 + iso[1])
-            row = (2*cart[0]/cell_size[0],
-                   2*cart[1]/cell_size[0])
-            unit_pos = (int(row[0]), int(row[1]))
+            unit_pos = self.pos_to_cell(next_cell)
 
             try:
                 all_cells[unit_pos]
             except KeyError:
-                # print(all_cells)
-                # print(unit_pos)
-                # 1/0
-                # road = [dest_cell]  # BUG: temporaire just pour test
+                # TODO: implement A* here
                 # print("can't walk here, stop before it")
                 break
 
