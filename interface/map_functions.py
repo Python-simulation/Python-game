@@ -76,6 +76,7 @@ class MapFunctions:
                     if tile == 1:
                         current_cell.function = Game.character.dest
                         cells_dict[(row_nb, col_nb)] = current_cell
+                        current_cell.alpha_off = 100
 
                     elif tile == "l":
                         current_cell.function = Game.border_left
@@ -129,6 +130,7 @@ class MapFunctions:
                     current_cell = cells_dict[(row_nb, col_nb)]
                     current_cell.reset()
                     current_cell.function = self.Game.character.dest
+                    current_cell.alpha_off = 100
 
                 elif tile == "l":
                     current_cell = borders_left[(row_nb, col_nb)]

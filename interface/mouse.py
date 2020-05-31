@@ -2,6 +2,10 @@ import os
 import pygame as pg
 import numpy as np
 
+from .interface_functions import NeededFunctions
+nf = NeededFunctions()
+
+
 class Mouse(pg.sprite.Sprite):
     """Position and surface of the mouse (can change the mouse image by
     removing the real mouse image and replacing by a defined one)"""
@@ -9,7 +13,8 @@ class Mouse(pg.sprite.Sprite):
     def __init__(self, Game):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)  # call Sprite initializer
-#        self.image, self.rect = load_image("mouse.png")  # , -1)
+        # name = os.path.join(self.Game.data_dir, 'mouse.png')
+        # self.image, self.rect = nf.load_image(name)  # , -1)
         self.image = pg.Surface((1, 1))
         self.image.set_colorkey(0)
         self.rect = self.image.get_rect()

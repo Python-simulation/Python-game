@@ -18,8 +18,6 @@ class House(BackGround):
         self.Map = Map
         self.Maps = Map.Maps
         self.Game = Map.Game
-        self.all_cells = Map.map_info["cells"]
-        self.borders = Map.map_info["borders"]
 
         self.name = "first_house"
 
@@ -77,19 +75,25 @@ class House(BackGround):
         return self.Game.teleportation(new_map_pos, new_char_pos, *args)
 
     def create_inside(self):
-        # TODO: see if add black background to erase outside
-        # or keep outside without sprites
+
         self.outside = self.Map.position
 
+        self.map_info = dict()
+
         background = BackGround()
-        background.image = self.background.image.copy()
+        background.image = self.background.image.copy()  # change if want black
         background.rect = background.image.get_rect()
 
         name = os.path.join(self.Game.data_dir, 'house_inside.png')
         image, rect = nf.load_image(name, -1)
         rect.topleft = self.rect.topleft
 
-        background.image.blit(image, rect)  # must be change if don't want bg
+        background.image.blit(image, rect)
+
+        self.map_info["background"] = background
+
+        sprites = pg.sprite.RenderPlain(())
+        self.map_info["sprites"] = sprites
 
         inside_cells = self.add_cell(self.forbidden_cells)
         door = self.add_cell(self.special_cell)
@@ -107,10 +111,8 @@ class House(BackGround):
             cell = self.add_init_pos(cell)
             inside_cells.pop(cell, None)
 
-        self.map_info = {"background": background,
-                         "cells": inside_cells,
-                         "borders": dict(),
-                         "sprites": pg.sprite.RenderPlain(())}
+        self.map_info["cells"] = inside_cells
+        self.map_info["borders"] = dict()
 
     def add_cell(self, cell_list):
         cells_dict = dict()
@@ -125,21 +127,24 @@ class House(BackGround):
                 function=self.Game.character.dest
             )
 
+            current_cell.alpha_off = 100
             cells_dict[(x, y)] = current_cell
 
         return cells_dict
 
     def refresh(self):
+        all_cells = self.Map.map_info["cells"]
+        borders = self.Map.map_info["borders"]
 
         for cell in self.forbidden_cells:
-            self.all_cells.pop(cell, None)#self.borders.pop(cell))
-            self.borders.pop(cell, None)  # CONSEIL, if house del border where char
+            all_cells.pop(cell, None)  #self.borders.pop(cell))
+            borders.pop(cell, None)  # CONSEIL, if house del border where char
             # came from, can't go back and can't move : stuck for ever
             # must del border in adjacent map to avoid it
-        self.Map.map_info["cells"] = self.all_cells
+        self.Map.map_info["cells"] = all_cells
 
         for cell in self.special_cell:
-            self.all_cells[cell].function = self.tp_house
+            all_cells[cell].function = self.tp_house
 
         self.tp_cell_in = self.special_cell[0]
         self.tp_cell_out = self.add_init_pos([13, 5])

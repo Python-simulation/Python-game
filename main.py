@@ -54,6 +54,7 @@ class Game():
         self.ratio_pix_meter_y = GAME_SCREEN_H/18  # pixel/meter
 
         self.check_border = None
+        # self._anti_recursion = False
         self.flags = (
                 pg.RESIZABLE |
                 pg.DOUBLEBUF
@@ -118,23 +119,18 @@ class Game():
         self.background_screen = self.current_map["background"]
         self.cells = self.current_map["cells"]  # dict
         self.cells_visible = self.current_map["borders"]  # dict
-        self.all_cells = dict(self.cells)
-        self.all_cells.update(self.cells_visible)
-        # self.all_cells = dict(self.cells_visible)  # TODO : change order warning, must redo
-        # self.all_cells.update(self.cells)
+        self.all_cells = dict(self.cells_visible)
+        self.all_cells.update(self.cells)
         self.sprites = self.current_map["sprites"]
 
         self.allsprites = pg.sprite.RenderPlain((
                 self.sprites,
                 self.cells_visible.values(),
-                # self.cells[(5,6)],
-                # self.cells[(5,4)],
-                # self.cells[(4,5)],
-                # self.cells[(6,5)],
-                ))  # character always ontop of sprites : not good
+                ))  # character always ontop of sprites : not good for persperc
         # for cells in self.cells.values():
         #     self.allsprites.add(cells)
         self.allsprites.add(self.character)
+        # self.allsprites.add(self.mouse)
 
     def unclick(self):
         for button in self.all_buttons:
@@ -211,7 +207,7 @@ class Game():
                             # else:
                             #     if self.mouse.clicking(self.game_screen):
                             #         print("hit no cells")
-                            #         self.character.dest(self.mouse.rect.center)
+                            #         self.character.dest(self.mouse.rect.topleft)
                             #         for cell in self.all_cells.values():
                             #             cell.unclicked()
 

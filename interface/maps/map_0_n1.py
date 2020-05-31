@@ -23,8 +23,6 @@ class Map:
 
         self.map_info = dict()
 
-        self.refresh()
-
         name = os.path.join(Game.data_dir, 'background2.png')
         background = BackGround(name)
         background.rect.center = Game.game_screen.rect.center
@@ -44,13 +42,13 @@ class Map:
 
         Maps.all_maps[self.position] = self
 
+        self.refresh()
+
     def refresh(self):
         [cells_dict, borders_left, borders_top,
          borders_right, borders_bottom, borders] = self.Maps.map_reset_cells()
-        try:
-            cells_dict.pop(self.tree_cell)
-        except AttributeError:
-            pass
+
+        cells_dict.pop(self.tree_cell)
 
         self.map_info["cells"] = cells_dict
         self.map_info["borders"] = borders_bottom

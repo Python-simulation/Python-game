@@ -55,7 +55,7 @@ class Character(pg.sprite.Sprite):
         self._npc_time = 10
 
         text = "I'm you !"
-        txt_position = self.Game.mouse.rect.center
+        txt_position = self.Game.mouse.rect.topleft
         self.message = display_info(self.Game, text, txt_position)
 
         name = os.path.join(self.Game.data_dir, 'button_1.png')
