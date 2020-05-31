@@ -1,16 +1,10 @@
-import os
-import math
-from math import pi
-import pygame as pg
 from .cell import Cell
-from .chimp import Chimp
-from .background import BackGround
-from .character import Character
 
 from .findpath import FindPath
 from .findpath import cell_sizes
 
 fp = FindPath()
+
 
 class MapFunctions:
 
@@ -110,8 +104,8 @@ class MapFunctions:
         borders.update(borders_bottom)
 
         self._all_cells = [cells_dict, borders_left,
-                          borders_top, borders_right,
-                          borders_bottom, borders]
+                           borders_top, borders_right,
+                           borders_bottom, borders]
 
     def map_reset_cells(self):
         [cells_dict, borders_left, borders_top,
@@ -196,12 +190,12 @@ class MapFunctions:
         Map(self, Game)
     #
         from .maps.map_n1_0 import Map
-        map1 = Map(self, Game)
+        Map(self, Game)
     #
         from .maps.map_1_0 import Map
-        map_2 = Map(self, Game)
+        Map(self, Game)
     #
         from .maps.map_0_n1 import Map
-        map_2 = Map(self, Game)
+        Map(self, Game)
 
         return self.all_maps

@@ -41,7 +41,7 @@ class Map:
                               5*cell_sizes[1]+cell_sizes[1]/2)
         npc.allowed_mvt(1)
         npc.max_speed = 5
-        # npc._npc_time = 0.1
+        npc._npc_time = 0.5
         sprites.add(npc)
 
         # show = BackGround(size=npc.area.size)
@@ -51,7 +51,8 @@ class Map:
         npc_2 = Character(Game, file_name)
         npc_2.rect.midbottom = (10*cell_sizes[0]+cell_sizes[0]/2,
                                 6*cell_sizes[1]+cell_sizes[1]/2)
-        npc_2.allowed_mvt(1)
+        npc_2.allowed_mvt(1, 2)
+        npc_2._npc_time = 1
         sprites.add(npc_2)
 
         self.map_info["sprites"] = sprites

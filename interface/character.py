@@ -1,9 +1,9 @@
 import os
-import pygame as pg
 import math
-import numpy as np
+from math import pi
 import random
 
+import pygame as pg
 from .interface_functions import NeededFunctions
 from .findpath import FindPath
 from .display import display_info
@@ -17,6 +17,7 @@ fp = FindPath()
 
 from .findpath import cell_sizes
 from .findpath import authorized_angle
+
 
 class Character(pg.sprite.Sprite):
     """moves a character across the screen."""
@@ -205,22 +206,22 @@ class Character(pg.sprite.Sprite):
                     self.step = 0
                     self.animation_time = 0
 
-        if self.previous_theta == np.pi/2:
+        if self.previous_theta == pi/2:
             self.image = self.animation[4*frames+self.step]
         elif self.previous_theta == 0:
             self.image = self.animation[5*frames+self.step]
-        elif self.previous_theta == -np.pi/2:
+        elif self.previous_theta == -pi/2:
             self.image = self.animation[6*frames+self.step]
-        elif self.previous_theta == np.pi or self.previous_theta == -np.pi:
+        elif self.previous_theta == pi or self.previous_theta == -pi:
             self.image = self.animation[7*frames+self.step]
 
         elif self.previous_theta == authorized_angle:
             self.image = self.animation[0*frames+self.step]
         elif self.previous_theta == -authorized_angle:
             self.image = self.animation[1*frames+self.step]
-        elif self.previous_theta == -np.pi + authorized_angle:
+        elif self.previous_theta == -pi + authorized_angle:
             self.image = self.animation[2*frames+self.step]
-        elif self.previous_theta == np.pi - authorized_angle:
+        elif self.previous_theta == pi - authorized_angle:
             self.image = self.animation[3*frames+self.step]
 
     def _auto_dest(self, dt):
@@ -233,6 +234,16 @@ class Character(pg.sprite.Sprite):
                   - self.area.top) // (cell_sizes[1]/2)
         bottom_mvt = (self.area.bottom
                       - self.rect.midbottom[1]) // (cell_sizes[1]/2)
+
+        if left_mvt > self._npc_nbr_cell:
+            left_mvt = self._npc_nbr_cell
+        if right_mvt > self._npc_nbr_cell:
+            right_mvt = self._npc_nbr_cell
+        if up_mvt > self._npc_nbr_cell:
+            up_mvt = self._npc_nbr_cell
+        if bottom_mvt > self._npc_nbr_cell:
+            bottom_mvt = self._npc_nbr_cell
+
         cells = (0, 0)
 
         if self._npc_clock > self._npc_time:
@@ -245,12 +256,13 @@ class Character(pg.sprite.Sprite):
                          cells[1]*(cell_sizes[1]/2)+self.rect.midbottom[1])
         self.dest(moving_to_pos)
 
-    def allowed_mvt(self, allowed_cell=0):
+    def allowed_mvt(self, allowed_cell=0, authorized_mvt=1):
+        self._npc_nbr_cell = authorized_mvt
         topleft = (self.rect.midbottom[0] - allowed_cell*cell_sizes[0]/2,
                    self.rect.midbottom[1] - allowed_cell*cell_sizes[1]/2)
         self.area = pg.Rect(topleft,
-                           (allowed_cell*cell_sizes[0],
-                            allowed_cell*cell_sizes[1]))
+                            (allowed_cell*cell_sizes[0],
+                             allowed_cell*cell_sizes[1]))
 
     def hovered(self):
         if self._npc:

@@ -1,15 +1,13 @@
 import os
 import pygame as pg
-import numpy as np
 from .display import display_info
 from .interface_functions import NeededFunctions
 from .findpath import FindPath
-from .findpath import cell_sizes
 
 nf = NeededFunctions()
 fp = FindPath()
 
-import time
+
 class Cell(pg.sprite.Sprite):
     """simple cell to target movement"""
 
@@ -46,31 +44,22 @@ class Cell(pg.sprite.Sprite):
         # self.message.text("reset")
         self.Game.allsprites.remove(self)  # BUG: if want to see, can be proble
 
-    def check_real_pos(self, redirection, *args, **kwargs):
+    def check_real_pos(self, redirection):
 
         other_cell = False
-
-        # if not self.Game._anti_recursion:
-        #     self.Game._anti_recursion = True
 
         mouse_pos = self.Game.mouse.rect.topleft
 
         if mouse_pos[1] < self.rect.centery:
             if mouse_pos[0] > self.rect.centerx:
-                (x1, y1) = (self.rect.midtop[0], self.rect.midtop[1])
-                # print((x1, y1))
-                y2 = y1 + (mouse_pos[0] - x1)/2
-                # print(mouse_pos, y2)
+                y2 = self.rect.midtop[1] + (mouse_pos[0]-self.rect.midtop[0])/2
                 if mouse_pos[1] < y2:
                     shift = (0, -1)
                     # print("upright")
                     other_cell = True
                 pass
             else:
-                (x1, y1) = (self.rect.midtop[0], self.rect.midtop[1])
-                # print((x1, y1))
-                y2 = y1 + (x1 - mouse_pos[0])/2
-                # print(mouse_pos[1], y2)
+                y2 = self.rect.midtop[1] + (self.rect.midtop[0]-mouse_pos[0])/2
                 if mouse_pos[1] < y2:
                     shift = (-1, 0)
                     # print("upleft")
@@ -79,20 +68,14 @@ class Cell(pg.sprite.Sprite):
 
         else:
             if mouse_pos[0] > self.rect.centerx:
-                (x1, y1) = (self.rect.right, self.rect.center[1])
-                # print((x1, y1))
-                y2 = y1 + (x1 - mouse_pos[0])/2
-                # print(mouse_pos, y2)
+                y2 = self.rect.center[1] + (self.rect.right - mouse_pos[0])/2
                 if mouse_pos[1] > y2:
                     shift = (1, 0)
                     # print("bottomright")
                     other_cell = True
                 pass
             else:
-                (x1, y1) = (self.rect.left, self.rect.center[1])
-                # print((x1, y1))
-                y2 = y1 + (mouse_pos[0] - x1)/2
-                # print(mouse_pos[1], y2)
+                y2 = self.rect.center[1] + (mouse_pos[0] - self.rect.left)/2
                 if mouse_pos[1] > y2:
                     shift = (0, 1)
                     # print("bottomleft")
@@ -100,23 +83,21 @@ class Cell(pg.sprite.Sprite):
                 pass
 
         if other_cell:
-            # print("yes", shift)
             real_cell = (self.cell_pos[0] + shift[0],
                          self.cell_pos[1] + shift[1])
 
             if redirection == "hovered":
                 try:
-                    # print(self.rect.center, self.Game.all_cells[real_cell].rect.center)
-                    self.Game.all_cells[real_cell].hovered(*args)
+                    self.Game.all_cells[real_cell].hovered()
                 except KeyError:
+                    other_cell = False
                     pass
             elif redirection == "clicked":
                 try:
-                    self.Game.all_cells[real_cell].clicked(*args, **kwargs)
+                    self.Game.all_cells[real_cell].clicked()
                 except KeyError:
+                    other_cell = False
                     pass
-
-            # self.Game._anti_recursion = False
 
         return other_cell
 
@@ -124,14 +105,14 @@ class Cell(pg.sprite.Sprite):
         """by default, if function returns nothing, consider
         the cell has done its purpuse and set state to False"""
         if self.function is not None and self.state:
-            output = self.function(*self.args, **self.kwargs)
+            output = self.function(self.rect.center)
 
             if output is None:
                 self.state = False
 
-    def hovered(self, *args):
+    def hovered(self):
 
-        if not self.check_real_pos("hovered", *args) and self.show_path:
+        if not self.check_real_pos("hovered") and self.show_path:
             self.image.set_alpha(self.alpha_on)
             self.road = fp.find_path(self.Game.character.rect.midbottom,
                                      self.rect.center,
@@ -151,7 +132,7 @@ class Cell(pg.sprite.Sprite):
             # self.message.hovered()
             pass
 
-    def unhovered(self, *args):
+    def unhovered(self):
 
         if self.show_path:
             self.image.set_alpha(self.alpha_off)
@@ -171,10 +152,8 @@ class Cell(pg.sprite.Sprite):
             # self.message.unhovered()
             pass
 
-    def clicked(self, *args, **kwargs):
-        if not self.check_real_pos("clicked", *args, **kwargs):
-            self.args = args
-            self.kwargs = kwargs
+    def clicked(self):
+        if not self.check_real_pos("clicked"):
             self.state = True
 
     def unclicked(self):

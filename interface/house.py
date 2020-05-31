@@ -13,7 +13,7 @@ fp = FindPath()
 class House(BackGround):
     """Create a house on the map"""
 
-    def __init__(self, Map, topleft):#, Game, background, topleft, cells, borders=dict()):
+    def __init__(self, Map, topleft):
         BackGround.__init__(self)
         self.Map = Map
         self.Maps = Map.Maps
@@ -137,11 +137,12 @@ class House(BackGround):
         borders = self.Map.map_info["borders"]
 
         for cell in self.forbidden_cells:
-            all_cells.pop(cell, None)  #self.borders.pop(cell))
-            borders.pop(cell, None)  # CONSEIL, if house del border where char
-            # came from, can't go back and can't move : stuck for ever
-            # must del border in adjacent map to avoid it
-        self.Map.map_info["cells"] = all_cells
+            self.Map.map_info["cells"].pop(
+                cell,
+                self.Map.map_info["borders"].pop(cell, None))
+                # CONSEIL: if house del border where character cam from,
+                # can't go back and can't move : stuck for ever.
+                # Must del border in adjacent map to avoid it.
 
         for cell in self.special_cell:
             all_cells[cell].function = self.tp_house

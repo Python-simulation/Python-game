@@ -15,14 +15,14 @@ class BackGround(pg.sprite.Sprite):
             # self.image.set_colorkey(0)
             self.rect = self.image.get_rect()
 
-    def hovered(self, *args):
+    def hovered(self):
         pass
 
-    def unhovered(self, *args):
+    def unhovered(self):
         pass
 
-    def clicked(self, *args):
+    def clicked(self):
         pass
 
-    def unclicked(self, *args):
+    def unclicked(self):
         pass

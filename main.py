@@ -201,7 +201,7 @@ class Game():
                                 if self.mouse.clicking(cell):
                                     for cell_bis in self.all_cells.values():
                                         cell_bis.unclicked()
-                                    cell.clicked(cell.rect.center)
+                                    cell.clicked()
                                     # print("hit cell", cell.rect)
                                     break
                             # else:
