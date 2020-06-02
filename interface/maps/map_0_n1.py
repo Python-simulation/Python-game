@@ -35,6 +35,8 @@ class Map:
         tree = BackGround(name, -1)
         self.tree_cell = (11, 15)
         position = fp.cell_to_pos(self.tree_cell)
+        position = (position[0],
+                    position[1] + cell_sizes[1]/2)
         tree.rect.midbottom = position
         sprites.add(tree)
 

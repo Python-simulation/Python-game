@@ -3,6 +3,7 @@ import pygame as pg
 from .display import display_info
 from .interface_functions import NeededFunctions
 from .findpath import FindPath
+from .findpath import cell_sizes
 
 nf = NeededFunctions()
 fp = FindPath()
@@ -114,7 +115,10 @@ class Cell(pg.sprite.Sprite):
 
         if not self.check_real_pos("hovered") and self.show_path:
             self.image.set_alpha(self.alpha_on)
-            self.road = fp.find_path(self.Game.character.rect.midbottom,
+            char_pos = self.Game.character.rect.midbottom
+            begin_cell = (char_pos[0],
+                          char_pos[1] - cell_sizes[1]/2)
+            self.road = fp.find_path(begin_cell,
                                      self.rect.center,
                                      all_cells=self.Game.all_cells,
                                      cardinal=self.Game.character.cardinal)

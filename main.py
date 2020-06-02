@@ -21,6 +21,8 @@ from interface.lower_bar import LowerBar
 
 from interface.findpath import cell_sizes
 
+from interface.menu import Menu
+
 if not pg.font:
     print("Warning, fonts disabled")
 if not pg.mixer:
@@ -54,7 +56,7 @@ class Game():
         self.ratio_pix_meter_y = GAME_SCREEN_H/18  # pixel/meter
 
         self.check_border = None
-        # self._anti_recursion = False
+
         self.flags = (
                 pg.RESIZABLE |
                 pg.DOUBLEBUF
@@ -100,10 +102,10 @@ class Game():
         self.all_maps = self.all_maps_fct(self)
         self.change_map((0, 0))
 
-        # self.character.rect.midbottom = self.cells[(1,1)].rect.center
-
         self.game_screen.image.blit(self.background_screen.image,
                                     self.background_screen.rect)
+
+        self.menu = Menu(self)
 
     def loader(self):
         self.data_dir = data_dir
@@ -155,10 +157,10 @@ class Game():
 
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:  # close windows using escape key
-                    self.running = False
+                    self.menu.run(self.dt)
+                    # self.running = False
 
             elif event.type == pg.VIDEORESIZE:
-
                 self.reset_app_screen(event.dict['size'])
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
@@ -341,11 +343,14 @@ class Game():
         pg.display.update()
 
     def teleportation(self, new_map_pos, new_char_pos, *args):
+        new_char_pos = (new_char_pos[0], new_char_pos[1] + cell_sizes[1]/2)
         if args != self.check_border:
             self.character.dest(*args)
             self.check_border = args
 
-        if (self.character.rect.midbottom == args[0]
+        char_pos = self.character.rect.midbottom
+        char_pos = (char_pos[0], char_pos[1] - cell_sizes[1]/2)
+        if (char_pos == args[0]
                 and self.character.road == list()):
             self.change_map(new_map_pos)
             self.character.rect.midbottom = new_char_pos
@@ -361,7 +366,7 @@ class Game():
         right = (self.game_screen.rect.right//cell_sizes[0])*cell_sizes[0]
         new_char_pos = (
             right - cell_sizes[0]/2,
-            self.character.rect.midbottom[1]
+            self.character.rect.midbottom[1] - cell_sizes[1]/2
         )
         return self.teleportation(new_map_pos, new_char_pos, *args)
 
@@ -370,7 +375,7 @@ class Game():
                        self.current_map_pos[1])
         new_char_pos = (
             self.game_screen.rect.left + cell_sizes[0]/2,
-            self.character.rect.midbottom[1]
+            self.character.rect.midbottom[1] - cell_sizes[1]/2
         )
         return self.teleportation(new_map_pos, new_char_pos, *args)
 
@@ -397,7 +402,7 @@ class Game():
         self.running = True
         self.dt = self.clock.tick()/1000  # avoid taking init time into account
         while self.running:
-            self.dt = self.clock.tick()/1000  # time from the last computation
+            self.dt = self.clock.tick(300)/1000  # time from the last computation
             self.events()  # look for commands
             self.dt_accumulator += self.dt
             step = 0

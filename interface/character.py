@@ -38,9 +38,9 @@ class Character(pg.sprite.Sprite):
 #        self.image = pg.transform.scale(
 #            self.image,
 #            (self.image.get_rect().w//2, self.image.get_rect().h//2))
-        self.rect.midbottom = (2*cell_sizes[0], 2*cell_sizes[1])
+        position = fp.cell_to_pos((4, 16))
+        self.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
 
-#        self.position = self.rect.midbottom
         self.dest_coord = self.rect.midbottom
         self.road = list()
         self.moving = False
@@ -97,7 +97,10 @@ class Character(pg.sprite.Sprite):
                 and moving_to_pos != self.rect.midbottom):
 
             if self.road == list():
-                self.road = fp.find_path(self.rect.midbottom,
+
+                begin_cell = (self.rect.midbottom[0],
+                              self.rect.midbottom[1] - cell_sizes[1]/2)
+                self.road = fp.find_path(begin_cell,
                                          moving_to_pos,
                                          all_cells=self.Game.all_cells,
                                          cardinal=self.cardinal)
@@ -113,6 +116,8 @@ class Character(pg.sprite.Sprite):
 
             if self.road != list():
                 self.dest_coord = self.road[0]
+                self.dest_coord = (self.dest_coord[0],
+                                   self.dest_coord[1] + cell_sizes[1]/2)
                 if self._npc:
                     print("npc is moving to", self.road[-1])
                 else:
@@ -168,6 +173,8 @@ class Character(pg.sprite.Sprite):
             try:
                 self.road.pop(0)
                 self.dest_coord = self.road[0]
+                self.dest_coord = (self.dest_coord[0],
+                                   self.dest_coord[1] + cell_sizes[1]/2)
                 self.moving = True
 #                print("choose next")
                 return

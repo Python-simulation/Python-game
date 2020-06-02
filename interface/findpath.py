@@ -5,6 +5,7 @@ from math import pi
 cell_sizes = (128, 64)
 authorized_angle = math.atan(0.5)
 
+
 class FindPath:
 
     def cell_to_pos(self, cell):
