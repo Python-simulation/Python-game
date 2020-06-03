@@ -5,30 +5,23 @@ from .background import BackGround
 from .cell import Cell
 from .findpath import cell_sizes
 from .findpath import FindPath
+from .sprite import Sprite
 
 nf = NeededFunctions()
 fp = FindPath()
 
 
-class House(BackGround):
+class House():
     """Create a house on the map"""
 
-    def __init__(self, Map, topleft):
-        BackGround.__init__(self)
+    def __init__(self, Map, cell_pos):
         self.Map = Map
         self.Maps = Map.Maps
         self.Game = Map.Game
 
-        self.name = "first_house"
-
         name = os.path.join(self.Game.data_dir, 'house.png')
-        self.image, self.rect = nf.load_image(name, -1)
-
-        self.rect.topleft = topleft
-
-        self.background = self.Map.map_info["background"]
-        self.background.image.blit(self.image, self.rect)  # TODO: if want to have
-        # the character to "vanish" being a building, must change this line
+        self.sprite = Sprite(Map.Game, Map, name, cell_pos)
+        self.rect = self.sprite.rect
 
         self.forbidden_cells = list()
 
@@ -44,10 +37,6 @@ class House(BackGround):
 
         for cell in self.special_cell:
             self.forbidden_cells.remove(cell)
-
-        self.refresh()
-
-        self.Maps.all_maps[self.name] = self
 
         self.create_inside()
 
@@ -75,13 +64,15 @@ class House(BackGround):
         return self.Game.teleportation(new_map_pos, new_char_pos, *args)
 
     def create_inside(self):
+        self.name = "first_house"
+        self.Maps.all_maps[self.name] = self
 
         self.outside = self.Map.position
 
         self.map_info = dict()
 
         background = BackGround()
-        background.image = self.background.image.copy()  # change if want black
+        background.image = self.Map.map_info["background"].image.copy()
         background.rect = background.image.get_rect()
 
         name = os.path.join(self.Game.data_dir, 'house_inside.png')
@@ -91,6 +82,9 @@ class House(BackGround):
         background.image.blit(image, rect)
 
         self.map_info["background"] = background
+
+        self.bg_sprites = pg.sprite.RenderPlain()
+        self.map_info["background_sprites"] = self.bg_sprites
 
         sprites = pg.sprite.RenderPlain(())
         self.map_info["sprites"] = sprites
@@ -133,8 +127,9 @@ class House(BackGround):
         return cells_dict
 
     def refresh(self):
+        self.Map.bg_sprites.add(self.sprite)
+
         all_cells = self.Map.map_info["cells"]
-        borders = self.Map.map_info["borders"]
 
         for cell in self.forbidden_cells:
             self.Map.map_info["cells"].pop(

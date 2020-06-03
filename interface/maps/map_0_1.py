@@ -14,6 +14,7 @@ from ..chimp import Chimp
 from ..findpath import cell_sizes
 from ..house import House
 
+
 class Map:
 
     def __init__(self, Maps, Game):
@@ -23,30 +24,32 @@ class Map:
 
         self.map_info = dict()
 
-        self.refresh()
-
         name = os.path.join(Game.data_dir, 'background2.png')
         background = BackGround(name)
         background.rect.center = Game.game_screen.rect.center
 
         self.map_info["background"] = background
 
+        self.bg_sprites = pg.sprite.RenderPlain()
+
         sprites = pg.sprite.RenderPlain()
 
         self.map_info["sprites"] = sprites
 
-        position = (1*cell_sizes[0],
-                    1*cell_sizes[1])
-        self.house = House(self, position)
+        house_cell = (13, 22)
+        self.house = House(self, house_cell)
+        # self.house.create_inside()
 
         Maps.all_maps[self.position] = self
+
+        self.refresh()
 
     def refresh(self):
         [cells_dict, borders_left, borders_top,
          borders_right, borders_bottom, borders] = self.Maps.map_reset_cells()
+
+        self.map_info["background_sprites"] = self.bg_sprites
         self.map_info["cells"] = cells_dict
         self.map_info["borders"] = borders_top
-        try:
-            self.house.refresh()
-        except AttributeError:
-            pass
+
+        self.house.refresh()

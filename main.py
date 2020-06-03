@@ -1,4 +1,7 @@
+
 """
+Pygame game.
+
 This simple example is used for the line-by-line tutorial
 that comes with pygame. It is based on a 'popular' web banner.
 Note there are comments here, but for the full explanation,
@@ -38,11 +41,14 @@ mp = MapFunctions()
 
 
 class Game():
-    """this function is called when the program starts.
-       it initializes everything it needs, then runs in
-       a loop until the function returns."""
+    """
+    Game class called when the program starts.
 
-    def __init__(self, WINDOW_W=1920, WINDOW_H=1080):
+    it initializes everything it needs, then runs in
+    a loop until the function returns.
+    """
+
+    def __init__(self, size=(1920, 1080)):
         pg.init()
         self.loader()
         name = os.path.join(self.data_dir, "logo32x32.png")
@@ -63,7 +69,7 @@ class Game():
                 )
 
         # application window surface
-        self.app_screen = pg.display.set_mode((WINDOW_W, WINDOW_H), self.flags)
+        self.app_screen = pg.display.set_mode(size, self.flags)
         self.app_screen_rect = self.app_screen.get_rect()
 
         # game screen surface (where all the ingame stuff gets blitted on)
@@ -119,6 +125,7 @@ class Game():
         map_class.refresh()
         self.current_map = map_class.map_info
         self.background_screen = self.current_map["background"]
+        self.bg_sprites = self.current_map["background_sprites"]
         self.cells = self.current_map["cells"]  # dict
         self.cells_visible = self.current_map["borders"]  # dict
         self.all_cells = dict(self.cells_visible)
@@ -126,8 +133,9 @@ class Game():
         self.sprites = self.current_map["sprites"]
 
         self.allsprites = pg.sprite.RenderPlain((
-                self.sprites,
+                self.bg_sprites,
                 self.cells_visible.values(),
+                self.sprites,
                 ))  # character always ontop of sprites : not good for persperc
         # for cells in self.cells.values():
         #     self.allsprites.add(cells)
@@ -186,7 +194,7 @@ class Game():
 #                            print("hit button", button)
                             break
                     else:
-                        self.check_border = None  # TODO: ugly but necessary for now
+                        self.check_border = None  # OPTIMIZE: ugly but necessary for now
                         for sprite in self.allsprites:
                             try:
                                 sprite.unclicked()
@@ -239,6 +247,7 @@ class Game():
                         for sprites in self.sprites:
                             if self.mouse.hovering(sprites):
                                 sprites.hovered()
+                                pg.mouse.set_cursor(*pg.cursors.ball)
 #                                    print("hover sprite", sprites)
                                 break
                         else:
@@ -343,21 +352,22 @@ class Game():
         pg.display.update()
 
     def teleportation(self, new_map_pos, new_char_pos, *args):
+
         new_char_pos = (new_char_pos[0], new_char_pos[1] + cell_sizes[1]/2)
+
         if args != self.check_border:
             self.character.dest(*args)
             self.check_border = args
 
         char_pos = self.character.rect.midbottom
         char_pos = (char_pos[0], char_pos[1] - cell_sizes[1]/2)
-        if (char_pos == args[0]
-                and self.character.road == list()):
+
+        if char_pos == args[0] and self.character.road == list():
             self.change_map(new_map_pos)
             self.character.rect.midbottom = new_char_pos
             self.check_border = None
             return None
         else:
-
             return False
 
     def border_left(self, *args):
@@ -402,7 +412,7 @@ class Game():
         self.running = True
         self.dt = self.clock.tick()/1000  # avoid taking init time into account
         while self.running:
-            self.dt = self.clock.tick(300)/1000  # time from the last computation
+            self.dt = self.clock.tick(80)/1000  # time from the last computation
             self.events()  # look for commands
             self.dt_accumulator += self.dt
             step = 0
@@ -447,5 +457,5 @@ if __name__ == "__main__":
     WINDOW_W = 1024
     WINDOW_H = 768
 
-    game = Game(WINDOW_W=WINDOW_W, WINDOW_H=WINDOW_H)
+    game = Game(size=(WINDOW_W, WINDOW_H))
     game.run()

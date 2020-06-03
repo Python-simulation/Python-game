@@ -60,7 +60,7 @@ class Menu:
 
         while self.running:
 
-            self.Game.clock.tick(300)/1000  # avoid taking init time into account
+            self.Game.clock.tick(80)/1000  # avoid taking init time into account
             self.events()  # look for commands
 
             self.update()  # update movement

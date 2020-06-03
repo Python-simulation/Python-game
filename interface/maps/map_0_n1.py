@@ -9,6 +9,7 @@ import os
 import pygame as pg
 
 from ..background import BackGround
+from ..sprite import Sprite
 from ..findpath import cell_sizes
 from ..findpath import FindPath
 fp = FindPath()
@@ -22,6 +23,9 @@ class Map:
         self.position = (0, -1)  # position of the map relative to all the maps
 
         self.map_info = dict()
+        self.cells_dict = dict()
+
+        Maps.all_maps[self.position] = self
 
         name = os.path.join(Game.data_dir, 'background2.png')
         background = BackGround(name)
@@ -29,20 +33,19 @@ class Map:
 
         self.map_info["background"] = background
 
-        sprites = pg.sprite.RenderPlain()
+        self.sprites = pg.sprite.RenderPlain()
+
+        self.bg_sprites = pg.sprite.RenderPlain()
 
         name = os.path.join(Game.data_dir, 'tree.png')
-        tree = BackGround(name, -1)
-        self.tree_cell = (11, 15)
-        position = fp.cell_to_pos(self.tree_cell)
-        position = (position[0],
-                    position[1] + cell_sizes[1]/2)
-        tree.rect.midbottom = position
-        sprites.add(tree)
 
-        self.map_info["sprites"] = sprites
-
-        Maps.all_maps[self.position] = self
+        self.bg_sprites.add(Sprite(Game, self, name, (11, 15)))
+        self.bg_sprites.add(Sprite(Game, self, name, (16, 18)))
+        self.bg_sprites.add(Sprite(Game, self, name, (17, 18)))
+        self.bg_sprites.add(Sprite(Game, self, name, (18, 18)))
+        self.bg_sprites.add(Sprite(Game, self, name, (12, 20)))
+        self.bg_sprites.add(Sprite(Game, self, name, (16, 26)))
+        self.bg_sprites.add(Sprite(Game, self, name, (16, 28)))
 
         self.refresh()
 
@@ -50,7 +53,13 @@ class Map:
         [cells_dict, borders_left, borders_top,
          borders_right, borders_bottom, borders] = self.Maps.map_reset_cells()
 
-        cells_dict.pop(self.tree_cell)
+        self.cells_dict = cells_dict
+        self.borders = borders_bottom
 
-        self.map_info["cells"] = cells_dict
-        self.map_info["borders"] = borders_bottom
+        for sprite in self.bg_sprites:
+            sprite.refresh()
+
+        self.map_info["background_sprites"] = self.bg_sprites
+        self.map_info["cells"] = self.cells_dict
+        self.map_info["borders"] = self.borders
+        self.map_info["sprites"] = self.sprites
