@@ -132,11 +132,12 @@ class Game():
         self.all_cells.update(self.cells)
         self.sprites = self.current_map["sprites"]
 
-        self.allsprites = pg.sprite.RenderPlain((
-                self.bg_sprites,
-                self.cells_visible.values(),
-                self.sprites,
-                ))  # character always ontop of sprites : not good for persperc
+        self.allsprites = pg.sprite.LayeredUpdates((
+            # self.character,
+            self.bg_sprites,
+            self.cells_visible.values(),
+            self.sprites,
+            ))  # character always ontop of sprites : not good for persperc
         # for cells in self.cells.values():
         #     self.allsprites.add(cells)
         self.allsprites.add(self.character)
@@ -412,7 +413,7 @@ class Game():
         self.running = True
         self.dt = self.clock.tick()/1000  # avoid taking init time into account
         while self.running:
-            self.dt = self.clock.tick(80)/1000  # time from the last computation
+            self.dt = self.clock.tick(80)/1000  # time of the last computation
             self.events()  # look for commands
             self.dt_accumulator += self.dt
             step = 0

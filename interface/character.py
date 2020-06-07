@@ -84,12 +84,61 @@ class Character(pg.sprite.Sprite):
 
     def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""
+
         if self.moving:
+            self.change_order()
             self._walk(dt)
+
         else:
             if self._npc:
                 self._auto_dest(dt)
             pass
+
+    def change_order(self):
+        player_feet = (self.rect.midbottom[0],
+                       self.rect.midbottom[1] - cell_sizes[1]/2)
+
+        self.Game.allsprites.remove(self)  # used to set back player and npc
+        self.Game.allsprites.add(self)  # to first plan if no overlap
+
+        for sprite in self.Game.bg_sprites:
+            if self.rect.colliderect(sprite.rect):
+                # print("overlap", self.rect, sprite.rect)
+                new_list = pg.sprite.LayeredUpdates(())
+                # self.Game.allsprites.copy()
+                # new_list.empty()
+                self.Game.allsprites.remove(self)
+
+                for sprite_bis in self.Game.allsprites:
+                    # print(sprite_bis)  # BUG: infinit group creation !!
+                    if sprite_bis == sprite:
+                        if sprite.check_order(player_feet):
+                            # print("above")
+                            new_list.add(sprite)
+                            new_list.add(self)
+                            break
+                        else:
+                            # print("bellow")
+                            new_list.add(self)
+                            new_list.add(sprite)
+                            break
+
+                    new_list.add(sprite_bis)
+
+                check = False
+
+                for sprite_bis in self.Game.allsprites:
+                    # print(sprite_bis, check)
+                    if check is True:
+                        new_list.add(sprite_bis)
+
+                    if sprite_bis == sprite:
+                        check = True
+
+                self.Game.allsprites = new_list.copy()
+                # new_list.empty()
+                if not sprite.check_order(player_feet):  # stay behind the 1st
+                    break
 
     def dest(self, moving_to_pos):
         if (self.area.left <= moving_to_pos[0] <= self.area.right
@@ -118,10 +167,10 @@ class Character(pg.sprite.Sprite):
                 self.dest_coord = self.road[0]
                 self.dest_coord = (self.dest_coord[0],
                                    self.dest_coord[1] + cell_sizes[1]/2)
-                if self._npc:
-                    print("npc is moving to", self.road[-1])
-                else:
-                    print("you are moving to", self.road[-1])
+                # if self._npc:
+                #     print("npc is moving to", self.road[-1])
+                # else:
+                #     print("you are moving to", self.road[-1])
 #                print("road", self.road)
                 self.moving = True
 

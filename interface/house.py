@@ -19,8 +19,9 @@ class House():
         self.Maps = Map.Maps
         self.Game = Map.Game
 
+        markers = [[8, 7], [12, 3]]
         name = os.path.join(self.Game.data_dir, 'house.png')
-        self.sprite = Sprite(Map.Game, Map, name, cell_pos)
+        self.sprite = Sprite(name, cell_pos, markers=markers)
         self.rect = self.sprite.rect
 
         self.forbidden_cells = list()
@@ -32,11 +33,14 @@ class House():
                 self.forbidden_cells.append(cell)
 
         self.special_cell = [
-            self.add_init_pos([12, 5]),
+            self.add_init_pos([12, 5]),  # OPTIMIZE: currently can walk on tp
+            # cell without tp if try to change map but stopped by the house
             ]
 
         for cell in self.special_cell:
             self.forbidden_cells.remove(cell)
+
+        self.tp_cell_in = self.special_cell[0]
 
         self.create_inside()
 
@@ -63,11 +67,13 @@ class House():
 
         return self.Game.teleportation(new_map_pos, new_char_pos, *args)
 
-    def create_inside(self):
+    def create_inside(self):  # TODO: move it to an other file
         self.name = "first_house"
         self.Maps.all_maps[self.name] = self
 
         self.outside = self.Map.position
+
+        self.tp_cell_out = self.add_init_pos([13, 5])
 
         self.map_info = dict()
 
@@ -129,18 +135,19 @@ class House():
     def refresh(self):
         self.Map.bg_sprites.add(self.sprite)
 
+        # for sprite in self.bg_sprites:
+        #     sprite.refresh()
+
         all_cells = self.Map.map_info["cells"]
 
         for cell in self.forbidden_cells:
             self.Map.map_info["cells"].pop(
                 cell,
-                self.Map.map_info["borders"].pop(cell, None))
-                # CONSEIL: if house del border where character cam from,
-                # can't go back and can't move : stuck for ever.
-                # Must del border in adjacent map to avoid it.
+                self.Map.map_info["borders"].pop(cell, None)
+            )
+            # CONSEIL: if house del border where character cam from,
+            # can't go back and can't move : stuck for ever.
+            # Must del border in adjacent map to avoid it.
 
         for cell in self.special_cell:
             all_cells[cell].function = self.tp_house
-
-        self.tp_cell_in = self.special_cell[0]
-        self.tp_cell_out = self.add_init_pos([13, 5])

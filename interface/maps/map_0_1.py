@@ -9,9 +9,6 @@ import os
 import pygame as pg
 
 from ..background import BackGround
-from ..character import Character
-from ..chimp import Chimp
-from ..findpath import cell_sizes
 from ..house import House
 
 
