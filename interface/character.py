@@ -12,12 +12,11 @@ from .flying_menu import FlyingMenu
 from .button import Button
 from .background import BackGround
 
-nf = NeededFunctions()
-fp = FindPath()
-
 from .findpath import cell_sizes
 from .findpath import authorized_angle
 
+nf = NeededFunctions()
+fp = FindPath()
 
 class Character(pg.sprite.Sprite):
     """moves a character across the screen."""
@@ -95,6 +94,9 @@ class Character(pg.sprite.Sprite):
             pass
 
     def change_order(self):
+        if self not in self.Game.allsprites:  # don't change if not displayed
+            return
+
         player_feet = (self.rect.midbottom[0],
                        self.rect.midbottom[1] - cell_sizes[1]/2)
 
@@ -286,10 +288,12 @@ class Character(pg.sprite.Sprite):
                     - self.area.left) // (cell_sizes[0]/2)
         right_mvt = (self.area.right
                      - self.rect.midbottom[0]) // (cell_sizes[0]/2)
-        up_mvt = (self.rect.midbottom[1]
+        up_mvt = (self.rect.midbottom[1]-cell_sizes[1]/2
                   - self.area.top) // (cell_sizes[1]/2)
         bottom_mvt = (self.area.bottom
-                      - self.rect.midbottom[1]) // (cell_sizes[1]/2)
+                      - (self.rect.midbottom[1]-cell_sizes[1]/2)) // (cell_sizes[1]/2)
+        # print(self.rect.midbottom[1], self.area.top, self.area.bottom)
+        # print(left_mvt, right_mvt, up_mvt, bottom_mvt, self._npc_nbr_cell)
 
         if left_mvt > self._npc_nbr_cell:
             left_mvt = self._npc_nbr_cell
@@ -307,15 +311,27 @@ class Character(pg.sprite.Sprite):
 
             cells = (random.randint(-left_mvt, right_mvt),
                      random.randint(-up_mvt, bottom_mvt))
+            # print(cells)
+            if (abs(cells[0]) + abs(cells[1])) > self._npc_nbr_cell:
+                if random.randint(0, 1) == 0:
+                    cells = (0, cells[1])
+                else:
+                    cells = (cells[0], 0)
 
-        moving_to_pos = (cells[0]*(cell_sizes[0]/2)+self.rect.midbottom[0],
-                         cells[1]*(cell_sizes[1]/2)+self.rect.midbottom[1])
-        self.dest(moving_to_pos)
+            position = (self.rect.midbottom[0],
+                        self.rect.midbottom[1] - cell_sizes[1]/2)
+            cell_pos = fp.pos_to_cell(position)
+            new_cell_pos = (cell_pos[0] + cells[0],
+                            cell_pos[1] + cells[1])
+            moving_to_pos = fp.cell_to_pos(new_cell_pos)
+
+            # print("dest", moving_to_pos)
+            self.dest(moving_to_pos)
 
     def allowed_mvt(self, allowed_cell=0, authorized_mvt=1):
         self._npc_nbr_cell = authorized_mvt
-        topleft = (self.rect.midbottom[0] - allowed_cell*cell_sizes[0]/2,
-                   self.rect.midbottom[1] - allowed_cell*cell_sizes[1]/2)
+        topleft = (self.rect.midbottom[0] - allowed_cell*cell_sizes[0]/2,  # OPTIMIZE: not defined by char position, but absolute position
+                   self.rect.midbottom[1]-cell_sizes[1]/2 - allowed_cell*cell_sizes[1]/2)
         self.area = pg.Rect(topleft,
                             (allowed_cell*cell_sizes[0],
                              allowed_cell*cell_sizes[1]))

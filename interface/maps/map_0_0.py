@@ -48,9 +48,9 @@ class Map:
         npc.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
         # npc.rect.midbottom = (5*cell_sizes[0]+cell_sizes[0]/2,
         #                       5*cell_sizes[1]+cell_sizes[1]/2)
-        npc.allowed_mvt(1)
+        npc.allowed_mvt(2, 1)
         npc.max_speed = 5
-        npc._npc_time = 0.5
+        npc._npc_time = 1
         sprites.add(npc)
 
         # show = BackGround(size=npc.area.size)
@@ -60,9 +60,13 @@ class Map:
         npc_2 = Character(Game, file_name)
         position = fp.cell_to_pos((20, 10))
         npc_2.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
-        npc_2.allowed_mvt(1, 2)
-        npc_2._npc_time = 1
+        npc_2.allowed_mvt(10, 3)
+        npc_2._npc_time = 2
         sprites.add(npc_2)
+
+        # show = BackGround(size=npc_2.area.size)
+        # show.rect.topleft = npc_2.area.topleft
+        # sprites.add(show)
 
         self.map_info["sprites"] = sprites
 

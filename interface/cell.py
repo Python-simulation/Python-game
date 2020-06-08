@@ -17,7 +17,7 @@ class Cell(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)
         # self.image = pg.Surface(size)
 
-        name = os.path.join(Game.data_dir, 'grass.png')
+        name = os.path.join(Game.data_dir, 'hover.png')
         self.image, self.rect = nf.load_image(name, -1)
         self.rect = self.image.get_rect()
         self.rect.center = position

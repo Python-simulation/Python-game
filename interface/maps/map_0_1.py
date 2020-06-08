@@ -10,6 +10,8 @@ import pygame as pg
 
 from ..background import BackGround
 from ..house import House
+from ..findpath import FindPath
+fp = FindPath()
 
 
 class Map:

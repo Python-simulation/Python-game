@@ -43,8 +43,8 @@ class Map:
         self.list_refresh.append(Tree(self, (12, 20)))
         self.list_refresh.append(Tree(self, (16, 26)))
         self.list_refresh.append(Tree(self, (16, 28)))
-        self.list_refresh.append(Wall_left(self, (16.5, 20.5)))  # OPTIMIZE: ugly
-        self.list_refresh.append(Wall_right(self, (17.5, 22.5)))
+        self.list_refresh.append(Wall_left(self, (16, 20)))
+        self.list_refresh.append(Wall_right(self, (17, 22)))
 
         self.refresh()
 

@@ -58,6 +58,8 @@ class Game():
         GAME_SCREEN_W = 1920
         GAME_SCREEN_H = 1080
 
+        self.size = (GAME_SCREEN_W, GAME_SCREEN_H)
+
         self.ratio_pix_meter_x = GAME_SCREEN_W/32  # pixel/meter
         self.ratio_pix_meter_y = GAME_SCREEN_H/18  # pixel/meter
 
@@ -137,10 +139,10 @@ class Game():
             self.bg_sprites,
             self.cells_visible.values(),
             self.sprites,
-            ))  # character always ontop of sprites : not good for persperc
+            self.character,
+            ))
         # for cells in self.cells.values():
         #     self.allsprites.add(cells)
-        self.allsprites.add(self.character)
         # self.allsprites.add(self.mouse)
 
     def unclick(self):
@@ -165,9 +167,8 @@ class Game():
                 self.running = False
 
             elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:  # close windows using escape key
+                if event.key == pg.K_ESCAPE:  # pause the game using escape key
                     self.menu.run(self.dt)
-                    # self.running = False
 
             elif event.type == pg.VIDEORESIZE:
                 self.reset_app_screen(event.dict['size'])

@@ -10,7 +10,47 @@ import pygame as pg
 
 from ..background import BackGround
 from ..findpath import cell_sizes
-from ..chimp import Chimp
+from ..map_functions import MapFunctions
+from ..findpath import FindPath
+from ..tree import Wall, Wall_right, Wall_left, Tree, Hole
+from ..character import Character
+
+fp = FindPath()
+mf = MapFunctions()
+
+map_data = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2],
+    [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1],
+    [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 3, 3, 3, 2, 1, 1, 1, 1, 1, 1, 7, 1, 1, 2, 1, 1],
+    [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 3, 2, 3, 2, 1, 1, 1, 1, 1, 1, 7, 1, 1, 2, 1, 1, 1],
+    [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 3, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1],
+    [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1],
+    [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 7, 7, 7, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1],
+    [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 6, 5, 1, 1, 4, 4, 4, 7, 2, 2, 2, 2, 2, 2, 2, 1, 1],
+    [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 3, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 4, 2, 2, 1, 2, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        ]
 
 
 class Map:
@@ -22,18 +62,67 @@ class Map:
 
         self.map_info = dict()
 
-        name = os.path.join(Game.data_dir, 'background2.png')
-        background = BackGround(name)
-        background.rect.center = Game.game_screen.rect.center
-
-        self.map_info["background"] = background
+        background = BackGround(size=Game.size)
 
         self.bg_sprites = pg.sprite.RenderPlain()
 
+        self.list_refresh = list()
+
+        name = os.path.join(Game.data_dir, 'grass.png')
+        grass = BackGround(name, -1)
+        name = os.path.join(Game.data_dir, 'ground.png')
+        ground = BackGround(name, -1)
+        name = os.path.join(Game.data_dir, 'water.png')
+        water = BackGround(name, -1)
+
+        for row_nb, row in enumerate(map_data):
+            for col_nb, tile in enumerate(row):
+
+                if tile == 1:
+                    position = fp.cell_to_pos((row_nb, col_nb))
+                    grass.rect.center = position
+                    background.image.blit(grass.image, grass.rect)
+
+                elif tile == 2:
+                    position = fp.cell_to_pos((row_nb, col_nb))
+                    ground.rect.center = position
+                    background.image.blit(ground.image, ground.rect)
+
+                elif tile == 3:
+                    position = fp.cell_to_pos((row_nb, col_nb))
+                    water.rect.center = position
+                    background.image.blit(water.image, water.rect)
+
+                elif tile == 4:
+                    self.list_refresh.append(Wall(self, (row_nb, col_nb)))
+
+                elif tile == 5:
+                    self.list_refresh.append(Wall_right(self, (row_nb, col_nb)))
+
+                elif tile == 6:
+                    self.list_refresh.append(Wall_left(self, (row_nb, col_nb)))
+
+                elif tile == 7:
+                    position = fp.cell_to_pos((row_nb, col_nb))
+                    grass.rect.center = position
+                    background.image.blit(grass.image, grass.rect)
+                    self.list_refresh.append(Tree(self, (row_nb, col_nb)))
+
+                elif tile == 8:
+                    self.list_refresh.append(Hole(self, (row_nb, col_nb)))
+
+        self.map_info["background"] = background
+
         sprites = pg.sprite.RenderPlain()
-        chimp = Chimp(Game)
-        chimp.speed_x = 10
-        sprites.add(chimp)
+        file_name = os.path.join(Game.data_dir, "npc.png")
+        npc = Character(Game, file_name)
+        position = fp.cell_to_pos((15, 20))
+        npc.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
+
+        npc.allowed_mvt(5, 1)
+        npc.max_speed = 5
+        npc._npc_time = 2
+        sprites.add(npc)
 
         self.map_info["sprites"] = sprites
 
@@ -51,3 +140,6 @@ class Map:
         self.map_info["background_sprites"] = self.bg_sprites
         self.map_info["cells"] = cells_dict
         self.map_info["borders"] = borders_right
+
+        for sprite in self.list_refresh:
+            sprite.refresh()
