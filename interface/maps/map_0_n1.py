@@ -59,5 +59,3 @@ class Map:
 
         for sprite in self.list_refresh:
             sprite.refresh()
-
-

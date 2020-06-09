@@ -9,11 +9,13 @@ import os
 import pygame as pg
 
 from ..background import BackGround
-from ..character import Character
+from ..npc.character import Character
 from ..chimp import Chimp
 from ..findpath import cell_sizes
 from ..findpath import FindPath
 from ..tree import Tree
+from ..npc.someguy import SomeGuy
+from ..npc.npc import Npc
 
 fp = FindPath()
 
@@ -42,26 +44,17 @@ class Map:
         chimp = Chimp(Game)
         sprites.add(chimp)
 
-        file_name = os.path.join(Game.data_dir, "npc.png")
-        npc = Character(Game, file_name)
-        position = fp.cell_to_pos((10, 20))
-        npc.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
-        # npc.rect.midbottom = (5*cell_sizes[0]+cell_sizes[0]/2,
-        #                       5*cell_sizes[1]+cell_sizes[1]/2)
-        npc.allowed_mvt(2, 1)
-        npc.max_speed = 5
-        npc._npc_time = 1
+        npc = SomeGuy(Game, (10, 20))
         sprites.add(npc)
 
         # show = BackGround(size=npc.area.size)
         # show.rect.topleft = npc.area.topleft
         # sprites.add(show)
 
-        npc_2 = Character(Game, file_name)
-        position = fp.cell_to_pos((20, 10))
-        npc_2.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
-        npc_2.allowed_mvt(10, 3)
-        npc_2._npc_time = 2
+        file_name = os.path.join(Game.data_dir, "npc.png")
+        npc_2 = Npc(Game, file_name, cell_pos=(20, 10))
+        # npc_2.allowed_mvt(10, 3)
+        # npc_2._npc_time = 2
         sprites.add(npc_2)
 
         # show = BackGround(size=npc_2.area.size)

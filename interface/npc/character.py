@@ -4,40 +4,38 @@ from math import pi
 import random
 
 import pygame as pg
-from .interface_functions import NeededFunctions
-from .findpath import FindPath
-from .display import display_info
-from .animation import image_animate
-from .flying_menu import FlyingMenu
-from .button import Button
-from .background import BackGround
+from ..interface_functions import NeededFunctions
+from ..findpath import FindPath
+from ..animation import image_animate
+from ..flying_menu import FlyingMenu
+from ..button import Button
+from ..background import BackGround
 
-from .findpath import cell_sizes
-from .findpath import authorized_angle
+from ..findpath import cell_sizes
+from ..findpath import authorized_angle
 
 nf = NeededFunctions()
 fp = FindPath()
 
+
 class Character(pg.sprite.Sprite):
     """moves a character across the screen."""
 
-    def __init__(self, Game, file_name, cardinal=4, npc=True):
+    def __init__(self, Game, file_name, cell_pos,
+                 cardinal=4, frames=6, anim_time=0.1):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)
         self.area = self.Game.game_screen.rect.copy()  # walkable space
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
         # self.image, self.rect = nf.load_image(name, colorkey=-1)
-        self.cardinal = cardinal  # mvt alloyed (8 means cros+diag, 4 means cross)
-        self._npc = npc  # if is a npc or the player
-        self.frames = 6  # number of frame for an animation
+        self._cardinal = cardinal  # alloyed mvt (8 -> cros+diag, 4 -> diag)
+        self.frames = frames  # number of frame for an animation
         self.animation = image_animate(file_name, -1,
-                                       frames=self.cardinal*self.frames)
+                                       frames=self._cardinal*self.frames)
+        self._anim_time = anim_time
         self.image = self.animation[0]
         self.rect = self.image.get_rect()
-#        self.image = pg.transform.scale(
-#            self.image,
-#            (self.image.get_rect().w//2, self.image.get_rect().h//2))
-        position = fp.cell_to_pos((4, 16))
+        position = fp.cell_to_pos(cell_pos)
         self.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
 
         self.dest_coord = self.rect.midbottom
@@ -48,38 +46,8 @@ class Character(pg.sprite.Sprite):
         # INFO: Dofus goes at 8.3 m/s (30km/h)
         self.previous_theta = None
 
-        self.animation_time = 0
+        self._anim_time_elapsed = 0
         self.step = 0
-
-        self._npc_clock = 0
-        self._npc_time = 10
-
-        text = "I'm you !"
-        txt_position = self.Game.mouse.rect.topleft
-        self.message = display_info(self.Game, text, txt_position)
-
-        name = os.path.join(self.Game.data_dir, 'button_1.png')
-        button_1 = Button(self.Game, nf.function_test, name)
-        button_1.add_text("carac")
-
-        button_2 = Button(self.Game, nf.function_test2, name)
-        inventory_image = os.path.join(self.Game.data_dir, 'inventory.png')
-        button_2.add_image(inventory_image, -1)
-
-        # button_blank_1 = BackGround(size=(button_1.rect.size[0], button_1.rect.size[1]-30))
-        # button_blank_1.image.set_colorkey(0)
-
-        # button_blank_2 = BackGround(size=(button_1.rect.size[0], button_1.rect.size[1]-30))
-
-        name = os.path.join(self.Game.data_dir, 'button_1.png')
-        button_3 = Button(self.Game, nf.function_test, name)
-        button_3.add_text("talk")
-
-        self.menu = FlyingMenu(self.Game, button_1, button_2,
-                               # button_blank_1, button_blank_2,
-                               button_3)
-        if npc:
-            self.allowed_mvt()
 
     def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""
@@ -87,11 +55,6 @@ class Character(pg.sprite.Sprite):
         if self.moving:
             self.change_order()
             self._walk(dt)
-
-        else:
-            if self._npc:
-                self._auto_dest(dt)
-            pass
 
     def change_order(self):
         if self not in self.Game.allsprites:  # don't change if not displayed
@@ -154,14 +117,13 @@ class Character(pg.sprite.Sprite):
                 self.road = fp.find_path(begin_cell,
                                          moving_to_pos,
                                          all_cells=self.Game.all_cells,
-                                         cardinal=self.cardinal)
-                # if not self._npc:
-                #     print(self.road)
+                                         cardinal=self._cardinal)
+                # print(self.road)
             else:
                 new_road = fp.find_path(self.road[0],
                                         moving_to_pos,
                                         all_cells=self.Game.all_cells,
-                                        cardinal=self.cardinal)
+                                        cardinal=self._cardinal)
                 self.road = [self.road[0]]
                 self.road.extend(new_road)
 
@@ -169,10 +131,8 @@ class Character(pg.sprite.Sprite):
                 self.dest_coord = self.road[0]
                 self.dest_coord = (self.dest_coord[0],
                                    self.dest_coord[1] + cell_sizes[1]/2)
-                # if self._npc:
-                #     print("npc is moving to", self.road[-1])
-                # else:
-                #     print("you are moving to", self.road[-1])
+
+                # print("you are moving to", self.road[-1])
 #                print("road", self.road)
                 self.moving = True
 
@@ -183,7 +143,7 @@ class Character(pg.sprite.Sprite):
 
         theta = math.atan2(y_length, x_length)
 
-        theta = fp.theta_cardinal(theta, self.cardinal)
+        theta = fp.theta_cardinal(theta, self._cardinal)
 
         self.speed_x = self.max_speed * math.cos(theta)
         self.speed_y = self.max_speed * math.sin(theta)  # meter per second
@@ -199,7 +159,7 @@ class Character(pg.sprite.Sprite):
 
         # frames = cell_size/(self.max_speed*self.Game.ratio_pix_meter_x*dt)
         # time = frames * dt
-        self._move_animation(0.1, self.frames, dt)
+        self._move_animation(self._anim_time, self.frames, dt)
 
         old_rect = self.rect.copy()
         self.rect = self.image.get_rect()
@@ -231,7 +191,7 @@ class Character(pg.sprite.Sprite):
                 return
             except IndexError:
                 self.previous_theta = previous_theta_buffer
-                self._move_animation(0.1, self.frames, 0)  # reset anim
+                self._move_animation(self._anim_time, self.frames, 0)  # reset anim
                 self.previous_theta = None
                 return
 
@@ -254,15 +214,15 @@ class Character(pg.sprite.Sprite):
         time_frame = anim_time / frames
 
         if dt == 0:
-            self.animation_time = 0
+            self._anim_time_elapsed = 0
             self.step = 0
         else:
-            self.animation_time += dt
-            while self.animation_time > self.step*time_frame:
+            self._anim_time_elapsed += dt
+            while self._anim_time_elapsed > self.step*time_frame:
                 self.step += 1
                 if self.step >= frames:
                     self.step = 0
-                    self.animation_time = 0
+                    self._anim_time_elapsed = 0
 
         if self.previous_theta == pi/2:
             self.image = self.animation[4*frames+self.step]
@@ -282,77 +242,14 @@ class Character(pg.sprite.Sprite):
         elif self.previous_theta == pi - authorized_angle:
             self.image = self.animation[3*frames+self.step]
 
-    def _auto_dest(self, dt):
-        self._npc_clock += dt
-        left_mvt = (self.rect.midbottom[0]
-                    - self.area.left) // (cell_sizes[0]/2)
-        right_mvt = (self.area.right
-                     - self.rect.midbottom[0]) // (cell_sizes[0]/2)
-        up_mvt = (self.rect.midbottom[1]-cell_sizes[1]/2
-                  - self.area.top) // (cell_sizes[1]/2)
-        bottom_mvt = (self.area.bottom
-                      - (self.rect.midbottom[1]-cell_sizes[1]/2)) // (cell_sizes[1]/2)
-        # print(self.rect.midbottom[1], self.area.top, self.area.bottom)
-        # print(left_mvt, right_mvt, up_mvt, bottom_mvt, self._npc_nbr_cell)
-
-        if left_mvt > self._npc_nbr_cell:
-            left_mvt = self._npc_nbr_cell
-        if right_mvt > self._npc_nbr_cell:
-            right_mvt = self._npc_nbr_cell
-        if up_mvt > self._npc_nbr_cell:
-            up_mvt = self._npc_nbr_cell
-        if bottom_mvt > self._npc_nbr_cell:
-            bottom_mvt = self._npc_nbr_cell
-
-        cells = (0, 0)
-
-        if self._npc_clock > self._npc_time:
-            self._npc_clock = 0
-
-            cells = (random.randint(-left_mvt, right_mvt),
-                     random.randint(-up_mvt, bottom_mvt))
-            # print(cells)
-            if (abs(cells[0]) + abs(cells[1])) > self._npc_nbr_cell:
-                if random.randint(0, 1) == 0:
-                    cells = (0, cells[1])
-                else:
-                    cells = (cells[0], 0)
-
-            position = (self.rect.midbottom[0],
-                        self.rect.midbottom[1] - cell_sizes[1]/2)
-            cell_pos = fp.pos_to_cell(position)
-            new_cell_pos = (cell_pos[0] + cells[0],
-                            cell_pos[1] + cells[1])
-            moving_to_pos = fp.cell_to_pos(new_cell_pos)
-
-            # print("dest", moving_to_pos)
-            self.dest(moving_to_pos)
-
-    def allowed_mvt(self, allowed_cell=0, authorized_mvt=1):
-        self._npc_nbr_cell = authorized_mvt
-        topleft = (self.rect.midbottom[0] - allowed_cell*cell_sizes[0]/2,  # OPTIMIZE: not defined by char position, but absolute position
-                   self.rect.midbottom[1]-cell_sizes[1]/2 - allowed_cell*cell_sizes[1]/2)
-        self.area = pg.Rect(topleft,
-                            (allowed_cell*cell_sizes[0],
-                             allowed_cell*cell_sizes[1]))
-
     def hovered(self):
-        if self._npc:
-            self.message.text("I'm a npc !")
-        else:
-            self.message.text("I'm you !")
-        self.message.hovered()
         pass
 
     def unhovered(self):
-        self.message.unhovered()
         pass
 
     def clicked(self):
-        self.message.text("You just clicked on me !")
-        self.menu.clicked()
         pass
 
     def unclicked(self):
-        self.menu.unclicked()
         pass

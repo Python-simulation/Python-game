@@ -13,7 +13,7 @@ from ..findpath import cell_sizes
 from ..map_functions import MapFunctions
 from ..findpath import FindPath
 from ..tree import Wall, Wall_right, Wall_left, Tree, Hole
-from ..character import Character
+from ..npc.npc import Npc
 
 fp = FindPath()
 mf = MapFunctions()
@@ -115,11 +115,10 @@ class Map:
 
         sprites = pg.sprite.RenderPlain()
         file_name = os.path.join(Game.data_dir, "npc.png")
-        npc = Character(Game, file_name)
-        position = fp.cell_to_pos((15, 20))
-        npc.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
-
-        npc.allowed_mvt(5, 1)
+        npc = Npc(Game, file_name, cell_pos=(15, 20))
+        # position = fp.cell_to_pos((15, 20))
+        # npc.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
+        npc.allowed_mvt(50, 1)
         npc.max_speed = 5
         npc._npc_time = 2
         sprites.add(npc)

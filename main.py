@@ -14,7 +14,7 @@ import os
 import pygame as pg
 
 from interface.mouse import Mouse
-from interface.character import Character
+from interface.npc.you import You
 from interface.interface_functions import NeededFunctions
 
 from interface.background import BackGround
@@ -103,8 +103,8 @@ class Game():
         # punch_sound = load_sound("punch.wav")
         self.mouse = Mouse(self)
 
-        file_name = os.path.join(self.data_dir, "character.png")
-        self.character = Character(self, file_name, cardinal=8, npc=False)
+        cell_pos = (3, 16)
+        self.character = You(self, cell_pos)
 
         self.allsprites = pg.sprite.RenderPlain(())  # init -> cell use it befo
         self.all_maps = self.all_maps_fct(self)
