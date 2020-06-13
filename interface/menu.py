@@ -69,3 +69,6 @@ class Menu:
 
         self.Game.clock.tick()/1000  # avoid taking init time into account
         self.Game.dt = dt
+
+        self.Game.mouse.unclicked()  # semi-obsolete: needed to avoid button to stick in clicked mode
+        # without being unclicked -> get teleported each pause being clicked

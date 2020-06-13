@@ -1,9 +1,7 @@
 import os
 from .character import Character
 # from ..findpath import FindPath
-from ..findpath import cell_sizes
-from ..flying_menu import FlyingMenu
-from ..button import Button
+# from ..findpath import cell_sizes
 
 from ..display import display_info
 

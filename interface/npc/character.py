@@ -1,15 +1,10 @@
-import os
 import math
 from math import pi
-import random
 
 import pygame as pg
 from ..interface_functions import NeededFunctions
 from ..findpath import FindPath
 from ..animation import image_animate
-from ..flying_menu import FlyingMenu
-from ..button import Button
-from ..background import BackGround
 
 from ..findpath import cell_sizes
 from ..findpath import authorized_angle
@@ -28,10 +23,10 @@ class Character(pg.sprite.Sprite):
         self.area = self.Game.game_screen.rect.copy()  # walkable space
         self.area.h -= self.Game.lower_tool_bar.rect.h - 19
         # self.image, self.rect = nf.load_image(name, colorkey=-1)
-        self._cardinal = cardinal  # alloyed mvt (8 -> cros+diag, 4 -> diag)
+        self.cardinal = cardinal  # alloyed mvt (8 -> cros+diag, 4 -> diag)
         self.frames = frames  # number of frame for an animation
         self.animation = image_animate(file_name, -1,
-                                       frames=self._cardinal*self.frames)
+                                       frames=self.cardinal*self.frames)
         self._anim_time = anim_time
         self.image = self.animation[0]
         self.rect = self.image.get_rect()
@@ -63,8 +58,11 @@ class Character(pg.sprite.Sprite):
         player_feet = (self.rect.midbottom[0],
                        self.rect.midbottom[1] - cell_sizes[1]/2)
 
-        self.Game.allsprites.remove(self)  # used to set back player and npc
-        self.Game.allsprites.add(self)  # to first plan if no overlap
+        # TODO: check if removing the two lines bellow induced bug -> the
+        # character only change his order relative to background and not other
+        # sprites like other character but avoid menu to go behind a character
+        # self.Game.allsprites.remove(self)  # used to set back player and npc
+        # self.Game.allsprites.add(self)  # to first plan if no overlap
 
         for sprite in self.Game.bg_sprites:
             if self.rect.colliderect(sprite.rect):
@@ -117,13 +115,13 @@ class Character(pg.sprite.Sprite):
                 self.road = fp.find_path(begin_cell,
                                          moving_to_pos,
                                          all_cells=self.Game.all_cells,
-                                         cardinal=self._cardinal)
+                                         cardinal=self.cardinal)
                 # print(self.road)
             else:
                 new_road = fp.find_path(self.road[0],
                                         moving_to_pos,
                                         all_cells=self.Game.all_cells,
-                                        cardinal=self._cardinal)
+                                        cardinal=self.cardinal)
                 self.road = [self.road[0]]
                 self.road.extend(new_road)
 
@@ -143,7 +141,7 @@ class Character(pg.sprite.Sprite):
 
         theta = math.atan2(y_length, x_length)
 
-        theta = fp.theta_cardinal(theta, self._cardinal)
+        theta = fp.theta_cardinal(theta, self.cardinal)
 
         self.speed_x = self.max_speed * math.cos(theta)
         self.speed_y = self.max_speed * math.sin(theta)  # meter per second

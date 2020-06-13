@@ -130,6 +130,7 @@ class Game():
         self.bg_sprites = self.current_map["background_sprites"]
         self.cells = self.current_map["cells"]  # dict
         self.cells_visible = self.current_map["borders"]  # dict
+        self.cells.update(self.cells_visible)  # TODO:need to decide what to do
         self.all_cells = dict(self.cells_visible)
         self.all_cells.update(self.cells)
         self.sprites = self.current_map["sprites"]
@@ -137,7 +138,7 @@ class Game():
         self.allsprites = pg.sprite.LayeredUpdates((
             # self.character,
             self.bg_sprites,
-            self.cells_visible.values(),
+            # self.cells_visible.values(),
             self.sprites,
             self.character,
             ))
@@ -178,33 +179,31 @@ class Game():
                 if self.mouse.clicking(self.character):
                     # OPTIMIZE: could remove from it by using
                     # list(reversed(sprites)) but Group is not a callable
-                    # print("clicked character", self.character.rect)
                     for sprite in self.allsprites:
-                        try:  # BUG: set state=False to cells and can't teleport if click on menu
-                            sprite.unclicked()
-                            # print("unclicking", sprite)
-                        except AttributeError:  # TODO: ugly, need to add unclicked to all sprites...
-                            pass
+                        # BUG: ?? set state=False to cells and can't teleport if click on menu
+                        sprite.unclicked()
+                        # print("unclicking", sprite)
+
                     self.character.clicked()
+                    # print("clicked character", self.character.rect)
                 else:
                     for button in self.all_buttons:
                         if self.mouse.clicking(button):
-                            # for button_bis in self.all_buttons:
-                            #     if button_bis != button:
-                            #         button_bis.unclicked()
+                            # reminder that unclicked occure here before
                             button.clicked()
 #                            print("hit button", button)
                             break
                     else:
                         self.check_border = None  # OPTIMIZE: ugly but necessary for now
+
                         for sprite in self.allsprites:
-                            try:
                                 sprite.unclicked()
                                 # print("unclicking", sprite)
-                            except AttributeError:  # TODO: ugly, need to add unclicked to all sprites...
-                                pass
+
                         for sprites in self.sprites:
+                            # print("tried to clicked on ", sprites)
                             if self.mouse.clicking(sprites):
+                                # print("just clicked on ", sprites)
                                 sprites.clicked()
 #                                print("hit sprite", sprites)
                                 break

@@ -13,7 +13,7 @@ from ..npc.character import Character
 from ..chimp import Chimp
 from ..findpath import cell_sizes
 from ..findpath import FindPath
-from ..tree import Tree
+from ..props import Tree
 from ..npc.someguy import SomeGuy
 from ..npc.npc import Npc
 
@@ -44,7 +44,7 @@ class Map:
         chimp = Chimp(Game)
         sprites.add(chimp)
 
-        npc = SomeGuy(Game, (10, 20))
+        npc = SomeGuy(Game, (25, 20))#(10, 20))
         sprites.add(npc)
 
         # show = BackGround(size=npc.area.size)

@@ -10,7 +10,7 @@ import pygame as pg
 
 from ..background import BackGround
 from ..findpath import FindPath
-from ..tree import Tree, Wall_left, Wall_right
+from ..props import Tree, Wall_left, Wall_right
 fp = FindPath()
 
 

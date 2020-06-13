@@ -79,3 +79,6 @@ class Chimp(pg.sprite.Sprite):
         if not self.dizzy:
             self.dizzy = 1
             self.original = self.image
+
+    def unclicked(self):
+        pass

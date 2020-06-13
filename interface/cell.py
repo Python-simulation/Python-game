@@ -121,7 +121,7 @@ class Cell(pg.sprite.Sprite):
             self.road = fp.find_path(begin_cell,
                                      self.rect.center,
                                      all_cells=self.Game.all_cells,
-                                     cardinal=self.Game.character._cardinal)
+                                     cardinal=self.Game.character.cardinal)
 
             for next_cell in self.road:
                 unit_pos = fp.pos_to_cell(next_cell)

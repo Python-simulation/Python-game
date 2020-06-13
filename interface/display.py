@@ -21,3 +21,9 @@ class display_info(pg.sprite.Sprite):
 
     def unhovered(self):
         self.Game.allsprites.remove(self)
+
+    def clicked(self):
+        pass
+
+    def unclicked(self):
+        pass

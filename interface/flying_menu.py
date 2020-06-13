@@ -1,59 +1,109 @@
 import pygame as pg
+from .button import Button
+from .background import BackGround
 
 
-class FlyingMenu(pg.sprite.Sprite):
+class FlyingMenu(BackGround):
     """Menu that pop when a npc is clicked"""
 
-    def __init__(self, Game, *args):
+    def __init__(self, Owner, *args):
         """args being a list of all the buttons that contain the menu.
         Each element can be a button, a background or any class containing
         a Rect and a image subclass"""
-        self.Game = Game
-        pg.sprite.Sprite.__init__(self)
+        self.Game = Owner.Game
+        self.Owner = Owner
+        BackGround.__init__(self)
 
         self._margin = 3  # (bottom = top = left = right = margin)
-        self.buttons = args
+        self.items = args
+        self.active = False
 
     def _update_menu(self):
-        width = 2*self._margin
+        extra_width = 2*self._margin
         height = 2*self._margin
+        width_max = extra_width
 
-        for button in self.buttons:
-            width_temp = button.rect.w + 2*self._margin
-            height += button.rect.h
+        for item in self.items:
+            width_temp = item.rect.w + extra_width
+            height += item.rect.h
 
-            if width_temp >= width:
-                width = width_temp
+            if width_temp >= width_max:
+                width_max = width_temp
 
+        width = width_max
         self.image = pg.Surface((width, height))
         self.rect = self.image.get_rect()
-        self.rect.topleft = self.buttons[0].rect.topleft
+        self.rect.topleft = self.items[0].rect.topleft
         color = (185, 122, 87)  # brown
+        color2 = (147, 90, 61)  # brown
         self.image.fill(color)
+        pg.draw.rect(self.image, color2, self.rect, self._margin)
         self.image.set_alpha(200)
 
     def position(self, value):
+
+        if value[0] < 0:
+            value = (0, value[1])
+        elif (value[0] + self.rect.w) > self.Game.size[0]:
+            value = (self.Game.size[0]-self.rect.w, value[1])
+
+        if value[1] < 0:
+            value = (value[0], 0)
+        elif (value[1] + self.rect.h
+              + self.Game.lower_tool_bar.rect.h - 19) > self.Game.size[1]:
+            value = (value[0], (self.Game.size[1] - self.rect.h
+                                - self.Game.lower_tool_bar.rect.h + 19))
+
         self.rect.topleft = value
         height = 0
+        topleft = (self.rect.topleft[0] + self._margin,
+                   self.rect.topleft[1] + self._margin)
 
-        for i, button in enumerate(self.buttons):
-            button.rect.topleft = (self.rect.topleft[0] + self._margin,
-                                   self.rect.topleft[1] + self._margin)
-            button.image.set_alpha(200)
+        for i, item in enumerate(self.items):
+            item.rect.topleft = topleft
+            item.image.set_alpha(200)
+
             if i != 0:
-                height += self.buttons[i-1].rect.h
-                button.rect.y += height
+                height += self.items[i-1].rect.h
+                item.rect.y += height
 
-    def clicked(self):
+    def activated(self):
+
+        self.desactivated()  # reset and put menu on top of display
+        self.active = True
+        # print("menu clicked", self.name, self)
         self._update_menu()
-        self.position(self.Game.mouse.rect.topleft)
-        self.Game.allsprites.add(self)
-        self.Game.all_buttons.extend(self.buttons)
 
-    def unclicked(self):
-        for button in self.buttons:
-            try:
-                self.Game.all_buttons.remove(button)
-            except ValueError:
-                pass
+        topleft = (self.Owner.rect.center[0] - self.rect.w/2,
+                   self.Owner.rect.center[1] - self.rect.h/2)
+        self.position(topleft)
+
+        # if self not in self.Game.allsprites:  # could be used but meh
+        self.Game.allsprites.add(self)  # display
+        self.Game.sprites.add(self)  # prevent from clicking behind the menu (except clicking on the npc...)
+
+        for item in self.items:
+
+            if isinstance(item, Button):
+                self.Game.all_buttons.append(item)
+            else:
+                self.Game.allsprites.add(item)  # reminder: allsprites does unclicked if clicked outside
+
+    def desactivated(self):
+
+        self.active = False
+        # print("menu unclicked", self.name, self)
         self.Game.allsprites.remove(self)
+        self.Game.sprites.remove(self)
+        # self.kill()  # work but harder to know from which group was remove
+
+        for item in self.items:
+
+            self.Game.sprites.remove(item)
+
+            if isinstance(item, Button):
+                if item in self.Game.all_buttons:
+                    self.Game.all_buttons.remove(item)
+            else:
+                if item in self.Game.allsprites:
+                    self.Game.allsprites.remove(item)

@@ -1,5 +1,4 @@
 import pygame as pg
-from pygame.compat import geterror
 
 
 class NeededFunctions:
@@ -9,12 +8,7 @@ class NeededFunctions:
         """Load images to the pygame variables space"""
         fullname = name
 
-        try:
-            image = pg.image.load(fullname)
-
-        except pg.error:
-            print("Cannot load image:", fullname)
-            raise SystemExit(str(geterror()))
+        image = pg.image.load(fullname)
 
         image = image.convert()
         # image = image.convert_alpha()
@@ -22,8 +16,9 @@ class NeededFunctions:
         if colorkey is not None:
 
             if colorkey == -1:
-                # (0, 0) ->take the first pixel of the image as reference for alpha
+                # (0, 0) ->take the first pixel of the image and remove all same pix from image
                 colorkey = image.get_at((0, 0))
+                # print(colorkey)  #  (0, 0, 0, 255) or (255, 255, 255, 255)
 
             # RLEACCEL make it faster to display
             image.set_colorkey(colorkey, pg.RLEACCEL)
@@ -41,12 +36,7 @@ class NeededFunctions:
 
         fullname = name
 
-        try:
-            sound = pg.mixer.Sound(fullname)
-
-        except pg.error:
-            print("Cannot load sound: %s" % fullname)
-            raise SystemExit(str(geterror()))
+        sound = pg.mixer.Sound(fullname)
 
         return sound
 

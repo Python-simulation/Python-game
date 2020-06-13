@@ -12,7 +12,7 @@ from ..background import BackGround
 from ..findpath import cell_sizes
 from ..map_functions import MapFunctions
 from ..findpath import FindPath
-from ..tree import Wall, Wall_right, Wall_left, Tree, Hole
+from ..props import Wall, Wall_right, Wall_left, Tree, Hole
 from ..npc.npc import Npc
 
 fp = FindPath()
