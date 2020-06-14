@@ -13,7 +13,7 @@ class display_info(pg.sprite.Sprite):
 
     def text(self, value):
         font = pg.font.Font(None, 30)
-        self.image = font.render(value, 1, (10, 10, 10))
+        self.image = font.render(value, True, (10, 10, 10))
 
     def hovered(self):
         self.rect = self.Game.mouse.rect

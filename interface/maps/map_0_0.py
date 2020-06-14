@@ -44,7 +44,7 @@ class Map:
         chimp = Chimp(Game)
         sprites.add(chimp)
 
-        npc = SomeGuy(Game, (25, 20))#(10, 20))
+        npc = SomeGuy(Game, (23, 19))#(10, 20))
         sprites.add(npc)
 
         # show = BackGround(size=npc.area.size)
@@ -54,7 +54,7 @@ class Map:
         file_name = os.path.join(Game.data_dir, "npc.png")
         npc_2 = Npc(Game, file_name, cell_pos=(20, 10))
         # npc_2.allowed_mvt(10, 3)
-        # npc_2._npc_time = 2
+        # npc_2.npc_time = 2
         sprites.add(npc_2)
 
         # show = BackGround(size=npc_2.area.size)

@@ -120,7 +120,7 @@ class Map:
         # npc.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
         npc.allowed_mvt(50, 1)
         npc.max_speed = 5
-        npc._npc_time = 2
+        npc.npc_time = 2
         sprites.add(npc)
 
         self.map_info["sprites"] = sprites

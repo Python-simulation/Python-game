@@ -9,7 +9,7 @@ class Menu:
 
         text = "Pause"
         font = pg.font.Font(None, 60)
-        self.image = font.render(text, 1, (10, 10, 10))
+        self.image = font.render(text, True, (10, 10, 10))
         self.rect = self.image.get_rect()
         self.rect.center = self.Game.game_screen.rect.center
 

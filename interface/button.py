@@ -9,7 +9,7 @@ def _fct_none(*args, **kwargs):
 class Button:
     """buttons"""
 
-    def __init__(self, Game, function=None, name=None, size=(1, 1)):
+    def __init__(self, Game, function=None, name=None, size=(0, 0)):
         self.Game = Game
         self.nf = NeededFunctions()
 
@@ -62,7 +62,7 @@ class Button:
     def add_text(self, text, center=None):
         self.text = text
         font = pg.font.Font(None, 30)
-        msg = font.render(text, 1, (10, 10, 10))
+        msg = font.render(text, True, (10, 10, 10))
 
         if center is None:
             textpos = msg.get_rect(centery=self.rect.h/2,

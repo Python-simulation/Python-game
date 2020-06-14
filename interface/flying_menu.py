@@ -33,11 +33,13 @@ class FlyingMenu(BackGround):
         width = width_max
         self.image = pg.Surface((width, height))
         self.rect = self.image.get_rect()
-        self.rect.topleft = self.items[0].rect.topleft
+
         color = (185, 122, 87)  # brown
-        color2 = (147, 90, 61)  # brown
         self.image.fill(color)
+
+        color2 = (147, 90, 61)  # brown
         pg.draw.rect(self.image, color2, self.rect, self._margin)
+
         self.image.set_alpha(200)
 
     def position(self, value):
@@ -61,7 +63,7 @@ class FlyingMenu(BackGround):
 
         for i, item in enumerate(self.items):
             item.rect.topleft = topleft
-            item.image.set_alpha(200)
+            # item.image.set_alpha(200)
 
             if i != 0:
                 height += self.items[i-1].rect.h
@@ -74,8 +76,10 @@ class FlyingMenu(BackGround):
         # print("menu clicked", self.name, self)
         self._update_menu()
 
-        topleft = (self.Owner.rect.center[0] - self.rect.w/2,
-                   self.Owner.rect.center[1] - self.rect.h/2)
+        topleft = (self.Owner.rect.centerx - self.rect.w/2,
+                   self.Owner.rect.top - self.rect.h - 50)
+        # topleft = (self.Owner.rect.center[0] - self.rect.w/2,
+        #            self.Owner.rect.center[1] - self.rect.h/2)
         self.position(topleft)
 
         # if self not in self.Game.allsprites:  # could be used but meh
