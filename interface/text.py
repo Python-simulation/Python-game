@@ -5,7 +5,7 @@ from .background import BackGround
 class Text(BackGround):
     """text"""
 
-    def __init__(self, text="", size=(600, 30)):
+    def __init__(self, text="", size=(0, 0)):
         self.size = size
         BackGround.__init__(self, size=size)
         self.add_text(text, size)
@@ -26,7 +26,7 @@ class Text(BackGround):
         self.image = self.highligh
 
 
-def text_tuple(text, size=(600, 30)):
+def text_tuple(text, size=(0, 0)):
     nbr_char = int(size[0]/(407/36))
     words = text.split(" ")
     new_text = list()

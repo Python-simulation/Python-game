@@ -2,10 +2,7 @@
 """
 Pygame game.
 
-This simple example is used for the line-by-line tutorial
-that comes with pygame. It is based on a 'popular' web banner.
-Note there are comments here, but for the full explanation,
-follow along in the tutorial.
+Game description.
 """
 
 # Import Modules
@@ -110,8 +107,8 @@ class Game():
         self.all_maps = self.all_maps_fct(self)
         self.change_map((0, 0))
 
-        self.game_screen.image.blit(self.background_screen.image,
-                                    self.background_screen.rect)
+        # self.game_screen.image.blit(self.background_screen.image,
+        #                             self.background_screen.rect)
 
         self.menu = Menu(self)
 
@@ -159,7 +156,8 @@ class Game():
             self.reset_app_screen(self.game_screen.rect.size)
 
         if ((all_keys[pg.K_LCTRL] or all_keys[pg.K_RCTRL])
-                and (all_keys[97] or all_keys[122])):  # BUG: q or w, value are wrong
+                and (all_keys[97] or all_keys[122])):
+            # BUG: q or w, value are wrong
             self.running = False
 
         for event in pg.event.get():  # listed key in pressed order
@@ -176,57 +174,48 @@ class Game():
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 # tried with allsprites but keep having errors
-                if self.mouse.clicking(self.character):
-                    # OPTIMIZE: could remove from it by using
-                    # list(reversed(sprites)) but Group is not a callable
+                # list(reversed(sprites)) but Group is not a callable
+
+                for button in self.all_buttons:
+                    if self.mouse.clicking(button):
+                        # reminder that unclicked occure here before
+                        button.clicked()
+                        # print("hit button", button)
+                        break
+                else:
+                    # OPTIMIZE: ugly but necessary for now
+                    self.check_border = None
+
                     for sprite in self.allsprites:
-                        # BUG: ?? set state=False to cells and can't teleport if click on menu
                         sprite.unclicked()
                         # print("unclicking", sprite)
 
-                    self.character.clicked()
-                    # print("clicked character", self.character.rect)
-                else:
-                    for button in self.all_buttons:
-                        if self.mouse.clicking(button):
-                            # reminder that unclicked occure here before
-                            button.clicked()
-#                            print("hit button", button)
+                    for sprites in self.sprites:
+                        # print("tried to clicked on ", sprites)
+                        if self.mouse.clicking(sprites):
+                            # print("just clicked on ", sprites)
+                            sprites.clicked()
+                            # print("hit sprite", sprites)
                             break
                     else:
-                        self.check_border = None  # OPTIMIZE: ugly but necessary for now
-
-                        for sprite in self.allsprites:
-                                sprite.unclicked()
-                                # print("unclicking", sprite)
-
-                        for sprites in self.sprites:
-                            # print("tried to clicked on ", sprites)
-                            if self.mouse.clicking(sprites):
-                                # print("just clicked on ", sprites)
-                                sprites.clicked()
-#                                print("hit sprite", sprites)
+                        for cell in self.all_cells.values():
+                            if self.mouse.clicking(cell):
+                                for cell_bis in self.all_cells.values():
+                                    cell_bis.unclicked()
+                                cell.clicked()
+                                # print("hit cell", cell.rect)
                                 break
-                        else:
-                            for cell in self.all_cells.values():
-                                if self.mouse.clicking(cell):
-                                    for cell_bis in self.all_cells.values():
-                                        cell_bis.unclicked()
-                                    cell.clicked()
-                                    # print("hit cell", cell.rect)
-                                    break
-                            # else:
-                            #     if self.mouse.clicking(self.game_screen):
-                            #         print("hit no cells")
-                            #         self.character.dest(self.mouse.rect.topleft)
-                            #         for cell in self.all_cells.values():
-                            #             cell.unclicked()
+                        # else:
+                        #     if self.mouse.clicking(self.game_screen):
+                        #         print("hit no cells")
+                        #         self.character.dest(self.mouse.rect.topleft)
+                        #         for cell in self.all_cells.values():
+                        #             cell.unclicked()
 
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 self.mouse.unclicked()
 
             else:
-                self.character.unhovered()
                 for button in self.all_buttons:
                     button.unhovered()
                 for sprites in self.sprites:
@@ -234,30 +223,28 @@ class Game():
                 for cell in self.all_cells.values():
                     cell.unhovered()
                 pg.mouse.set_cursor(*pg.cursors.diamond)
-                if self.mouse.hovering(self.character):
-                    self.character.hovered()
-#                    print("hover character", self.character.rect)
-                else:  # OPTIMIZE: tried without succes to do one for loop
-                    for button in self.all_buttons:
-                        if self.mouse.hovering(button):
+
+                # OPTIMIZE: tried without succes to do one for loop
+                for button in self.all_buttons:
+                    if self.mouse.hovering(button):
+                        pg.mouse.set_cursor(*pg.cursors.ball)
+                        button.hovered()
+                        # print("hover button", button)
+                        break
+                else:
+                    for sprites in self.sprites:
+                        if self.mouse.hovering(sprites):
+                            sprites.hovered()
                             pg.mouse.set_cursor(*pg.cursors.ball)
-                            button.hovered()
-                            # print("hover button", button)
+                            # print("hover sprite", sprites)
                             break
                     else:
-                        for sprites in self.sprites:
-                            if self.mouse.hovering(sprites):
-                                sprites.hovered()
-                                pg.mouse.set_cursor(*pg.cursors.ball)
-#                                    print("hover sprite", sprites)
+                        for cell in self.all_cells.values():
+                            if self.mouse.hovering(cell):
+                                cell.hovered()
                                 break
                         else:
-                            for cell in self.all_cells.values():
-                                if self.mouse.hovering(cell):
-                                    cell.hovered()
-                                    break
-                            else:
-                                pg.mouse.set_cursor(*pg.cursors.arrow)
+                            pg.mouse.set_cursor(*pg.cursors.arrow)
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside

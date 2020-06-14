@@ -11,6 +11,8 @@ import pygame as pg
 from ..background import BackGround
 from ..house import House
 from ..findpath import FindPath
+from ..npc.npc import Npc
+
 fp = FindPath()
 
 
@@ -32,6 +34,13 @@ class Map:
         self.bg_sprites = pg.sprite.RenderPlain()
 
         sprites = pg.sprite.RenderPlain()
+
+        file_name = os.path.join(Game.data_dir, "npc.png")
+        npc = Npc(Game, file_name, cell_pos=(17, 15))
+        npc.allowed_mvt(50, 50)
+        npc.npc_time = 1
+
+        sprites.add(npc)
 
         self.map_info["sprites"] = sprites
 
