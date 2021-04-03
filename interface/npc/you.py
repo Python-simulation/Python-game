@@ -3,7 +3,7 @@ from .character import Character
 # from ..findpath import FindPath
 # from ..findpath import cell_sizes
 
-from ..display import display_info
+from ..display import Display
 
 # fp = FindPath()
 
@@ -16,7 +16,7 @@ class You(Character):
 
         text = "I'm you!"
         txt_position = self.Game.mouse.rect.topleft
-        self.message = display_info(self.Game, text, txt_position)
+        self.message = Display(self.Game, text, txt_position)
 
     def hovered(self):
         # self.message.text("I'm you")

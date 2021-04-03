@@ -34,15 +34,17 @@ class Map:
         self.bg_sprites = pg.sprite.RenderPlain()
 
         sprites = pg.sprite.RenderPlain()
+        npc = pg.sprite.RenderPlain()
 
         file_name = os.path.join(Game.data_dir, "npc.png")
-        npc = Npc(Game, file_name, cell_pos=(17, 15))
-        npc.allowed_mvt(50, 50)
-        npc.npc_time = 1
+        npc_1 = Npc(Game, file_name, cell_pos=(17, 15))
+        npc_1.allowed_mvt(50, 50)
+        npc_1.npc_time = 1
 
-        sprites.add(npc)
+        npc.add(npc_1)
 
         self.map_info["sprites"] = sprites
+        self.map_info["npc"] = npc
 
         house_cell = (13, 22)
         self.house = House(self, house_cell)

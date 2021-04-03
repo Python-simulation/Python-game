@@ -7,7 +7,7 @@ Game description.
 
 # Import Modules
 import os
-# import time
+import time
 import pygame as pg
 
 from interface.mouse import Mouse
@@ -22,6 +22,8 @@ from interface.lower_bar import LowerBar
 from interface.findpath import cell_sizes
 
 from interface.menu import Menu
+from interface.display import Display
+
 
 if not pg.font:
     print("Warning, fonts disabled")
@@ -76,19 +78,20 @@ class Game():
 
         self.resized_screen = BackGround()
 
-        pg.display.set_caption("Testing")
+        pg.display.set_caption("Loading screen")
         pg.mouse.set_visible(1)
 
-        # Create The Backgound that never changes (with fixed toolbar)
-        # self.bg_image = pg.Surface(self.game_screen.get_size()).convert()
-        # background_color = (200, 200, 200)
-        # self.bg_image.fill(background_color)
+        self.allsprites = pg.sprite.RenderPlain(())  # init -> cell use it befo
 
-        self.lower_bar = LowerBar(self)
-        self.lower_tool_bar = self.lower_bar.lower_tool_bar
+        loading_image = BackGround(size=self.game_screen.image.get_size())
+        loading_image.image.fill((200, 200, 200))
+        load_txt = Display(self, "Loading game",
+                           self.game_screen.rect.center, 100)
+        loading_image.image.blit(load_txt.image, load_txt.rect)
+        self.background_screen = loading_image
 
-        self.all_buttons = []
-        self.all_buttons.extend(self.lower_bar.buttons)
+        self.all_buttons =[]
+        self.allsprites.add(self.background_screen)
 
         # Prepare Game Objects
         self.clock = pg.time.Clock()
@@ -100,21 +103,30 @@ class Game():
         # punch_sound = load_sound("punch.wav")
         self.mouse = Mouse(self)
 
-        cell_pos = (3, 16)
+        self.draw()
+        # time.sleep(3)
+
+        self.lower_bar = LowerBar(self)
+        self.lower_tool_bar = self.lower_bar.lower_tool_bar
+
+        self.all_buttons.extend(self.lower_bar.buttons)
+
+        cell_pos = (3, 16)  # will be defined in a load file
         self.character = You(self, cell_pos)
 
-        self.allsprites = pg.sprite.RenderPlain(())  # init -> cell use it befo
-        self.all_maps = self.all_maps_fct(self)
-        self.change_map((0, 0))
+        self.all_maps = self.create_maps(self)
 
-        # self.game_screen.image.blit(self.background_screen.image,
-        #                             self.background_screen.rect)
+        self.map_pos_txt = Display(self)
+        self.change_map((0, 0))  # will be defined in a load file
 
-        self.menu = Menu(self)
+        self.pause = Menu(self)
+        # self.menu.run(self.dt)
 
     def loader(self):
+        """used to call those variables in other files from the main game
+        class"""
         self.data_dir = data_dir
-        self.all_maps_fct = mp.create_maps
+        self.create_maps = mp.create_maps
         self.function_test = nf.function_test
         self.function_test2 = nf.function_test2
 
@@ -131,17 +143,23 @@ class Game():
         self.all_cells = dict(self.cells_visible)
         self.all_cells.update(self.cells)
         self.sprites = self.current_map["sprites"]
+        self.npc = self.current_map["npc"]
+        self.map_pos_txt.text(new_map_pos)
+        self.map_pos_txt.rect.topleft = (self.map_pos_txt.rect.h/2,
+                                         self.map_pos_txt.rect.h/2)
 
-        self.allsprites = pg.sprite.LayeredUpdates((
-            # self.character,
-            self.bg_sprites,
-            # self.cells_visible.values(),
-            self.sprites,
-            self.character,
-            ))
-        # for cells in self.cells.values():
-        #     self.allsprites.add(cells)
-        # self.allsprites.add(self.mouse)
+        self.allsprites = pg.sprite.LayeredUpdates()
+        self.allsprites.add(self.background_screen, layer=0)
+        self.allsprites.add(self.bg_sprites, layer=1)
+        self.allsprites.add(self.npc, layer=1)
+        self.allsprites.add(self.character, layer=1)
+        self.allsprites.add(self.sprites, layer=2)
+        self.allsprites.add(self.lower_tool_bar, layer=3)
+        self.allsprites.add(self.all_buttons, layer=3)
+        self.allsprites.add(self.map_pos_txt, layer=3)
+
+        # self.allsprites.add(self.cells.values(), layer=0)
+        # self.allsprites.add(self.mouse, layer=4)
 
     def unclick(self):
         for button in self.all_buttons:
@@ -167,7 +185,7 @@ class Game():
 
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:  # pause the game using escape key
-                    self.menu.run(self.dt)
+                    self.pause.run(self.dt)
 
             elif event.type == pg.VIDEORESIZE:
                 self.reset_app_screen(event.dict['size'])
@@ -198,19 +216,27 @@ class Game():
                             # print("hit sprite", sprites)
                             break
                     else:
-                        for cell in self.all_cells.values():
-                            if self.mouse.clicking(cell):
-                                for cell_bis in self.all_cells.values():
-                                    cell_bis.unclicked()
-                                cell.clicked()
-                                # print("hit cell", cell.rect)
+                        for npc in self.npc:
+                            # print("tried to clicked on ", sprites)
+                            if self.mouse.clicking(npc):
+                                # print("just clicked on ", sprites)
+                                npc.clicked()
+                                # print("hit sprite", sprites)
                                 break
-                        # else:
-                        #     if self.mouse.clicking(self.game_screen):
-                        #         print("hit no cells")
-                        #         self.character.dest(self.mouse.rect.topleft)
-                        #         for cell in self.all_cells.values():
-                        #             cell.unclicked()
+                        else:
+                            for cell in self.all_cells.values():
+                                if self.mouse.clicking(cell):
+                                    for cell_bis in self.all_cells.values():
+                                        cell_bis.unclicked()
+                                    cell.clicked()
+                                    # print("hit cell", cell.rect)
+                                    break
+                            # else:
+                            #     if self.mouse.clicking(self.game_screen):
+                            #         print("hit no cells")
+                            #         self.character.dest(self.mouse.rect.topleft)
+                            #         for cell in self.all_cells.values():
+                            #             cell.unclicked()
 
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 self.mouse.unclicked()
@@ -220,6 +246,8 @@ class Game():
                     button.unhovered()
                 for sprites in self.sprites:
                     sprites.unhovered()
+                for npc in self.npc:
+                    npc.unhovered()
                 for cell in self.all_cells.values():
                     cell.unhovered()
                 pg.mouse.set_cursor(*pg.cursors.diamond)
@@ -239,12 +267,19 @@ class Game():
                             # print("hover sprite", sprites)
                             break
                     else:
-                        for cell in self.all_cells.values():
-                            if self.mouse.hovering(cell):
-                                cell.hovered()
+                        for npc in self.npc:
+                            if self.mouse.hovering(npc):
+                                npc.hovered()
+                                pg.mouse.set_cursor(*pg.cursors.ball)
+                                # print("hover npc", npc)
                                 break
                         else:
-                            pg.mouse.set_cursor(*pg.cursors.arrow)
+                            for cell in self.all_cells.values():
+                                if self.mouse.hovering(cell):
+                                    cell.hovered()
+                                    break
+                            else:
+                                pg.mouse.set_cursor(*pg.cursors.arrow)
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside
@@ -274,8 +309,6 @@ class Game():
 
     def draw(self):
         """Draw Everything"""
-        self.game_screen.image.blit(self.background_screen.image,
-                                    self.background_screen.rect)
         # for rect in self.old_rects:
         #     self.game_screen.image.blit(self.background_screen.image,
         #                                 rect, rect)
@@ -288,13 +321,6 @@ class Game():
         #                                 rect, rect)
 
         self.allsprites.draw(self.game_screen.image)  # draw moving items
-
-        self.game_screen.image.blit(self.lower_tool_bar.image,
-                                    self.lower_tool_bar.rect)
-
-        for button in self.all_buttons:
-            self.game_screen.image.blit(button.image,
-                                        button.rect)
 
         self.game_screen.image.blit(self.mouse.image,
                                     self.mouse.rect)
@@ -399,6 +425,7 @@ class Game():
     def run(self):
         self.running = True
         self.dt = self.clock.tick()/1000  # avoid taking init time into account
+
         while self.running:
             self.dt = self.clock.tick(80)/1000  # time of the last computation
             self.events()  # look for commands

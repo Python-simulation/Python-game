@@ -30,8 +30,10 @@ class Map:
         self.bg_sprites = pg.sprite.RenderPlain()
 
         sprites = pg.sprite.RenderPlain()
+        npc = pg.sprite.RenderPlain()
 
         self.map_info["sprites"] = sprites
+        self.map_info["npc"] = npc
 
         position = (1*cell_sizes[0],
                     1*cell_sizes[1])

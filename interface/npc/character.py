@@ -16,7 +16,7 @@ fp = FindPath()
 class Character(pg.sprite.Sprite):
     """moves a character across the screen."""
 
-    def __init__(self, Game, file_name, cell_pos,
+    def __init__(self, Game, image_name, cell_pos,
                  cardinal=4, frames=6, anim_time=0.1):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)
@@ -25,7 +25,7 @@ class Character(pg.sprite.Sprite):
         # self.image, self.rect = nf.load_image(name, colorkey=-1)
         self.cardinal = cardinal  # alloyed mvt (8 -> cros+diag, 4 -> diag)
         self.frames = frames  # number of frame for an animation
-        self.animation = image_animate(file_name, -1,
+        self.animation = image_animate(image_name, -1,
                                        frames=self.cardinal*self.frames)
         self._anim_time = anim_time
         self.image = self.animation[0]
@@ -51,57 +51,63 @@ class Character(pg.sprite.Sprite):
             self.change_order()
             self._walk(dt)
 
+    def check_order(self, target):
+        y0 = target[1]
+        y1 = self.rect.midbottom[1] - cell_sizes[1]/2
+        return True if y0 > y1 else False
+
     def change_order(self):
+        """Change the display order of self if collide with a sprite from layer
+        1 (you+npc+bg_sprite)"""
         if self not in self.Game.allsprites:  # don't change if not displayed
             return
 
-        player_feet = (self.rect.midbottom[0],
-                       self.rect.midbottom[1] - cell_sizes[1]/2)
+        character_pos = (self.rect.midbottom[0],
+                         self.rect.midbottom[1] - cell_sizes[1]/2)
 
-        # TODO: check if removing the two lines bellow induced bug -> the
-        # character only change his order relative to background and not other
-        # sprites like other character but avoid menu to go behind a character
-        # self.Game.allsprites.remove(self)  # used to set back player and npc
-        # self.Game.allsprites.add(self)  # to first plan if no overlap
+        group = self.Game.allsprites.get_sprites_from_layer(1)
+        group.remove(self)
 
-        for sprite in self.Game.bg_sprites:
+        for i, sprite in enumerate(group):
+
             if self.rect.colliderect(sprite.rect):
-                # print("overlap", self.rect, sprite.rect)
-                new_list = pg.sprite.LayeredUpdates(())
-                # self.Game.allsprites.copy()
-                # new_list.empty()
+                new_list = []
                 self.Game.allsprites.remove(self)
 
                 for sprite_bis in self.Game.allsprites:
-                    # print(sprite_bis)  # BUG: infinit group creation !!
+                    # recreate the list by copying when no conditions met and,
+                    # by placing self infront or back the the collided sprite
+
                     if sprite_bis == sprite:
-                        if sprite.check_order(player_feet):
+
+                        if sprite.check_order(character_pos):
                             # print("above")
-                            new_list.add(sprite)
-                            new_list.add(self)
+                            new_list.append(sprite)
+                            new_list.append(self)
                             break
                         else:
                             # print("bellow")
-                            new_list.add(self)
-                            new_list.add(sprite)
+                            new_list.append(self)
+                            new_list.append(sprite)
                             break
 
-                    new_list.add(sprite_bis)
+                    new_list.append(sprite_bis)
 
                 check = False
-
+                # add remaining sprites after sprite
                 for sprite_bis in self.Game.allsprites:
-                    # print(sprite_bis, check)
+
                     if check is True:
-                        new_list.add(sprite_bis)
+                        new_list.append(sprite_bis)
 
                     if sprite_bis == sprite:
                         check = True
 
-                self.Game.allsprites = new_list.copy()
-                # new_list.empty()
-                if not sprite.check_order(player_feet):  # stay behind the 1st
-                    break
+                self.Game.allsprites.remove(group)
+                self.Game.allsprites.add(new_list, layer=1)
+
+                if not sprite.check_order(character_pos):
+                    break  # stay behind the 1st
 
     def dest(self, moving_to_pos):
         if (self.area.left <= moving_to_pos[0] <= self.area.right

@@ -1,23 +1,30 @@
 import pygame as pg
 
 
-class display_info(pg.sprite.Sprite):
-
-    def __init__(self, Game, text, position):
+class Display(pg.sprite.Sprite):
+    """Text with hovering methods"""
+    def __init__(self, Game, text="", position=(0, 0), size=30):
         self.Game = Game
+        self.position = position
+        self.size = size
         pg.sprite.Sprite.__init__(self)  # call Sprite intializer
-#        font = pg.font.Font(None, 30)
-#        self.image = font.render(self.text, 1, (10, 10, 10))
-        self.text(text)
-        self.rect = self.image.get_rect().center = position
 
-    def text(self, value):
-        font = pg.font.Font(None, 30)
-        self.image = font.render(value, True, (10, 10, 10))
+        self.text(str(text), size=size)
+
+    def text(self, txt, position="default", size="default"):
+        if position == "default":
+            position = self.position
+        if size == "default":
+            size = self.size
+
+        font = pg.font.Font(None, size)
+        self.image = font.render(str(txt), True, (10, 10, 10))
+        self.rect = self.image.get_rect()
+        self.rect.center = position
 
     def hovered(self):
         self.rect = self.Game.mouse.rect
-        self.Game.allsprites.add(self)
+        self.Game.allsprites.add(self, layer=2)
 
     def unhovered(self):
         self.Game.allsprites.remove(self)

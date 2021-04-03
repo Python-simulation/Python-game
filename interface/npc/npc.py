@@ -3,7 +3,7 @@ import pygame as pg
 from ..findpath import FindPath
 from ..findpath import cell_sizes
 from .character import Character
-from ..display import display_info
+from ..display import Display
 
 fp = FindPath()
 
@@ -22,7 +22,7 @@ class Npc(Character):
 
         text = "I'm a basic npc!"
         txt_position = self.Game.mouse.rect.topleft
-        self.message = display_info(self.Game, text, txt_position)
+        self.message = Display(self.Game, text, txt_position)
 
     def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""

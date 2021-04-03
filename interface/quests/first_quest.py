@@ -34,7 +34,7 @@ class Quest:
         rep_hi = Button(self.Game, self.dialog, size=(150, 50))
         rep_hi.add_text("Hi!")
 
-        diag_ask = Text("Do you want to help me ?", size=(400, 30))
+        diag_ask = Text("Do you want to help me?", size=(400, 30))
 
         diag_acept = Button(self.Game, self.accept_mission, size=(150, 50))
         diag_acept.add_text("Yes!")
@@ -78,7 +78,7 @@ class Quest:
             self.char_sign.rect
             self.char_sign.rect.bottomleft = (self.Owner.rect.centerx-3,
                                               self.Owner.rect.top-3)
-            self.Game.allsprites.add(self.char_sign)
+            self.Game.allsprites.add(self.char_sign, layer=2)
         else:
             self.Game.allsprites.remove(self.char_sign)
 

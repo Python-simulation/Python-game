@@ -6,16 +6,17 @@ from ..quests.first_quest import Quest
 class SomeGuy(Npc):
     def __init__(self, Game, cell_pos):
         self.Game = Game
-        file_name = os.path.join(Game.data_dir, "npc.png")
-        Npc.__init__(self, Game, file_name, cell_pos)
+        image_name = os.path.join(Game.data_dir, "npc.png")
+        Npc.__init__(self, Game, image_name, cell_pos)
 
         self.allowed_mvt(2, 1)
         self.max_speed = 5
         self.npc_time = 1
 
-        self.name = "Character Name"
+        self.name = "Character with quest"
 
-        self.quest = Quest(self)
+        self.quest = Quest(self)  #  TODO: need to create quest outside
+        # (if several character involved and over differente maps)
 
     def update(self, dt):
         Npc.update(self, dt)

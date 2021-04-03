@@ -93,7 +93,9 @@ class House():
         self.map_info["background_sprites"] = self.bg_sprites
 
         sprites = pg.sprite.RenderPlain(())
+        npc = pg.sprite.RenderPlain(())
         self.map_info["sprites"] = sprites
+        self.map_info["npc"] = npc
 
         inside_cells = self.add_cell(self.forbidden_cells)
         door = self.add_cell(self.special_cell)

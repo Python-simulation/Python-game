@@ -32,6 +32,9 @@ class Map:
         self.map_info["background"] = background
 
         self.sprites = pg.sprite.RenderPlain()
+        npc = pg.sprite.RenderPlain()
+
+        self.map_info["npc"] = npc
 
         self.bg_sprites = pg.sprite.RenderPlain()
 

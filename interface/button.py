@@ -6,10 +6,11 @@ def _fct_none(*args, **kwargs):
     pass
 
 
-class Button:
+class Button(pg.sprite.Sprite):
     """buttons"""
 
     def __init__(self, Game, function=None, name=None, size=(0, 0)):
+        pg.sprite.Sprite.__init__(self)
         self.Game = Game
         self.nf = NeededFunctions()
 

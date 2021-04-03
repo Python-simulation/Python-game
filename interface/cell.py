@@ -1,6 +1,6 @@
 import os
 import pygame as pg
-from .display import display_info
+from .display import Display
 from .interface_functions import NeededFunctions
 from .findpath import FindPath
 from .findpath import cell_sizes
@@ -25,7 +25,7 @@ class Cell(pg.sprite.Sprite):
 
         # text = "Display path"
         # txt_position = self.Game.mouse.rect.topleft
-        # self.message = display_info(self.Game, text, txt_position)
+        # self.message = Display(self.Game, text, txt_position)
 
         self.reset()
         self.function = function
@@ -127,7 +127,7 @@ class Cell(pg.sprite.Sprite):
                 unit_pos = fp.pos_to_cell(next_cell)
 
                 try:
-                    self.Game.allsprites.add(self.Game.cells[unit_pos])
+                    self.Game.allsprites.add(self.Game.cells[unit_pos], layer=0)
                     # self.message.text(str(unit_pos))
                 except KeyError:
                     # self.message.text("")

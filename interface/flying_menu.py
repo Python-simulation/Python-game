@@ -83,7 +83,7 @@ class FlyingMenu(BackGround):
         self.position(topleft)
 
         # if self not in self.Game.allsprites:  # could be used but meh
-        self.Game.allsprites.add(self)  # display
+        self.Game.allsprites.add(self, layer=2)  # display
         self.Game.sprites.add(self)  # prevent from clicking behind the menu (except clicking on the npc...)
 
         for item in self.items:
@@ -91,7 +91,7 @@ class FlyingMenu(BackGround):
             if isinstance(item, Button):
                 self.Game.all_buttons.append(item)
             else:
-                self.Game.allsprites.add(item)  # reminder: allsprites does unclicked if clicked outside
+                self.Game.allsprites.add(item, layer=2)  # reminder: allsprites does unclicked if clicked outside
 
     def desactivated(self):
 

@@ -10,7 +10,7 @@ import pygame as pg
 
 from ..background import BackGround
 from ..npc.character import Character
-from ..chimp import Chimp
+# from ..chimp import Chimp
 from ..findpath import cell_sizes
 from ..findpath import FindPath
 from ..props import Tree
@@ -41,11 +41,12 @@ class Map:
         self.list_refresh.append(Tree(self, (11, 15)))
 
         sprites = pg.sprite.RenderPlain(())
-        chimp = Chimp(Game)
-        sprites.add(chimp)
+        npc = pg.sprite.RenderPlain(())
+        # chimp = Chimp(Game)
+        # sprites.add(chimp)
 
-        npc = SomeGuy(Game, (23, 19))#(10, 20))
-        sprites.add(npc)
+        someguy = SomeGuy(Game, (23, 19))#(10, 20))
+        npc.add(someguy)
 
         # show = BackGround(size=npc.area.size)
         # show.rect.topleft = npc.area.topleft
@@ -55,13 +56,14 @@ class Map:
         npc_2 = Npc(Game, file_name, cell_pos=(20, 10))
         # npc_2.allowed_mvt(10, 3)
         # npc_2.npc_time = 2
-        sprites.add(npc_2)
+        npc.add(npc_2)
 
         # show = BackGround(size=npc_2.area.size)
         # show.rect.topleft = npc_2.area.topleft
         # sprites.add(show)
 
         self.map_info["sprites"] = sprites
+        self.map_info["npc"] = npc
 
         Maps.all_maps[self.position] = self
 

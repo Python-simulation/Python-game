@@ -3,7 +3,7 @@ from .background import BackGround
 
 
 class Text(BackGround):
-    """text"""
+    """text with background"""
 
     def __init__(self, text="", size=(0, 0)):
         self.size = size

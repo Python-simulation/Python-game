@@ -114,16 +114,19 @@ class Map:
         self.map_info["background"] = background
 
         sprites = pg.sprite.RenderPlain()
+        npc = pg.sprite.RenderPlain()
+
         file_name = os.path.join(Game.data_dir, "npc.png")
-        npc = Npc(Game, file_name, cell_pos=(15, 20))
+        npc_1 = Npc(Game, file_name, cell_pos=(15, 20))
         # position = fp.cell_to_pos((15, 20))
         # npc.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
-        npc.allowed_mvt(50, 1)
-        npc.max_speed = 5
-        npc.npc_time = 2
-        sprites.add(npc)
+        npc_1.allowed_mvt(50, 1)
+        npc_1.max_speed = 5
+        npc_1.npc_time = 2
+        npc.add(npc_1)
 
         self.map_info["sprites"] = sprites
+        self.map_info["npc"] = npc
 
         position = (1*cell_sizes[0],
                     1*cell_sizes[1])
