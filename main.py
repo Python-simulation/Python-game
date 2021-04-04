@@ -90,7 +90,6 @@ class Game():
         loading_image.image.blit(load_txt.image, load_txt.rect)
         self.background_screen = loading_image
 
-        self.all_buttons =[]
         self.allsprites.add(self.background_screen)
 
         # Prepare Game Objects
@@ -101,14 +100,16 @@ class Game():
         self.time_warning = 0
         # whiff_sound = load_sound("whiff.wav")
         # punch_sound = load_sound("punch.wav")
-        self.mouse = Mouse(self)
 
         self.draw()
         # time.sleep(3)
 
+        self.mouse = Mouse(self)
+
         self.lower_bar = LowerBar(self)
         self.lower_tool_bar = self.lower_bar.lower_tool_bar
 
+        self.all_buttons = []
         self.all_buttons.extend(self.lower_bar.buttons)
 
         cell_pos = (3, 16)  # will be defined in a load file
@@ -142,7 +143,9 @@ class Game():
         self.cells.update(self.cells_visible)  # TODO:need to decide what to do
         self.all_cells = dict(self.cells_visible)
         self.all_cells.update(self.cells)
-        self.sprites = self.current_map["sprites"]
+        self.sprites = self.current_map["sprites"]  # .copy()
+        # OPTIMIZE: if want to keep new sprites on map let as is, if want to
+        # remove new sprite and isplay only original one, add .copy() to chg id
         self.npc = self.current_map["npc"]
         self.map_pos_txt.text(new_map_pos)
         self.map_pos_txt.rect.topleft = (self.map_pos_txt.rect.h/2,
@@ -155,11 +158,13 @@ class Game():
         self.allsprites.add(self.character, layer=1)
         self.allsprites.add(self.sprites, layer=2)
         self.allsprites.add(self.lower_tool_bar, layer=3)
-        self.allsprites.add(self.all_buttons, layer=3)
+        self.allsprites.add(self.lower_bar.buttons, layer=3)
         self.allsprites.add(self.map_pos_txt, layer=3)
+        self.allsprites.add(self.mouse, layer=4)
 
+        for npc in self.npc:  # OPTIMIZE
+            npc.unclicked()
         # self.allsprites.add(self.cells.values(), layer=0)
-        # self.allsprites.add(self.mouse, layer=4)
 
     def unclick(self):
         for button in self.all_buttons:
@@ -283,7 +288,8 @@ class Game():
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside
-        for cell in self.cells.values():
+        for cell in self.all_cells.values():
+            # OPTIMIZE: check if all_cell or cell
             cell.update(dt)
         self.mouse.update(dt)
 
@@ -321,9 +327,6 @@ class Game():
         #                                 rect, rect)
 
         self.allsprites.draw(self.game_screen.image)  # draw moving items
-
-        self.game_screen.image.blit(self.mouse.image,
-                                    self.mouse.rect)
 
         self.resize_app_screen()  # resize the game size to the app size
 
@@ -366,7 +369,6 @@ class Game():
         pg.display.update()
 
     def teleportation(self, new_map_pos, new_char_pos, *args):
-
         new_char_pos = (new_char_pos[0], new_char_pos[1] + cell_sizes[1]/2)
 
         if args != self.check_border:
@@ -380,7 +382,7 @@ class Game():
             self.change_map(new_map_pos)
             self.character.rect.midbottom = new_char_pos
             self.check_border = None
-            return None
+            return True
         else:
             return False
 

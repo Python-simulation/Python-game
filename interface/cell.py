@@ -29,6 +29,7 @@ class Cell(pg.sprite.Sprite):
 
         self.reset()
         self.function = function
+        # Note that a normal cell will have a self.Game.character.dest function
 
     def reset(self):
         self.function = None
@@ -40,6 +41,7 @@ class Cell(pg.sprite.Sprite):
         # self.image.fill(color)
         self.image.set_alpha(self.alpha_off)
         self.state = False
+        self.active = True
         self.road = list()
         self.show_path = True
         # self.message.text("reset")
@@ -103,17 +105,20 @@ class Cell(pg.sprite.Sprite):
         return other_cell
 
     def update(self, dt):
-        """by default, if function returns nothing, consider
-        the cell has done its purpuse and set state to False"""
+        """by default, if function returns nothing, consider the cell has done
+        its purpuse and set state to False. If function exist, check every dt
+        if the function return True."""
         if self.function is not None and self.state:
             output = self.function(self.rect.center)
 
-            if output is None:
+            if output in (True, None):
                 self.state = False
 
     def hovered(self):
+        if not self.show_path:
+            return
 
-        if not self.check_real_pos("hovered") and self.show_path:
+        if not self.check_real_pos("hovered"):
             self.image.set_alpha(self.alpha_on)
             char_pos = self.Game.character.rect.midbottom
             begin_cell = (char_pos[0],
@@ -134,29 +139,31 @@ class Cell(pg.sprite.Sprite):
                     pass
 
             # self.message.hovered()
-            pass
 
     def unhovered(self):
+        if not self.show_path:
+            return
 
-        if self.show_path:
-            self.image.set_alpha(self.alpha_off)
+        self.image.set_alpha(self.alpha_off)
 
-            for next_cell in self.road:
-                unit_pos = fp.pos_to_cell(next_cell)
+        for next_cell in self.road:
+            unit_pos = fp.pos_to_cell(next_cell)
 
-                try:
-                    self.Game.allsprites.remove(self.Game.cells[unit_pos])
-                    # rect = self.Game.cells[unit_pos].rect
-                    # self.Game.game_screen.image.blit(
-                    #     self.Game.background_screen.image,
-                    #     rect, rect)
-                except KeyError:
-                    pass
-            self.road = list()
-            # self.message.unhovered()
-            pass
+            try:
+                self.Game.allsprites.remove(self.Game.cells[unit_pos])
+                # rect = self.Game.cells[unit_pos].rect
+                # self.Game.game_screen.image.blit(
+                #     self.Game.background_screen.image,
+                #     rect, rect)
+            except KeyError:
+                pass
+        self.road = list()
+        # self.message.unhovered()
 
     def clicked(self):
+        if not self.active:
+            return
+
         if not self.check_real_pos("clicked"):
             self.state = True
 

@@ -53,7 +53,7 @@ map_data = [
         ]
 
 
-class Map:
+class Map:  # TODO: create a super class with all the needed parameters by default
 
     def __init__(self, Maps, Game):
         self.Maps = Maps

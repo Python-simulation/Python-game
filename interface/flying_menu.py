@@ -90,6 +90,7 @@ class FlyingMenu(BackGround):
 
             if isinstance(item, Button):
                 self.Game.all_buttons.append(item)
+                self.Game.allsprites.add(item, layer=2)
             else:
                 self.Game.allsprites.add(item, layer=2)  # reminder: allsprites does unclicked if clicked outside
 
@@ -108,6 +109,7 @@ class FlyingMenu(BackGround):
             if isinstance(item, Button):
                 if item in self.Game.all_buttons:
                     self.Game.all_buttons.remove(item)
+                    self.Game.allsprites.remove(item)
             else:
                 if item in self.Game.allsprites:
                     self.Game.allsprites.remove(item)

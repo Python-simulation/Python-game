@@ -137,7 +137,7 @@ class Character(pg.sprite.Sprite):
                                    self.dest_coord[1] + cell_sizes[1]/2)
 
                 # print("you are moving to", self.road[-1])
-#                print("road", self.road)
+                # print("road", self.road)
                 self.moving = True
 
     def _walk(self, dt):

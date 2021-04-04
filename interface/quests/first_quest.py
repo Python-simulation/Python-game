@@ -61,6 +61,7 @@ class Quest:
 
         self.menu = FlyingMenu(self.Owner)
 
+        # TODO: need to add a exit cross to the upper right to close dialog ?
         self.start_mission = [
             (gap_1, name, gap_2, diag_hi, rep_hi),
             (gap_1, name, gap_2, *diag_description, rep_continue),
@@ -86,6 +87,16 @@ class Quest:
         if self.menu.active:
             return
 
+        if len(self.Game.character.road) != 0:
+            # prevent character from changing map and moving
+            stop = self.Game.character.road[0]
+            self.Game.character.dest(stop)
+
+        for cell in self.Game.all_cells.values():
+            cell.unclicked()
+            cell.active = False
+            cell.show_path = False
+
         self.Owner.authorized_mvt = 0
 
         if not self.mission_accepted:
@@ -98,18 +109,22 @@ class Quest:
         self.menu.activated()
 
     def unclicked(self):
-        if not self.Game.mouse.clicking(self.menu):
-            # print("desac from unclicked")
-            self.stop_dialog()
-            # if keep activated instead of clicked, must never kill a npc
-            # without doing desactivated menu
+        pass
+        # if not self.Game.mouse.clicking(self.menu):
+        #     # print("desac from unclicked")
+        #     self.stop_dialog()
+        #     # if keep activated instead of clicked, must never kill a npc
+        #     # without doing desactivated menu
 
     def stop_dialog(self, *args):
         # print("desac from buton")
         self.menu.desactivated()
         self.diag_index = 0
         self.Owner.authorized_mvt = self.authorized_mvt_save
-        pass
+
+        for cell in self.Game.all_cells.values():
+            cell.active = True
+            cell.show_path = True  # OPTIMIZE: to be discust
 
     def dialog(self, *args):
         # self.kill()  # show the bug if npc is kill without closing the dialog
