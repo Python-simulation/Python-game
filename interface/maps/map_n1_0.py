@@ -121,7 +121,7 @@ class Map:  # TODO: create a super class with all the needed parameters by defau
         # position = fp.cell_to_pos((15, 20))
         # npc.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
         npc_1.allowed_mvt(50, 1)
-        npc_1.max_speed = 5
+        npc_1.speed = 5
         npc_1.npc_time = 2
         npc.add(npc_1)
 

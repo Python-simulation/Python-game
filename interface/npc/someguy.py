@@ -10,7 +10,7 @@ class SomeGuy(Npc):
         Npc.__init__(self, Game, image_name, cell_pos)
 
         self.allowed_mvt(2, 1)
-        self.max_speed = 5
+        self.speed = 5
         self.npc_time = 1
 
         self.name = "Character with quest"

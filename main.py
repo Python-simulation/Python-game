@@ -61,6 +61,8 @@ class Game():
 
         self.ratio_pix_meter_x = GAME_SCREEN_W/32  # pixel/meter
         self.ratio_pix_meter_y = GAME_SCREEN_H/18  # pixel/meter
+        assert self.ratio_pix_meter_x == self.ratio_pix_meter_y
+        self.ratio_pix_meter = self.ratio_pix_meter_x
 
         self.check_border = None
 

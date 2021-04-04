@@ -34,9 +34,10 @@ class Character(pg.sprite.Sprite):
         self.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
 
         self.dest_coord = self.rect.midbottom
+        self.real_pos = self.rect.midbottom
         self.road = list()
         self.moving = False
-        self.max_speed = 10  # m/s, can't go higher than 64 (1 frame per cell)
+        self.speed = 10  # m/s, can't go higher than 64 (1 frame per cell)
         # and best to have multiple of 64 (cell size)
         # INFO: Dofus goes at 8.3 m/s (30km/h)
         self.previous_theta = None
@@ -132,9 +133,9 @@ class Character(pg.sprite.Sprite):
                 self.road.extend(new_road)
 
             if self.road != list():
-                self.dest_coord = self.road[0]
-                self.dest_coord = (self.dest_coord[0],
-                                   self.dest_coord[1] + cell_sizes[1]/2)
+                dest_coord = self.road[0]
+                self.dest_coord = (dest_coord[0],
+                                   dest_coord[1] + cell_sizes[1]/2)
 
                 # print("you are moving to", self.road[-1])
                 # print("road", self.road)
@@ -142,77 +143,57 @@ class Character(pg.sprite.Sprite):
 
     def _walk(self, dt):
         """move the character across the screen"""
-        x_length = self.dest_coord[0] - self.rect.midbottom[0]
-        y_length = self.dest_coord[1] - self.rect.midbottom[1]
+        position_x, position_y = self.real_pos
 
-        theta = math.atan2(y_length, x_length)
+        dest_x, dest_y = self.dest_coord
 
-        theta = fp.theta_cardinal(theta, self.cardinal)
+        length_x = dest_x - position_x
+        length_y = dest_y - position_y
+        length = math.sqrt(length_x**2 + length_y**2)
 
-        self.speed_x = self.max_speed * math.cos(theta)
-        self.speed_y = self.max_speed * math.sin(theta)  # meter per second
+        move = self.speed*self.Game.ratio_pix_meter*dt + self.accum
 
-        self.move_x = self.speed_x * self.Game.ratio_pix_meter_x * dt
-        self.move_y = self.speed_y * self.Game.ratio_pix_meter_y * dt
-        # TODO: could add a memory for the movement left to add up to the
-        # next frame ? like the time has a accumulator.
-        # I tried but rise a issues with the number of cases than the character
-        # can go in advance. To be continue... (reminder: if go further,
-        # keep position, if same angle with while loop for each cases ?, if not
-        # teleport to case as it is)
-
-        # frames = cell_size/(self.max_speed*self.Game.ratio_pix_meter_x*dt)
-        # time = frames * dt
-        self._move_animation(self._anim_time, self.frames, dt)
-
-        old_rect = self.rect.copy()
-        self.rect = self.image.get_rect()
-        self.rect = old_rect.copy()
-        del old_rect
-
-        newpos = self.rect.move((self.move_x, self.move_y))
-        self.rect = newpos
-
-#        print(theta, self.previous_theta)
-        if theta != self.previous_theta and self.previous_theta is not None:
-            self.rect.midbottom = self.dest_coord
-
-        if self._check_pos():
-            self.speed_x = 0
-            self.speed_y = 0
-            self.rect.midbottom = self.dest_coord
-            self.moving = False
-            previous_theta_buffer = self.previous_theta
-            self.previous_theta = None
+        while move >= length:
+            move -= length
+            self.real_pos = self.dest_coord
 
             try:
                 self.road.pop(0)
-                self.dest_coord = self.road[0]
-                self.dest_coord = (self.dest_coord[0],
-                                   self.dest_coord[1] + cell_sizes[1]/2)
-                self.moving = True
-#                print("choose next")
-                return
+
+                dest_coord = self.road[0]
+                self.dest_coord = (dest_coord[0],
+                                   dest_coord[1] + cell_sizes[1]/2)
+
+                position_x, position_y = self.real_pos
+
+                dest_x, dest_y = self.dest_coord
+
+                length_x = dest_x - position_x
+                length_y = dest_y - position_y
+                length = math.sqrt(length_x**2 + length_y**2)
             except IndexError:
-                self.previous_theta = previous_theta_buffer
-                self._move_animation(self._anim_time, self.frames, 0)  # reset anim
+                self.moving = False
+                move = 0
+                theta = math.atan2(length_y, length_x)
+                theta = fp.theta_cardinal(theta, self.cardinal)
+                self.previous_theta = theta
+                self._move_animation(self._anim_time, self.frames, 0)  # reset
                 self.previous_theta = None
+                self.rect.midbottom = self.real_pos
                 return
+
+        theta = math.atan2(length_y, length_x)
+        theta = fp.theta_cardinal(theta, self.cardinal)
+
+        move_x = move * math.cos(theta)  # pix
+        move_y = move * math.sin(theta)
+
+        self.real_pos = (self.real_pos[0] + move_x,
+                         self.real_pos[1] + move_y)
+        self.rect.midbottom = self.real_pos
 
         self.previous_theta = theta
-
-    def _check_pos(self):
-        acceptance = 0  # OPTIMZE: Obsolete when added self.previous_theta
-        interv_low = (self.dest_coord[0] - acceptance,
-                      self.dest_coord[1] - acceptance)
-        interv_high = (self.dest_coord[0] + acceptance,
-                       self.dest_coord[1] + acceptance)
-
-        if (interv_low[0] <= self.rect.midbottom[0] <= interv_high[0]
-                and interv_low[1] <= self.rect.midbottom[1] <= interv_high[1]):
-            return True
-        else:
-            return False
+        self._move_animation(self._anim_time, self.frames, dt)
 
     def _move_animation(self, anim_time, frames, dt):
         time_frame = anim_time / frames
@@ -225,7 +206,7 @@ class Character(pg.sprite.Sprite):
             while self._anim_time_elapsed > self.step*time_frame:
                 self.step += 1
                 if self.step >= frames:
-                    self.step = 0
+                    self.step = 1
                     self._anim_time_elapsed = 0
 
         if self.previous_theta == pi/2:
@@ -238,7 +219,7 @@ class Character(pg.sprite.Sprite):
             self.image = self.animation[7*frames+self.step]
 
         elif self.previous_theta == authorized_angle:
-            self.image = self.animation[0*frames+self.step]
+            self.image = self.animation[self.step]
         elif self.previous_theta == -authorized_angle:
             self.image = self.animation[1*frames+self.step]
         elif self.previous_theta == -pi + authorized_angle:
