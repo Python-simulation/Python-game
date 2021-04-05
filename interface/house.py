@@ -64,6 +64,7 @@ class House():
         new_map_pos = self.outside
 
         new_char_pos = fp.cell_to_pos(self.tp_cell_out)
+        self.Game.character.change_orientation("se")
 
         return self.Game.teleportation(new_map_pos, new_char_pos, *args)
 

@@ -37,7 +37,8 @@ class Map:
         npc = pg.sprite.RenderPlain()
 
         file_name = os.path.join(Game.data_dir, "npc.png")
-        npc_1 = Npc(Game, file_name, cell_pos=(17, 15))
+        npc_1 = Npc(Game, file_name)
+        npc_1.change_position((17, 15))
         npc_1.allowed_mvt(50, 50)
         npc_1.npc_time = 1
 
@@ -61,5 +62,6 @@ class Map:
         self.map_info["background_sprites"] = self.bg_sprites
         self.map_info["cells"] = cells_dict
         self.map_info["borders"] = borders_top
+        self.map_info["borders"].update(borders_right)
 
         self.house.refresh()

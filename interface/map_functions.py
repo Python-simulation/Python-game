@@ -10,7 +10,7 @@ class MapFunctions:
 
     def __init__(self):
 
-        self.map_data_full = [
+        self.map_data = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
@@ -44,7 +44,7 @@ class MapFunctions:
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         ]
 
-        self.map_data = [
+        self.cell_data = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "t", 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "t", 1, "l", 0],
@@ -91,7 +91,7 @@ class MapFunctions:
         borders_right = dict()
         borders_bottom = dict()
 
-        for row_nb, row in enumerate(self.map_data):
+        for row_nb, row in enumerate(self.cell_data):
             for col_nb, tile in enumerate(row):
 
                 if tile != 0:
@@ -144,9 +144,12 @@ class MapFunctions:
                            borders_top, borders_right,
                            borders_bottom, borders]
 
-    def map_reset_cells(self):
+    def map_reset_cells(self, **kwargs):
+        cell_data = kwargs.get("cell_data", self.cell_data)
+
         [cells_dict, borders_left, borders_top,
          borders_right, borders_bottom, borders] = self._all_cells
+
         [cells_dict, borders_left, borders_top,
          borders_right, borders_bottom, borders] = [
              dict(cells_dict), dict(borders_left),
@@ -154,10 +157,17 @@ class MapFunctions:
              dict(borders_bottom), dict(borders)
              ]
 
-        for row_nb, row in enumerate(self.map_data):
+        for row_nb, row in enumerate(cell_data):
             for col_nb, tile in enumerate(row):
 
-                if tile == 1:
+                if tile == 0:
+                    current_cell = cells_dict.get((row_nb, col_nb))
+
+                    if current_cell is not None:
+                        current_cell.reset()
+                        current_cell.active = False
+
+                elif tile == 1:
                     current_cell = cells_dict[(row_nb, col_nb)]
                     current_cell.reset()
                     current_cell.function = self.Game.character.dest
@@ -233,6 +243,9 @@ class MapFunctions:
         Map(self, Game)
     #
         from .maps.map_0_n1 import Map
+        Map(self, Game)
+    #
+        from .maps.map_1_1 import Map
         Map(self, Game)
 
         return self.all_maps

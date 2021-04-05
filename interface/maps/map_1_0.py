@@ -35,9 +35,6 @@ class Map:
         self.map_info["sprites"] = sprites
         self.map_info["npc"] = npc
 
-        position = (1*cell_sizes[0],
-                    1*cell_sizes[1])
-
         Maps.all_maps[self.position] = self
 
         self.refresh()
@@ -49,3 +46,4 @@ class Map:
         self.map_info["background_sprites"] = self.bg_sprites
         self.map_info["cells"] = cells_dict
         self.map_info["borders"] = borders_left
+        self.map_info["borders"].update(borders_bottom)

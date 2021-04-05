@@ -45,18 +45,24 @@ class Map:
         # chimp = Chimp(Game)
         # sprites.add(chimp)
 
-        someguy = SomeGuy(Game, (23, 19))#(10, 20))
+        someguy = SomeGuy(Game)
+        someguy.change_position((23, 19))
         npc.add(someguy)
 
-        # show = BackGround(size=npc.area.size)
-        # show.rect.topleft = npc.area.topleft
+        # show = BackGround(size=someguy.area.size)
+        # show.rect.topleft = someguy.area.topleft
         # sprites.add(show)
 
         file_name = os.path.join(Game.data_dir, "npc.png")
-        npc_2 = Npc(Game, file_name, cell_pos=(20, 10))
+        npc_2 = Npc(Game, file_name)
+        npc_2.change_position((20, 10))
         # npc_2.allowed_mvt(10, 3)
         # npc_2.npc_time = 2
         npc.add(npc_2)
+
+        most_basic_npc = Character(Game, file_name)
+        most_basic_npc.change_position((15, 13))
+        npc.add(most_basic_npc)
 
         # show = BackGround(size=npc_2.area.size)
         # show.rect.topleft = npc_2.area.topleft

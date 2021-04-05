@@ -11,10 +11,10 @@ fp = FindPath()
 class Npc(Character):
     """moves a character across the screen."""
 
-    def __init__(self, Game, file_name, cell_pos,
+    def __init__(self, Game, file_name,
                  cardinal=4, frames=6, anim_time=0.1):
-        Character.__init__(self, Game, file_name, cell_pos,
-                           cardinal=4, frames=6, anim_time=0.1)
+        Character.__init__(self, Game, file_name,
+                           cardinal, frames, anim_time)
 
         self._npc_clock = 0
         self.npc_time = 10
@@ -96,6 +96,13 @@ class Npc(Character):
         self.area = pg.Rect(topleft,
                             (allowed_cell*cell_sizes[0],
                              allowed_cell*cell_sizes[1]))
+
+    def change_position(self, cell_pos):
+        Character.change_position(self, cell_pos)
+        try:  # OPTIMIZE
+            self.allowed_mvt(self.allowed_cell, self.authorized_mvt)
+        except AttributeError:
+            self.allowed_mvt()
 
     def hovered(self):
         # self.message.text("I'm a basic npc !")

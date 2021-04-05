@@ -6,8 +6,7 @@ from ..interface_functions import NeededFunctions
 from ..findpath import FindPath
 from ..animation import image_animate
 
-from ..findpath import cell_sizes
-from ..findpath import authorized_angle
+from ..findpath import cell_sizes, authorized_angle
 
 nf = NeededFunctions()
 fp = FindPath()
@@ -16,7 +15,7 @@ fp = FindPath()
 class Character(pg.sprite.Sprite):
     """moves a character across the screen."""
 
-    def __init__(self, Game, image_name, cell_pos,
+    def __init__(self, Game, image_name,
                  cardinal=4, frames=6, anim_time=0.1):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)
@@ -30,23 +29,24 @@ class Character(pg.sprite.Sprite):
         self._anim_time = anim_time
         self.image = self.animation[0]
         self.rect = self.image.get_rect()
-        position = fp.cell_to_pos(cell_pos)
-        self.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
 
-        self.dest_coord = self.rect.midbottom
-        self.real_pos = self.rect.midbottom
+        center = (self.Game.size[0]/2, self.Game.size[1]/2)
+        pos = fp.pos_to_cell(center)
+        self.change_position(pos)
+
         self.road = list()
         self.moving = False
         self.speed = 10  # m/s, can't go higher than 64 (1 frame per cell)
         # and best to have multiple of 64 (cell size)
         # INFO: Dofus goes at 8.3 m/s (30km/h)
-        self.previous_theta = None
+        self.angle = None
 
         self._anim_time_elapsed = 0
         self.step = 0
 
     def update(self, dt):  # implicitly called from allsprite update
         """walk depending on the character state"""
+        self.rect.midbottom = self.position
 
         if self.moving:
             self.change_order()
@@ -143,7 +143,7 @@ class Character(pg.sprite.Sprite):
 
     def _walk(self, dt):
         """move the character across the screen"""
-        position_x, position_y = self.real_pos
+        position_x, position_y = self.position
 
         dest_x, dest_y = self.dest_coord
 
@@ -151,11 +151,11 @@ class Character(pg.sprite.Sprite):
         length_y = dest_y - position_y
         length = math.sqrt(length_x**2 + length_y**2)
 
-        move = self.speed*self.Game.ratio_pix_meter*dt + self.accum
+        move = self.speed * self.Game.ratio_pix_meter * dt
 
         while move >= length:
             move -= length
-            self.real_pos = self.dest_coord
+            self.position = self.dest_coord
 
             try:
                 self.road.pop(0)
@@ -164,7 +164,7 @@ class Character(pg.sprite.Sprite):
                 self.dest_coord = (dest_coord[0],
                                    dest_coord[1] + cell_sizes[1]/2)
 
-                position_x, position_y = self.real_pos
+                position_x, position_y = self.position
 
                 dest_x, dest_y = self.dest_coord
 
@@ -174,28 +174,26 @@ class Character(pg.sprite.Sprite):
             except IndexError:
                 self.moving = False
                 move = 0
-                theta = math.atan2(length_y, length_x)
-                theta = fp.theta_cardinal(theta, self.cardinal)
-                self.previous_theta = theta
-                self._move_animation(self._anim_time, self.frames, 0)  # reset
-                self.previous_theta = None
-                self.rect.midbottom = self.real_pos
+                angle = math.atan2(length_y, length_x)
+                angle = fp.theta_cardinal(angle, self.cardinal)
+                self._move_animation(angle, self._anim_time, self.frames, 0)  # reset
+                self.rect.midbottom = self.position
                 return
 
-        theta = math.atan2(length_y, length_x)
-        theta = fp.theta_cardinal(theta, self.cardinal)
+        angle = math.atan2(length_y, length_x)
+        angle = fp.theta_cardinal(angle, self.cardinal)
 
-        move_x = move * math.cos(theta)  # pix
-        move_y = move * math.sin(theta)
+        move_x = move * math.cos(angle)  # pix
+        move_y = move * math.sin(angle)
 
-        self.real_pos = (self.real_pos[0] + move_x,
-                         self.real_pos[1] + move_y)
-        self.rect.midbottom = self.real_pos
+        self.position = (self.position[0] + move_x,
+                         self.position[1] + move_y)
+        self.rect.midbottom = self.position
 
-        self.previous_theta = theta
-        self._move_animation(self._anim_time, self.frames, dt)
+        self._move_animation(angle, self._anim_time, self.frames, dt)
 
-    def _move_animation(self, anim_time, frames, dt):
+    def _move_animation(self, angle, anim_time, frames, dt):
+        self.angle = angle
         time_frame = anim_time / frames
 
         if dt == 0:
@@ -209,23 +207,51 @@ class Character(pg.sprite.Sprite):
                     self.step = 1
                     self._anim_time_elapsed = 0
 
-        if self.previous_theta == pi/2:
+        if angle == pi/2:
             self.image = self.animation[4*frames+self.step]
-        elif self.previous_theta == 0:
+        elif angle == 0:
             self.image = self.animation[5*frames+self.step]
-        elif self.previous_theta == -pi/2:
+        elif angle == -pi/2:
             self.image = self.animation[6*frames+self.step]
-        elif self.previous_theta == pi or self.previous_theta == -pi:
+        elif angle == pi or angle == -pi:
             self.image = self.animation[7*frames+self.step]
 
-        elif self.previous_theta == authorized_angle:
+        elif angle == authorized_angle:
             self.image = self.animation[self.step]
-        elif self.previous_theta == -authorized_angle:
+        elif angle == -authorized_angle:
             self.image = self.animation[1*frames+self.step]
-        elif self.previous_theta == -pi + authorized_angle:
+        elif angle == -pi + authorized_angle:
             self.image = self.animation[2*frames+self.step]
-        elif self.previous_theta == pi - authorized_angle:
+        elif angle == pi - authorized_angle:
             self.image = self.animation[3*frames+self.step]
+
+    def change_orientation(self, angle):
+        if type(angle) is str:
+            if angle == "s":
+                angle = pi/2
+            elif angle == "e":
+                angle = 0
+            elif angle == "n":
+                angle = -pi/2
+            elif angle == "w":
+                angle = pi
+            elif angle == "se":
+                angle = authorized_angle
+            elif angle == "ne":
+                angle = -authorized_angle
+            elif angle == "nw":
+                angle = -pi + authorized_angle
+            elif angle == "sw":
+                angle = pi - authorized_angle
+            else:
+                raise ValueError("bad angle value or name for", angle)
+        self._move_animation(angle, self._anim_time, self.frames, 0)
+
+    def change_position(self, cell_pos):
+        position = fp.cell_to_pos(cell_pos)
+        self.rect.midbottom = (position[0], position[1] + cell_sizes[1]/2)
+        self.dest_coord = self.rect.midbottom
+        self.position = self.rect.midbottom
 
     def hovered(self):
         pass

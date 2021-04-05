@@ -6,17 +6,19 @@ from .background import BackGround
 class FlyingMenu(BackGround):
     """Menu that pop when a npc is clicked"""
 
-    def __init__(self, Owner, *args):
+    def __init__(self, Owner, *args, background=False):
         """args being a list of all the buttons that contain the menu.
         Each element can be a button, a background or any class containing
         a Rect and a image subclass"""
         self.Game = Owner.Game
         self.Owner = Owner
         BackGround.__init__(self)
-
         self._margin = 3  # (bottom = top = left = right = margin)
         self.items = args
         self.active = False
+        self.background = background
+        self.bg = BackGround(size=self.Game.size)
+
 
     def _update_menu(self):
         extra_width = 2*self._margin
@@ -83,6 +85,9 @@ class FlyingMenu(BackGround):
         self.position(topleft)
 
         # if self not in self.Game.allsprites:  # could be used but meh
+        if self.background:
+            self.Game.sprites.add(self.bg)  # display
+
         self.Game.allsprites.add(self, layer=2)  # display
         self.Game.sprites.add(self)  # prevent from clicking behind the menu (except clicking on the npc...)
 
@@ -98,6 +103,9 @@ class FlyingMenu(BackGround):
 
         self.active = False
         # print("menu unclicked", self.name, self)
+        if self.background:
+            self.Game.sprites.remove(self.bg)  # display
+
         self.Game.allsprites.remove(self)
         self.Game.sprites.remove(self)
         # self.kill()  # work but harder to know from which group was remove

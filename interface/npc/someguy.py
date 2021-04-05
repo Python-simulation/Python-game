@@ -4,14 +4,14 @@ from ..quests.first_quest import Quest
 
 
 class SomeGuy(Npc):
-    def __init__(self, Game, cell_pos):
+    def __init__(self, Game):
         self.Game = Game
         image_name = os.path.join(Game.data_dir, "npc.png")
-        Npc.__init__(self, Game, image_name, cell_pos)
+        Npc.__init__(self, Game, image_name)
 
-        self.allowed_mvt(2, 1)
-        self.speed = 5
-        self.npc_time = 1
+        self.allowed_mvt(1, 1)
+        self.speed = 2
+        self.npc_time = 3
 
         self.name = "Character with quest"
 
@@ -38,5 +38,5 @@ class SomeGuy(Npc):
         pass
 
     def unclicked(self):
-        self.quest.unclicked()
+        # self.quest.unclicked()
         pass

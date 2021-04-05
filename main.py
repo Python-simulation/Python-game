@@ -115,7 +115,8 @@ class Game():
         self.all_buttons.extend(self.lower_bar.buttons)
 
         cell_pos = (3, 16)  # will be defined in a load file
-        self.character = You(self, cell_pos)
+        self.character = You(self)
+        self.character.change_position(cell_pos)
 
         self.all_maps = self.create_maps(self)
 
@@ -164,8 +165,6 @@ class Game():
         self.allsprites.add(self.map_pos_txt, layer=3)
         self.allsprites.add(self.mouse, layer=4)
 
-        for npc in self.npc:  # OPTIMIZE
-            npc.unclicked()
         # self.allsprites.add(self.cells.values(), layer=0)
 
     def unclick(self):
@@ -377,12 +376,12 @@ class Game():
             self.character.dest(*args)
             self.check_border = args
 
-        char_pos = self.character.rect.midbottom
+        char_pos = self.character.position
         char_pos = (char_pos[0], char_pos[1] - cell_sizes[1]/2)
 
         if char_pos == args[0] and self.character.road == list():
             self.change_map(new_map_pos)
-            self.character.rect.midbottom = new_char_pos
+            self.character.position = new_char_pos
             self.check_border = None
             return True
         else:

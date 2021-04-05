@@ -59,7 +59,7 @@ class Quest:
 
         gap_2 = Text(size=(0, 10))
 
-        self.menu = FlyingMenu(self.Owner)
+        self.menu = FlyingMenu(self.Owner, background=True)
 
         # TODO: need to add a exit cross to the upper right to close dialog ?
         self.start_mission = [
@@ -88,14 +88,17 @@ class Quest:
             return
 
         if len(self.Game.character.road) != 0:
-            # prevent character from changing map and moving
+            # stop the character if moving
             stop = self.Game.character.road[0]
             self.Game.character.dest(stop)
 
-        for cell in self.Game.all_cells.values():
-            cell.unclicked()
-            cell.active = False
-            cell.show_path = False
+        # OPTIMIZE: keep cells_visible or change depending on choice made for
+        # cell visibility in main.py
+        for cell in self.Game.cells_visible.values():
+            # prevent from changing map
+            cell.state = False
+            # cell.active = False
+            # cell.show_path = False
 
         self.Owner.authorized_mvt = 0
 
@@ -108,13 +111,8 @@ class Quest:
 
         self.menu.activated()
 
-    def unclicked(self):
-        pass
-        # if not self.Game.mouse.clicking(self.menu):
-        #     # print("desac from unclicked")
-        #     self.stop_dialog()
-        #     # if keep activated instead of clicked, must never kill a npc
-        #     # without doing desactivated menu
+    # def unclicked(self):
+    #     pass
 
     def stop_dialog(self, *args):
         # print("desac from buton")
@@ -122,9 +120,9 @@ class Quest:
         self.diag_index = 0
         self.Owner.authorized_mvt = self.authorized_mvt_save
 
-        for cell in self.Game.all_cells.values():
-            cell.active = True
-            cell.show_path = True  # OPTIMIZE: to be discust
+        # for cell in self.Game.all_cells.values():
+        #     cell.active = True
+        #     cell.show_path = True  # OPTIMIZE: to be discust
 
     def dialog(self, *args):
         # self.kill()  # show the bug if npc is kill without closing the dialog

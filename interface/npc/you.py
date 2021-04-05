@@ -9,10 +9,10 @@ from ..display import Display
 
 
 class You(Character):
-    def __init__(self, Game, cell_pos):
+    def __init__(self, Game):
         self.Game = Game
         file_name = os.path.join(Game.data_dir, "character.png")
-        Character.__init__(self, Game, file_name, cell_pos, cardinal=8)
+        Character.__init__(self, Game, file_name, cardinal=8)
 
         text = "I'm you!"
         txt_position = self.Game.mouse.rect.topleft

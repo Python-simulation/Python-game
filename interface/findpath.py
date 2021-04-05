@@ -146,9 +146,8 @@ class FindPath:
 
             unit_pos = self.pos_to_cell(next_cell)
 
-            try:
-                all_cells[unit_pos]
-            except KeyError:
+            if (all_cells.get(unit_pos) is None
+                    or all_cells.get(unit_pos).active == False):
                 # TODO: implement A* here
                 # print("can't walk here, stop before it")
                 break
