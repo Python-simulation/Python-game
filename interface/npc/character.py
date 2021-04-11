@@ -6,10 +6,10 @@ from ..interface_functions import NeededFunctions
 from ..findpath import FindPath
 from ..animation import image_animate
 
-from ..findpath import cell_sizes, authorized_angle
-
 nf = NeededFunctions()
 fp = FindPath()
+cell_sizes = fp.cell_sizes
+authorized_angle = fp.authorized_angle
 
 
 class Character(pg.sprite.Sprite):
@@ -36,8 +36,8 @@ class Character(pg.sprite.Sprite):
 
         self.road = list()
         self.moving = False
-        self.speed = 10  # m/s, can't go higher than 64 (1 frame per cell)
-        # and best to have multiple of 64 (cell size)
+        self.speed = 5  # m/s
+        # best to have multiple of 64 (cell size)
         # INFO: Dofus goes at 8.3 m/s (30km/h)
         self.angle = None
 

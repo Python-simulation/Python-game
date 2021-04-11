@@ -8,10 +8,10 @@ import os
 
 import pygame as pg
 
+from .map_functions import MapFunctions
 from ..background import BackGround
-from ..map_functions import MapFunctions
 from ..findpath import FindPath
-from ..props import Wall, Wall_right, Wall_left, Tree, Hole
+from ..props import prop_dict
 
 fp = FindPath()
 mf = MapFunctions()
@@ -19,87 +19,99 @@ mf = MapFunctions()
 
 class MapDefault:
     """Map model"""
-    map_data = mf.map_data
-    cell_data = mf.cell_data
 
     def __init__(self, Maps, Game, position, **kwargs):
-        self.map_data = kwargs.get("map_data", mf.map_data)
-        self.cell_data = kwargs.get("cell_data", mf.cell_data)
-        self.borders = kwargs.get("borders", dict())
-        # npc_list = kwargs.get("npc", list())
-
         self.Maps = Maps
         self.Game = Game
-        self.position = position  # position of the map relative to all the maps
+        self.position = position  # pos of the map relative to all the maps
+        Maps.all_maps[position] = self
+
+        # warning: don't use Game.mf because id conflict that change cell
+        self.map_data = kwargs.get("map_data", mf.map_data_zero)
+
+        if self.map_data == "grass":
+            self.map_data = mf.map_data
+
+        self.cell_data = kwargs.get("cell_data", mf.cell_data)
+
+        self.borders = kwargs.get("borders", dict())
+        image = kwargs.get("image", None)
 
         self.map_info = dict()
-
-        background = BackGround(size=Game.size)
-
+        self.list_refresh = list()
         self.bg_sprites = pg.sprite.RenderPlain()
-        sprites = pg.sprite.RenderPlain()
         npc = pg.sprite.RenderPlain()
 
-        self.list_refresh = list()
-
-        name = os.path.join(Game.data_dir, 'grass.png')
-        grass = BackGround(name, -1)
-        name = os.path.join(Game.data_dir, 'ground.png')
-        ground = BackGround(name, -1)
-        name = os.path.join(Game.data_dir, 'water.png')
-        water = BackGround(name, -1)
-
-        for row_nb, row in enumerate(self.map_data):
-            for col_nb, tile in enumerate(row):
-
-                if tile == 1:
-                    position = fp.cell_to_pos((row_nb, col_nb))
-                    grass.rect.center = position
-                    background.image.blit(grass.image, grass.rect)
-
-                elif tile == 2:
-                    position = fp.cell_to_pos((row_nb, col_nb))
-                    ground.rect.center = position
-                    background.image.blit(ground.image, ground.rect)
-
-                elif tile == 3:
-                    position = fp.cell_to_pos((row_nb, col_nb))
-                    water.rect.center = position
-                    background.image.blit(water.image, water.rect)
-
-                elif tile == 4:
-                    self.list_refresh.append(Wall(self, (row_nb, col_nb)))
-
-                elif tile == 5:
-                    self.list_refresh.append(Wall_right(self, (row_nb, col_nb)))
-
-                elif tile == 6:
-                    self.list_refresh.append(Wall_left(self, (row_nb, col_nb)))
-
-                elif tile == 7:
-                    position = fp.cell_to_pos((row_nb, col_nb))
-                    grass.rect.center = position
-                    background.image.blit(grass.image, grass.rect)
-                    self.list_refresh.append(Tree(self, (row_nb, col_nb)))
-
-                elif tile == 8:
-                    self.list_refresh.append(Hole(self, (row_nb, col_nb)))
+        if image is not None:
+            background = BackGround(image)
+            background.rect.center = Game.game_screen.rect.center
+        else:
+            background = BackGround(size=Game.size)
 
         self.map_info["background"] = background
 
-        self.map_info["sprites"] = sprites
+        for row_nb, row in enumerate(self.map_data):
+            for col_nb, tile in enumerate(row):
+                cell = (row_nb, col_nb)
+
+                # TODO: choose if keep number of switch to str
+                if tile == 1 or tile == "grass":
+                    self.add_ground("grass", cell)
+
+                elif tile == 2 or tile == "ground":
+                    self.add_ground("ground", cell)
+
+                elif tile == 3 or tile == "water":
+                    self.add_ground("water", cell)
+
+                # elif tile == 4:
+                #     self.add_prop("wall", cell)
+
+                # elif tile == 5:
+                #     self.add_prop("wall_right_3", cell)
+
+                # elif tile == 6:
+                #     # self.list_refresh.append(Wall_left(self, cell))
+                #     self.add_prop("wall_left_3", cell)
+
+                # elif tile == 7:
+                #     position = fp.cell_to_pos(cell)
+                #     grass.rect.center = position
+                #     background.image.blit(grass.image, grass.rect)  # OPTIMIZE: change to not force grass under Sprite
+                #     self.add_prop("tree", cell)
+
+                # elif tile == 8:
+                #     self.add_prop("hole", cell)
+
+                # elif tile == 9:
+                #     self.add_prop("wall_left_2", cell)
+
+                # elif tile == 10:
+                #     self.add_prop("wall_right_2", cell)
+
         self.map_info["npc"] = npc
 
-        Maps.all_maps[self.position] = self
+    def add_npc(self, npc):
+        self.map_info["npc"].add(npc)
 
-        self.refresh()
+    def add_ground(self, name, cell):
+        ground = self.Game.ground_dict[str(name)]
+        position = fp.cell_to_pos(cell)
+        ground.rect.center = position
+        self.map_data[cell[0]][cell[1]] = name
+        self.map_info["background"].image.blit(ground.image, ground.rect)
+
+    def add_prop(self, name, cell):
+        prop = prop_dict[str(name)]
+        self.list_refresh.append(prop(self, cell))
 
     def refresh(self):
-        [cells_dict, borders_left, borders_top,
-         borders_right, borders_bottom, borders] = self.Maps.map_reset_cells(cell_data=self.cell_data)
+        [cells_dict, borders_left, borders_top, borders_right, borders_bottom,
+         borders] = self.Maps.map_reset_cells(cell_data=self.cell_data)
 
-        borders_choice = {"l":borders_left, "r":borders_right,
-                          "t":borders_top, "b":borders_bottom}
+        borders_choice = {"l": borders_left, "r": borders_right,
+                          "t": borders_top, "b": borders_bottom,
+                          "a": borders}
 
         borders_choosen = dict()
 

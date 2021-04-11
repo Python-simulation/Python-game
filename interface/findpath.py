@@ -8,6 +8,9 @@ authorized_angle = math.atan(0.5)
 
 class FindPath:
 
+    cell_sizes = cell_sizes
+    authorized_angle = authorized_angle
+
     def cell_to_pos(self, cell):
         cart_x = cell[0] * cell_sizes[0]/2
         cart_y = cell[1] * cell_sizes[0]/2  # x not a mistake

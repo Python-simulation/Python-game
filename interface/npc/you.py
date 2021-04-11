@@ -1,18 +1,19 @@
 import os
 from .character import Character
 # from ..findpath import FindPath
-# from ..findpath import cell_sizes
 
 from ..display import Display
 
 # fp = FindPath()
+# cell_sizes = fp.cell_sizes
 
 
 class You(Character):
     def __init__(self, Game):
         self.Game = Game
-        file_name = os.path.join(Game.data_dir, "character.png")
-        Character.__init__(self, Game, file_name, cardinal=8)
+        image_name = os.path.join(Game.data_dir, "character.png")
+        Character.__init__(self, Game, image_name, cardinal=8)
+        self.speed = 20
 
         text = "I'm you!"
         txt_position = self.Game.mouse.rect.topleft

@@ -3,10 +3,10 @@ import pygame as pg
 from .display import Display
 from .interface_functions import NeededFunctions
 from .findpath import FindPath
-from .findpath import cell_sizes
 
 nf = NeededFunctions()
 fp = FindPath()
+cell_sizes = fp.cell_sizes
 
 
 class Cell(pg.sprite.Sprite):

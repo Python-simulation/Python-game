@@ -6,59 +6,29 @@ Created on Sat May 30 11:15:11 2020
 """
 import os
 
-import pygame as pg
-
-from ..background import BackGround
-from ..findpath import FindPath
-from ..props import Tree, Wall_left, Wall_right
-fp = FindPath()
+from .map_model import MapDefault
 
 
-class Map:
+class Map(MapDefault):
 
     def __init__(self, Maps, Game):
         self.Maps = Maps
         self.Game = Game
-        self.position = (0, -1)  # position of the map relative to all the maps
+        position = (0, -1)  # position of the map relative to all the maps
 
-        self.map_info = dict()
+        image = os.path.join(Game.data_dir, 'background2.png')
 
-        Maps.all_maps[self.position] = self
+        super().__init__(Maps, Game, position, image=image,
+                            # map_data=map_data,  # cell_data=cell_data,
+                            borders="br")
 
-        name = os.path.join(Game.data_dir, 'background2.png')
-        background = BackGround(name)
-        background.rect.center = Game.game_screen.rect.center
-
-        self.map_info["background"] = background
-
-        self.sprites = pg.sprite.RenderPlain()
-        npc = pg.sprite.RenderPlain()
-
-        self.map_info["npc"] = npc
-
-        self.bg_sprites = pg.sprite.RenderPlain()
-
-        self.list_refresh = list()
-        self.list_refresh.append(Tree(self, (11, 15)))
-        self.list_refresh.append(Tree(self, (16, 18)))
-        self.list_refresh.append(Tree(self, (17, 18)))
-        self.list_refresh.append(Tree(self, (18, 18)))
-        self.list_refresh.append(Tree(self, (12, 20)))
-        self.list_refresh.append(Tree(self, (16, 26)))
-        self.list_refresh.append(Tree(self, (16, 28)))
-        self.list_refresh.append(Wall_left(self, (16, 20)))
-        self.list_refresh.append(Wall_right(self, (17, 22)))
-
-        self.refresh()
-
-    def refresh(self):
-        [cells_dict, borders_left, borders_top,
-         borders_right, borders_bottom, borders] = self.Maps.map_reset_cells()
-
-        self.map_info["background_sprites"] = self.bg_sprites
-        self.map_info["cells"] = cells_dict
-        self.map_info["borders"] = borders_bottom
-        self.map_info["sprites"] = self.sprites
-
-        for sprite in self.list_refresh:
-            sprite.refresh()
+        self.add_prop("tree", (11, 15))
+        self.add_prop("tree", (11, 15))
+        self.add_prop("tree", (16, 18))
+        self.add_prop("tree", (17, 18))
+        self.add_prop("tree", (18, 18))
+        self.add_prop("tree", (12, 20))
+        self.add_prop("tree", (16, 26))
+        self.add_prop("tree", (16, 28))
+        self.add_prop("wall_left_3", (16, 19))
+        self.add_prop("wall_right_3", (16, 22))

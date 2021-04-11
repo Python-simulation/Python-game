@@ -6,44 +6,29 @@ Created on Sat May 30 11:15:11 2020
 """
 import os
 
-import pygame as pg
+from .map_model import MapDefault
 
-from ..background import BackGround
+# from ..background import BackGround
 from ..npc.character import Character
-# from ..chimp import Chimp
-from ..findpath import cell_sizes
-from ..findpath import FindPath
-from ..props import Tree
 from ..npc.someguy import SomeGuy
 from ..npc.npc import Npc
 
-fp = FindPath()
 
-
-class Map:
+class Map(MapDefault):
 
     def __init__(self, Maps, Game):
-        self.Maps = Maps
         self.Game = Game
-        self.position = (0, 0)  # position of the map relative to all the maps
+        self.Maps = Maps
+        position = (0, 0)
 
-        self.map_info = dict()
+        image = os.path.join(Game.data_dir, 'background.png')
 
-        name = os.path.join(Game.data_dir, 'background.png')
-        background = BackGround(name)
-        background.rect.center = Game.game_screen.rect.center
+        super().__init__(Maps, Game, position, image=image,
+                         # map_data=map_data,  # cell_data=cell_data,
+                         borders="a")
 
-        self.map_info["background"] = background
-
-        self.bg_sprites = pg.sprite.RenderPlain()
-
-        self.list_refresh = list()
-        self.list_refresh.append(Tree(self, (11, 15)))
-
-        sprites = pg.sprite.RenderPlain(())
-        npc = pg.sprite.RenderPlain(())
-        # chimp = Chimp(Game)
-        # sprites.add(chimp)
+        npc = self.map_info["npc"]
+        # sprites = self.map_info["sprites"]
 
         someguy = SomeGuy(Game)
         someguy.change_position((23, 19))
@@ -68,20 +53,6 @@ class Map:
         # show.rect.topleft = npc_2.area.topleft
         # sprites.add(show)
 
-        self.map_info["sprites"] = sprites
-        self.map_info["npc"] = npc
+        # self.map_info["npc"] = npc
 
-        Maps.all_maps[self.position] = self
-
-        self.refresh()
-
-    def refresh(self):
-        [cells_dict, borders_left, borders_top,
-         borders_right, borders_bottom, borders] = self.Maps.map_reset_cells()
-
-        self.map_info["background_sprites"] = self.bg_sprites
-        self.map_info["cells"] = cells_dict
-        self.map_info["borders"] = borders
-
-        for sprite in self.list_refresh:
-            sprite.refresh()
+        self.add_prop("tree", (11, 15))

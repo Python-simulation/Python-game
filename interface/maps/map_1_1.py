@@ -8,16 +8,12 @@ from .map_model import MapDefault
 class Map(MapDefault):
 
     def __init__(self, Maps, Game):
-        self.Maps = Maps
-        self.Game = Game
         position = (1, 1)  # position of the map relative to all the maps
 
-        map_data = MapDefault.map_data
-        cell_data = MapDefault.cell_data
-        # print(map_data)
-        map_data[15][8] = 4
-        map_data[16][8] = 4
-        map_data[17][8] = 4
+        map_data = Game.mf.map_data.copy()
+
+        map_data[15][8] = 2  # done: add function to add to existing mapdefault__init__
+        map_data[16][8] = 2
 
         map_data[20][10] = 3
 
@@ -37,14 +33,21 @@ class Map(MapDefault):
         map_data[15][6] = 0
         map_data[16][6] = 0
 
-        cell_data[15][5] = 0
-        cell_data[16][5] = 0
-        cell_data[15][6] = 0
-        cell_data[16][6] = 0
 
-        MapDefault.__init__(self, Maps, Game, position,
-                            map_data=map_data, cell_data=cell_data,
-                            borders="lt")
+        super().__init__(Maps, Game, position,
+                         map_data=map_data,
+                         borders="lt")
+
+        # BUG: can't have black sprite (no sprite) if use "grass" -> need to create a black sprite or
+        # need to create back background using new map_data
+        self.add_prop("tree", (15, 8))
+        self.add_prop("tree", (16, 8))
+        self.add_prop("tree", (17, 8))
+
+        self.cell_data[15][5] = 0
+        self.cell_data[16][5] = 0
+        self.cell_data[15][6] = 0
+        self.cell_data[16][6] = 0
 
         file_name = os.path.join(Game.data_dir, "npc.png")
         npc_1 = Npc(Game, file_name)
@@ -53,5 +56,4 @@ class Map(MapDefault):
         npc_1.npc_time = 2
 
         npc_1.change_position((15, 20))
-
         self.map_info["npc"].add(npc_1)

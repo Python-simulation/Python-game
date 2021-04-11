@@ -1,14 +1,14 @@
 import os
 import pygame as pg
-from .interface_functions import NeededFunctions
-from .background import BackGround
-from .cell import Cell
-from .findpath import cell_sizes
-from .findpath import FindPath
-from .sprite import Sprite
+from ..interface_functions import NeededFunctions
+from ..background import BackGround
+from ..cell import Cell
+from ..findpath import FindPath
+from ..sprite import Sprite
 
 nf = NeededFunctions()
 fp = FindPath()
+cell_sizes = fp.cell_sizes
 
 
 class House():
@@ -26,14 +26,14 @@ class House():
 
         self.forbidden_cells = list()
 
-        for cell_x in range(8, 12+1):
+        for cell_x in range(8, 12+1):  # OPTIMIZE: function for sprite
             for cell_y in range(3, 7+1):
 
                 cell = self.add_init_pos([cell_x, cell_y])
                 self.forbidden_cells.append(cell)
 
         self.special_cell = [
-            self.add_init_pos([12, 5]),  # OPTIMIZE: currently can walk on tp
+            self.add_init_pos([12, 5]),  # currently can walk on tp
             # cell without tp if try to change map but stopped by the house
             ]
 
@@ -42,7 +42,7 @@ class House():
 
         self.tp_cell_in = self.special_cell[0]
 
-        self.create_inside()
+        # self.create_inside()
 
     def add_init_pos(self, cell):
         init_pos = fp.pos_to_cell(self.rect.topleft)
@@ -78,9 +78,9 @@ class House():
 
         self.map_info = dict()
 
-        background = BackGround()
-        background.image = self.Map.map_info["background"].image.copy()
-        background.rect = background.image.get_rect()
+        background = BackGround(size=self.Game.size)  # TODO: search example for colors -> can't read map pos
+        # background.image = self.Map.map_info["background"].image.copy()
+        # background.rect = background.image.get_rect()
 
         name = os.path.join(self.Game.data_dir, 'house_inside.png')
         image, rect = nf.load_image(name, -1)
@@ -106,13 +106,14 @@ class House():
             cell = (int(cell[0]), int(cell[1]))
             inside_cells[cell].function = self.tp_outside
 
-        table = [
-            [9, 4],
-            [9, 5],
-            ]
-        for cell in table:
-            cell = self.add_init_pos(cell)
-            inside_cells.pop(cell, None)
+        # table = [
+        #     [9, 4],
+        #     [9, 5],
+
+        # # self.list_refresh.append(Table(self, (9, 4)))
+        # for cell in table:
+        #     cell = self.add_init_pos(cell)
+        #     inside_cells.pop(cell, None)
 
         self.map_info["cells"] = inside_cells
         self.map_info["borders"] = dict()
@@ -148,7 +149,7 @@ class House():
                 cell,
                 self.Map.map_info["borders"].pop(cell, None)
             )
-            # CONSEIL: if house del border where character cam from,
+            # ADVICE: if house del border where character cam from,
             # can't go back and can't move : stuck for ever.
             # Must del border in adjacent map to avoid it.
 

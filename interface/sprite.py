@@ -1,10 +1,10 @@
 from .interface_functions import NeededFunctions
 from .findpath import FindPath
-from .findpath import cell_sizes
 from .background import BackGround
 
 nf = NeededFunctions()
 fp = FindPath()
+cell_sizes = fp.cell_sizes
 
 
 class Sprite(BackGround):
@@ -22,7 +22,7 @@ class Sprite(BackGround):
         markers_pos = list()
 
         for cell in markers:
-            self.add_init_pos(cell)
+            cell = self.add_init_pos(cell)  # don't change cell anymore
             markers_pos.append(fp.cell_to_pos(cell))
 
         self.markers = self.add_markers(markers_pos)
@@ -30,8 +30,8 @@ class Sprite(BackGround):
     def add_init_pos(self, cell):
         init_pos = fp.pos_to_cell(self.rect.topleft)
 
-        cell[0] += init_pos[0]
-        cell[1] += init_pos[1]
+        cell = (cell[0] + init_pos[0],
+                cell[1] + init_pos[1])
 
         unit_pos = (int(cell[0]), int(cell[1]))
         return unit_pos

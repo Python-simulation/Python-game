@@ -1,11 +1,11 @@
 import random
 import pygame as pg
 from ..findpath import FindPath
-from ..findpath import cell_sizes
 from .character import Character
 from ..display import Display
 
 fp = FindPath()
+cell_sizes = fp.cell_sizes
 
 
 class Npc(Character):

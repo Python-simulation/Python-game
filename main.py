@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 """
 Pygame game.
 
@@ -15,7 +15,7 @@ from interface.npc.you import You
 from interface.interface_functions import NeededFunctions
 
 from interface.background import BackGround
-from interface.map_functions import MapFunctions
+from interface.maps.map_functions import MapFunctions
 
 from interface.lower_bar import LowerBar
 
@@ -24,6 +24,10 @@ from interface.findpath import cell_sizes
 from interface.menu import Menu
 from interface.display import Display
 
+from interface.ground import ground
+
+# OPTIMIZE: temporary & should be remove in final version
+from interface.maps.map_generator import MapGenerator
 
 if not pg.font:
     print("Warning, fonts disabled")
@@ -36,7 +40,8 @@ main_dir = os.path.split(os.path.abspath(__file__))[0]
 data_dir = os.path.join(main_dir, "data")
 
 nf = NeededFunctions()
-mp = MapFunctions()
+mf = MapFunctions()
+
 
 
 class Game():
@@ -44,7 +49,7 @@ class Game():
     Game class called when the program starts.
 
     it initializes everything it needs, then runs in
-    a loop until the function returns.
+    a loop until the player stop the game.
     """
 
     def __init__(self, size=(1920, 1080)):
@@ -118,19 +123,23 @@ class Game():
         self.character = You(self)
         self.character.change_position(cell_pos)
 
+        self.ground_dict = ground(self)  # OPTIMIZE: ugly position in script
         self.all_maps = self.create_maps(self)
 
         self.map_pos_txt = Display(self)
         self.change_map((0, 0))  # will be defined in a load file
 
         self.pause = Menu(self)
+        self.map_generator = MapGenerator(self)
         # self.menu.run(self.dt)
 
     def loader(self):
         """used to call those variables in other files from the main game
         class"""
+        self.main_dir = main_dir
         self.data_dir = data_dir
-        self.create_maps = mp.create_maps
+        self.mf = mf
+        self.create_maps = mf.create_maps
         self.function_test = nf.function_test
         self.function_test2 = nf.function_test2
 
@@ -138,18 +147,19 @@ class Game():
         self.current_map_pos = new_map_pos
         map_class = self.all_maps[new_map_pos]
         map_class.refresh()
-        self.current_map = map_class.map_info
-        self.background_screen = self.current_map["background"]
-        self.bg_sprites = self.current_map["background_sprites"]
-        self.cells = self.current_map["cells"]  # dict
-        self.cells_visible = self.current_map["borders"]  # dict
+        self.current_map = map_class
+        self.map_info = map_class.map_info
+        self.background_screen = self.map_info["background"]
+        self.bg_sprites = self.map_info["background_sprites"]
+        self.cells = self.map_info["cells"]  # dict
+        self.cells_visible = self.map_info["borders"]  # dict
         self.cells.update(self.cells_visible)  # TODO:need to decide what to do
         self.all_cells = dict(self.cells_visible)
         self.all_cells.update(self.cells)
-        self.sprites = self.current_map["sprites"]  # .copy()
+        self.sprites = pg.sprite.Group()  # .copy()
         # OPTIMIZE: if want to keep new sprites on map let as is, if want to
         # remove new sprite and isplay only original one, add .copy() to chg id
-        self.npc = self.current_map["npc"]
+        self.npc = self.map_info["npc"]
         self.map_pos_txt.text(new_map_pos)
         self.map_pos_txt.rect.topleft = (self.map_pos_txt.rect.h/2,
                                          self.map_pos_txt.rect.h/2)
@@ -165,6 +175,8 @@ class Game():
         self.allsprites.add(self.map_pos_txt, layer=3)
         self.allsprites.add(self.mouse, layer=4)
 
+        for npc in self.npc:  # avoid bug if npc behing sprite
+            npc.change_order()
         # self.allsprites.add(self.cells.values(), layer=0)
 
     def unclick(self):
@@ -191,7 +203,8 @@ class Game():
 
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:  # pause the game using escape key
-                    self.pause.run(self.dt)
+                    self.map_generator.run(self.dt)
+                    # self.pause.run(self.dt)
 
             elif event.type == pg.VIDEORESIZE:
                 self.reset_app_screen(event.dict['size'])
