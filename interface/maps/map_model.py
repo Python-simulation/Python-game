@@ -14,13 +14,14 @@ from ..findpath import FindPath
 from ..props import prop_dict
 
 fp = FindPath()
-mf = MapFunctions()
 
 
 class MapDefault:
     """Map model"""
 
     def __init__(self, Maps, Game, position, **kwargs):
+        mf = MapFunctions()  # only solution to have independent cell_data
+        # not corrupted by other maps
         self.Maps = Maps
         self.Game = Game
         self.position = position  # pos of the map relative to all the maps
@@ -32,7 +33,10 @@ class MapDefault:
         if self.map_data == "grass":
             self.map_data = mf.map_data
 
-        self.cell_data = kwargs.get("cell_data", mf.cell_data)
+        self.cell_data = kwargs.get("cell_data", mf.cell_data_zero)
+
+        if self.cell_data == "walk":
+            self.cell_data = mf.cell_data
 
         self.borders = kwargs.get("borders", dict())
         image = kwargs.get("image", None)
@@ -55,6 +59,7 @@ class MapDefault:
                 cell = (row_nb, col_nb)
 
                 # TODO: choose if keep number of switch to str
+                # self.add_ground(tile, cell)  # TODO: or not depend on 1 or "grass" convention
                 if tile == 1 or tile == "grass":
                     self.add_ground("grass", cell)
 
@@ -75,9 +80,6 @@ class MapDefault:
                 #     self.add_prop("wall_left_3", cell)
 
                 # elif tile == 7:
-                #     position = fp.cell_to_pos(cell)
-                #     grass.rect.center = position
-                #     background.image.blit(grass.image, grass.rect)  # OPTIMIZE: change to not force grass under Sprite
                 #     self.add_prop("tree", cell)
 
                 # elif tile == 8:
@@ -99,6 +101,9 @@ class MapDefault:
         position = fp.cell_to_pos(cell)
         ground.rect.center = position
         self.map_data[cell[0]][cell[1]] = name
+        # print(self.cell_data[cell[0]][cell[1]])
+        self.cell_data[cell[0]][cell[1]] = 1
+        # print(self.cell_data[cell[0]][cell[1]])
         self.map_info["background"].image.blit(ground.image, ground.rect)
 
     def add_prop(self, name, cell):

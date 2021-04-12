@@ -10,6 +10,7 @@ class Prop(Sprite):
 
     def __init__(self, Map, cell_pos, image, markers=list()):
         """cell_pos =  midbottom - .5*cell_y"""
+        self.cell_pos = cell_pos
         self.Map = Map
         self.Game = Map.Game
 

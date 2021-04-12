@@ -69,9 +69,10 @@ class Character(pg.sprite.Sprite):
         group = self.Game.allsprites.get_sprites_from_layer(1)
         group.remove(self)
 
-        for i, sprite in enumerate(group):
+        for i, sprite in enumerate(group):  # all bg_sprites & npc
 
-            if self.rect.colliderect(sprite.rect):
+            if self.rect.colliderect(sprite.rect):  # if player collid with
+
                 new_list = []
                 self.Game.allsprites.remove(self)
 
@@ -178,6 +179,8 @@ class Character(pg.sprite.Sprite):
                 angle = fp.theta_cardinal(angle, self.cardinal)
                 self._move_animation(angle, self._anim_time, self.frames, 0)  # reset
                 self.rect.midbottom = self.position
+
+                self.change_order() # fixed rendering order issue
                 return
 
         angle = math.atan2(length_y, length_x)

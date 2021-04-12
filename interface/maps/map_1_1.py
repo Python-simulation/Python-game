@@ -33,7 +33,6 @@ class Map(MapDefault):
         map_data[15][6] = 0
         map_data[16][6] = 0
 
-
         super().__init__(Maps, Game, position,
                          map_data=map_data,
                          borders="lt")

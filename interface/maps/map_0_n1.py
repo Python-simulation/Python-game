@@ -19,8 +19,8 @@ class Map(MapDefault):
         image = os.path.join(Game.data_dir, 'background2.png')
 
         super().__init__(Maps, Game, position, image=image,
-                            # map_data=map_data,  # cell_data=cell_data,
-                            borders="br")
+                         cell_data="walk",
+                         borders="br")
 
         self.add_prop("tree", (11, 15))
         self.add_prop("tree", (11, 15))

@@ -24,7 +24,7 @@ class Map(MapDefault):
         image = os.path.join(Game.data_dir, 'background.png')
 
         super().__init__(Maps, Game, position, image=image,
-                         # map_data=map_data,  # cell_data=cell_data,
+                         cell_data="walk",
                          borders="a")
 
         npc = self.map_info["npc"]

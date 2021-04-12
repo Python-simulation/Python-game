@@ -54,8 +54,8 @@ class Map(MapDefault):
         position = (-1, 0)  # position of the map relative to all the maps
 
         super().__init__(Maps, Game, position,
-                            map_data=map_data,  # cell_data=cell_data,
-                            borders="r")
+                         map_data=map_data,  # cell_data=cell_data,
+                         borders="r")
 
         file_name = os.path.join(Game.data_dir, "npc.png")
         npc_1 = Npc(Game, file_name)

@@ -156,9 +156,7 @@ class Game():
         self.cells.update(self.cells_visible)  # TODO:need to decide what to do
         self.all_cells = dict(self.cells_visible)
         self.all_cells.update(self.cells)
-        self.sprites = pg.sprite.Group()  # .copy()
-        # OPTIMIZE: if want to keep new sprites on map let as is, if want to
-        # remove new sprite and isplay only original one, add .copy() to chg id
+        self.sprites = pg.sprite.Group()
         self.npc = self.map_info["npc"]
         self.map_pos_txt.text(new_map_pos)
         self.map_pos_txt.rect.topleft = (self.map_pos_txt.rect.h/2,
@@ -173,7 +171,7 @@ class Game():
         self.allsprites.add(self.lower_tool_bar, layer=3)
         self.allsprites.add(self.lower_bar.buttons, layer=3)
         self.allsprites.add(self.map_pos_txt, layer=3)
-        self.allsprites.add(self.mouse, layer=4)
+        # self.allsprites.add(self.mouse, layer=4)
 
         for npc in self.npc:  # avoid bug if npc behing sprite
             npc.change_order()

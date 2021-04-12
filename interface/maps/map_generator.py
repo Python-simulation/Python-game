@@ -65,15 +65,9 @@ class MapGenerator:
                 self.Game.reset_app_screen(event.dict['size'])
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                # tried with allsprites but keep having errors
-                # list(reversed(sprites)) but Group is not a callable
 
                 for cell in self.Game.all_cells.values():
                     if self.Game.mouse.clicking(cell):
-                        for cell_bis in self.Game.all_cells.values():
-                            cell_bis.unclicked()
-                        # cell.clicked()
-
                         try:
                             self.map.add_ground(self.tile, cell.cell_pos)
                         except KeyError:
@@ -81,23 +75,18 @@ class MapGenerator:
                             print("self.add_prop(\""+str(self.tile)+"\", "+str(cell.cell_pos)+")")
                             self.map.refresh()
 
-                        # print("hit cell", cell.cell_pos)
-                        # print("hit cell", cell.rect)
                         break
 
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 self.Game.mouse.unclicked()
 
             else:
-                for cell in self.Game.all_cells.values():
-                    cell.unhovered()
                 pg.mouse.set_cursor(*pg.cursors.diamond)
 
                 for cell in self.Game.all_cells.values():
                     if self.Game.mouse.hovering(cell):
 
                         self.Game.sprites.empty()
-                        # cell.hovered()
                         try:
                             self.show_ground(self.tile, cell.cell_pos)
                         except KeyError:
@@ -142,6 +131,9 @@ class MapGenerator:
         self.map = self.Game.current_map
         self.running = True
 
+        self.Game.all_cells = self.map.Maps.map_reset_cells()[0]
+        self.Game.all_cells.update(self.Game.cells_visible)
+
         while self.running:
 
             self.Game.clock.tick(80)/1000  # avoid taking init time into account
@@ -156,6 +148,8 @@ class MapGenerator:
 
         self.Game.mouse.unclicked()  # semi-obsolete: needed to avoid button to stick in clicked mode
         # without being unclicked -> get teleported each pause being clicked
+
+        self.Game.sprites.empty()
         print("map_data = "+str(self.map.map_data))
         # print("\n")
         # print(self.Game.bg_sprites.sprites())

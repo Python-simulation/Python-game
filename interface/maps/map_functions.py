@@ -33,6 +33,20 @@ class MapFunctions:
         cell_data.append([0]*(16))
         self.cell_data = cell_data
 
+        cell_data_zero = []
+        cell_data_zero.append([0]*(16))
+        cell_data_zero.append([0]*(15) + ["t"] + [0])
+        for n in range(0, 13, 1):
+            cell_data_zero.append([0]*(14-n) + ["t"] + [0]*(2*n+1) + ["l"] + [0])
+        n = 13
+        cell_data_zero.append([0]*(14-n) + ["r"] + [0]*(2*n+1) + ["l"] + [0])
+        for n in range(12, -1, -1):
+            cell_data_zero.append([0]*(14-n) + ["r"] + [0]*(2*n+1) + ["b"] + [0])
+
+        cell_data_zero.append([0]*(15) + ["b"] + [0])
+        cell_data_zero.append([0]*(16))
+        self.cell_data_zero = cell_data_zero
+
     def create_map(self, Game):
         self.Game = Game
 
@@ -123,10 +137,13 @@ class MapFunctions:
                         current_cell.active = False
 
                 elif tile == 1:
-                    current_cell = cells_dict[(row_nb, col_nb)]
-                    current_cell.reset()
-                    current_cell.function = self.Game.character.dest
-                    current_cell.alpha_off = 100
+                    current_cell = cells_dict.get((row_nb, col_nb))
+                    # current_cell = cells_dict[(row_nb, col_nb)]
+
+                    if current_cell is not None:
+                        current_cell.reset()
+                        current_cell.function = self.Game.character.dest
+                        current_cell.alpha_off = 100
 
                 elif tile == "l":
                     current_cell = borders_left[(row_nb, col_nb)]
