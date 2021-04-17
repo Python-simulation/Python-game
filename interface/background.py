@@ -4,10 +4,11 @@ from .interface_functions import NeededFunctions
 nf = NeededFunctions()
 
 
-class BackGround(pg.sprite.Sprite):
+class BackGround(pg.sprite.Sprite):  # OPTIMIZE: don' like the try except ->
+    # because if bad name in image name, will not return error but a 0x0 image
     """image of the map"""
     def __init__(self, *args, size=(0, 0)):
-        pg.sprite.Sprite.__init__(self)  # call Sprite intializer
+        super().__init__()  # call Sprite intializer
         try:
             self.image, self.rect = nf.load_image(*args)
         except Exception:

@@ -174,14 +174,13 @@ class Character(pg.sprite.Sprite):
                 length = math.sqrt(length_x**2 + length_y**2)
             except IndexError:
                 self.moving = False
-                move = 0
                 angle = math.atan2(length_y, length_x)
                 angle = fp.theta_cardinal(angle, self.cardinal)
-                self._move_animation(angle, self._anim_time, self.frames, 0)  # reset
+                self._move_animation(angle, self._anim_time, self.frames, 0)
                 self.rect.midbottom = self.position
 
-                self.change_order() # fixed rendering order issue
-                return
+                self.change_order()  # fixed rendering order issue
+                return  # without need to set move=0 dt=0
 
         angle = math.atan2(length_y, length_x)
         angle = fp.theta_cardinal(angle, self.cardinal)
@@ -199,7 +198,7 @@ class Character(pg.sprite.Sprite):
         self.angle = angle
         time_frame = anim_time / frames
 
-        if dt == 0:
+        if dt == 0:  # reset
             self._anim_time_elapsed = 0
             self.step = 0
         else:

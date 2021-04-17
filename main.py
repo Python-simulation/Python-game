@@ -175,6 +175,8 @@ class Game():
 
         for npc in self.npc:  # avoid bug if npc behing sprite
             npc.change_order()
+
+        self.character.change_order()
         # self.allsprites.add(self.cells.values(), layer=0)
 
     def unclick(self):

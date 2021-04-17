@@ -10,9 +10,7 @@ cell_sizes = fp.cell_sizes
 class Sprite(BackGround):
 
     def __init__(self, file_name, cell_pos, markers=list()):
-        BackGround.__init__(self, file_name, -1)
-
-        self.cell_pos = cell_pos
+        super().__init__(file_name, -1)
 
         position = fp.cell_to_pos(cell_pos)
         position = (position[0],
@@ -45,7 +43,7 @@ class Sprite(BackGround):
             ]
 
         elif len(markers) == 1:
-            pass
+            raise NotImplementedError
 
         elif len(markers) == 2:
             markers = [
@@ -77,20 +75,20 @@ class Sprite(BackGround):
 
             return self.check_line(target, (x1, y1), (x2, y2))
 
-        # elif len(self.markers) == 3:  # Work (not tested) but too complicated
-        #     x1, y1 = self.markers[0]
-        #     x2, y2 = self.markers[1]
-        #     x3, y3 = self.markers[2]
-        #     first_line = self.check_line(self, target, (x1, y1), (x2, y2))
-        #     second_line = self.check_line(self, target, (x2, y2), (x3, y3))
+        elif len(self.markers) == 3:  # Work (not tested) but too complicated
+            x1, y1 = self.markers[0]
+            x2, y2 = self.markers[1]
+            x3, y3 = self.markers[2]
+            first_line = self.check_line(target, (x1, y1), (x2, y2))
+            second_line = self.check_line(target, (x2, y2), (x3, y3))
 
-        #     if y2 > y1 and y2 > y3:
-        #         return True if first_line and second_line else False
-        #     else:
-        #         return True if first_line or second_line else False
+            if y2 > y1 and y2 > y3:
+                return True if first_line and second_line else False
+            else:
+                return True if first_line or second_line else False
 
         else:
-            raise ValueError("can't have markers with len != 1,2")
+            raise ValueError("can't have markers with len != 1,2,3")
 
     def check_line(self, target, marker1, marker2):
         x0, y0 = target

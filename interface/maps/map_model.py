@@ -59,15 +59,18 @@ class MapDefault:
                 cell = (row_nb, col_nb)
 
                 # TODO: choose if keep number of switch to str
-                # self.add_ground(tile, cell)  # TODO: or not depend on 1 or "grass" convention
-                if tile == 1 or tile == "grass":
-                    self.add_ground("grass", cell)
+                try:
+                    self.add_ground(tile, cell)
+                except KeyError:
 
-                elif tile == 2 or tile == "ground":
-                    self.add_ground("ground", cell)
+                    if tile == 1 or tile == "grass":
+                        self.add_ground("grass", cell)
 
-                elif tile == 3 or tile == "water":
-                    self.add_ground("water", cell)
+                    elif tile == 2 or tile == "ground":
+                        self.add_ground("ground", cell)
+
+                    elif tile == 3 or tile == "water":
+                        self.add_ground("water", cell)
 
                 # elif tile == 4:
                 #     self.add_prop("wall", cell)

@@ -32,24 +32,47 @@ class MapGenerator:
             self.Game.running = False
             self.running = False
 
+        # if all_keys[pg.K_1] or all_keys[pg.K_KP1]:
+        #     self.tile = "grass"
+        # if all_keys[pg.K_2] or all_keys[pg.K_KP2]:
+        #     self.tile = "ground"
+        # if all_keys[pg.K_3] or all_keys[pg.K_KP3]:
+        #     self.tile = "water"
+        # if all_keys[pg.K_4] or all_keys[pg.K_KP4]:
+        #     self.tile = "tree"
+        # if all_keys[pg.K_5] or all_keys[pg.K_KP5]:
+        #     self.tile = "wall"
+        # if all_keys[pg.K_6] or all_keys[pg.K_KP6]:
+        #     self.tile = "wall_left_2"
+        # if all_keys[pg.K_7] or all_keys[pg.K_KP7]:
+        #     self.tile = "wall_right_2"
+        # if all_keys[pg.K_8] or all_keys[pg.K_KP8]:
+        #     self.tile = "wall_left_3"
+        # if all_keys[pg.K_9] or all_keys[pg.K_KP9]:
+        #     self.tile = "wall_right_3"
+
         if all_keys[pg.K_1] or all_keys[pg.K_KP1]:
-            self.tile = "grass"
-        if all_keys[pg.K_2] or all_keys[pg.K_KP2]:
-            self.tile = "ground"
-        if all_keys[pg.K_3] or all_keys[pg.K_KP3]:
-            self.tile = "water"
-        if all_keys[pg.K_4] or all_keys[pg.K_KP4]:
-            self.tile = "tree"
-        if all_keys[pg.K_5] or all_keys[pg.K_KP5]:
             self.tile = "wall"
-        if all_keys[pg.K_6] or all_keys[pg.K_KP6]:
+        if all_keys[pg.K_2] or all_keys[pg.K_KP2]:
             self.tile = "wall_left_2"
+        if all_keys[pg.K_3] or all_keys[pg.K_KP3]:
+            self.tile = "wall_left_2_2"
+        if all_keys[pg.K_4] or all_keys[pg.K_KP4]:
+            self.tile = "wall_left_2_3"
+        if all_keys[pg.K_5] or all_keys[pg.K_KP5]:
+            self.tile = "wall_left_2_3_2"
+        if all_keys[pg.K_6] or all_keys[pg.K_KP6]:
+            self.tile = "wall_left_2_3_4"
         if all_keys[pg.K_7] or all_keys[pg.K_KP7]:
-            self.tile = "wall_right_2"
+            self.tile = "wall_left_3_3_4_spec"
         if all_keys[pg.K_8] or all_keys[pg.K_KP8]:
-            self.tile = "wall_left_3"
+            self.tile = "wall_left_2_2_2"
         if all_keys[pg.K_9] or all_keys[pg.K_KP9]:
-            self.tile = "wall_right_3"
+            self.tile = "wall_left_3_3_4"
+        if all_keys[pg.K_0] or all_keys[pg.K_KP0]:
+            self.tile = "wall_left_1_1_2"
+        if all_keys[pg.K_2] or all_keys[pg.K_KP2]:
+            self.tile = "wall_left_1_1_3"
 
         for event in pg.event.get():  # listed key in pressed order
 
