@@ -137,6 +137,8 @@ class House():
         return cells_dict
 
     def refresh(self):
+        print("temp do nothing")
+        return
         self.Map.bg_sprites.add(self.sprite)
 
         # for sprite in self.bg_sprites:

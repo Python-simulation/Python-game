@@ -109,9 +109,9 @@ class MapDefault:
         # print(self.cell_data[cell[0]][cell[1]])
         self.map_info["background"].image.blit(ground.image, ground.rect)
 
-    def add_prop(self, name, cell):
+    def add_prop(self, name, cell, *args, **kargs):
         prop = prop_dict[str(name)]
-        self.list_refresh.append(prop(self, cell))
+        self.list_refresh.append(prop(self, cell, *args, **kargs))
 
     def refresh(self):
         [cells_dict, borders_left, borders_top, borders_right, borders_bottom,

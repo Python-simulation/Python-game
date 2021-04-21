@@ -43,7 +43,6 @@ nf = NeededFunctions()
 mf = MapFunctions()
 
 
-
 class Game():
     """
     Game class called when the program starts.
@@ -248,7 +247,7 @@ class Game():
                                     for cell_bis in self.all_cells.values():
                                         cell_bis.unclicked()
                                     cell.clicked()
-                                    # print("hit cell", cell.rect)
+                                    # print("hit cell", cell.rect, cell.active)
                                     break
                             # else:
                             #     if self.mouse.clicking(self.game_screen):
@@ -296,6 +295,7 @@ class Game():
                             for cell in self.all_cells.values():
                                 if self.mouse.hovering(cell):
                                     cell.hovered()
+                                    # print("hover cell", cell)
                                     break
                             else:
                                 pg.mouse.set_cursor(*pg.cursors.arrow)
@@ -393,8 +393,9 @@ class Game():
         char_pos = (char_pos[0], char_pos[1] - cell_sizes[1]/2)
 
         if char_pos == args[0] and self.character.road == list():
-            self.change_map(new_map_pos)
             self.character.position = new_char_pos
+            self.character.rect.midbottom = new_char_pos  # avoid sprite bug
+            self.change_map(new_map_pos)
             self.check_border = None
             return True
         else:

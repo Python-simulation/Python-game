@@ -8,7 +8,6 @@ import os
 
 from .map_model import MapDefault
 
-from .house import House
 from ..npc.npc import Npc
 
 
@@ -22,10 +21,6 @@ class Map(MapDefault):
         super().__init__(Maps, Game, position,
                          map_data="grass", borders="tr")
 
-        house_cell = (13, 22)
-        self.house = House(self, house_cell)
-        self.house.create_inside()
-
         file_name = os.path.join(Game.data_dir, "npc.png")
         npc_1 = Npc(Game, file_name)
         npc_1.change_position((17, 15))
@@ -34,9 +29,14 @@ class Map(MapDefault):
 
         self.map_info["npc"].add(npc_1)
 
+        self.add_prop("house", (9, 18))
+        self.add_prop("door", (13, 20), "first_house", char_orientation="nw")
+
+        self.add_prop("tp_cell", (20, 17), (1, -1), new_char_cell=(14, 15))
+
     def refresh(self):
         super().refresh()
         # try:  # error if refresh before house creation
-        self.house.refresh()
+        # self.house.refresh()
         # except AttributeError:
         #     print("not created yet")

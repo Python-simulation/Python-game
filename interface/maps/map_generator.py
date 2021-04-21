@@ -70,9 +70,9 @@ class MapGenerator:
         if all_keys[pg.K_9] or all_keys[pg.K_KP9]:
             self.tile = "wall_left_3_3_4"
         if all_keys[pg.K_0] or all_keys[pg.K_KP0]:
-            self.tile = "wall_left_1_1_2"
-        if all_keys[pg.K_2] or all_keys[pg.K_KP2]:
-            self.tile = "wall_left_1_1_3"
+            self.tile = "house_inside"
+        if all_keys[pg.K_2] or all_keys[pg.K_KP3]:
+            self.tile = "table"
 
         for event in pg.event.get():  # listed key in pressed order
 

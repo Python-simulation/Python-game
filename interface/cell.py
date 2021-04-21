@@ -161,10 +161,8 @@ class Cell(pg.sprite.Sprite):
         # self.message.unhovered()
 
     def clicked(self):
-        if not self.active:
-            return
 
-        if not self.check_real_pos("clicked"):
+        if not self.check_real_pos("clicked") and self.active:
             self.state = True
 
     def unclicked(self):

@@ -141,9 +141,7 @@ class MapFunctions:
                     # current_cell = cells_dict[(row_nb, col_nb)]
 
                     if current_cell is not None:
-                        current_cell.reset()
-                        current_cell.function = self.Game.character.dest
-                        current_cell.alpha_off = 100
+                        self.fct_tile_1(current_cell)
 
                 elif tile == "l":
                     current_cell = borders_left[(row_nb, col_nb)]
@@ -178,6 +176,10 @@ class MapFunctions:
         return [cells_dict, borders_left, borders_top,
                 borders_right, borders_bottom, borders]
 
+    def fct_tile_1(self, current_cell):
+        current_cell.reset()
+        current_cell.function = self.Game.character.dest
+        current_cell.alpha_off = 100
     # def _add_border_cell(self, Game, pos, func=None):
     #     if func == "l":
     #         function = Game.border_left
@@ -221,6 +223,9 @@ class MapFunctions:
         Map(self, Game)
     #
         from .map_1_n1 import Map
+        Map(self, Game)
+    #
+        from .house_inside import Map
         Map(self, Game)
 
         return self.all_maps
