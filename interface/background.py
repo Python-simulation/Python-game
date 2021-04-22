@@ -7,10 +7,10 @@ nf = NeededFunctions()
 class BackGround(pg.sprite.Sprite):  # OPTIMIZE: don' like the try except ->
     # because if bad name in image name, will not return error but a 0x0 image
     """image of the map"""
-    def __init__(self, *args, size=(0, 0)):
+    def __init__(self, *args, size=(0, 0), **kwargs):
         super().__init__()  # call Sprite intializer
         try:
-            self.image, self.rect = nf.load_image(*args)
+            self.image, self.rect = nf.load_image(*args, **kwargs)
         except Exception:
             self.image = pg.Surface(size)
             self.image.convert()

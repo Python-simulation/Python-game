@@ -9,8 +9,8 @@ cell_sizes = fp.cell_sizes
 
 class Sprite(BackGround):
 
-    def __init__(self, file_name, cell_pos, markers=list()):
-        super().__init__(file_name, -1)
+    def __init__(self, file_name, cell_pos, markers=list(), **kwargs):
+        super().__init__(file_name, -1, **kwargs)
 
         position = fp.cell_to_pos(cell_pos)
         position = (position[0],

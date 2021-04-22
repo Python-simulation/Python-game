@@ -30,7 +30,9 @@ class Map(MapDefault):
         self.map_info["npc"].add(npc_1)
 
         self.add_prop("house", (9, 18))
-        self.add_prop("door", (13, 20), "first_house", char_orientation="nw")
+        self.add_prop("door", (14, 20), (14, 20))
+        self.add_prop("tp_cell_invisible", (14, 20), "first_house",
+                      new_char_cell=(13, 20), char_orientation="nw")
 
         self.add_prop("tp_cell", (20, 17), (1, -1), new_char_cell=(14, 15))
 

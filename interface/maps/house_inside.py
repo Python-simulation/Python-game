@@ -27,5 +27,11 @@ class Map(MapDefault):
         self.add_prop("frame", (9, 15), background=True)
         self.add_prop("vase", (9, 18))
 
-        self.add_prop("door_left", (14, 20), (0, 1),
+        self.add_prop("tp_cell_invisible", (13, 20), (0, 1),
                       new_char_cell=(14, 20), char_orientation="se")
+        self.add_prop("door", (14, 20), (13, 20))
+
+        # other solution but not completly satisfied with it (perspective)
+        # self.add_prop("tp_cell_invisible", (14, 20), (0, 1),
+        #               new_char_cell=(14, 20), char_orientation="se")
+        # self.add_prop("door_right", (14, 20), (14, 20))

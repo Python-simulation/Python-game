@@ -7,7 +7,10 @@ fp = FindPath()
 
 prop_dict = {}
 
+
 """Model class"""
+
+
 class Object(Sprite):
     """Object model for all displayed item that don't affect the cells"""
 
@@ -53,19 +56,19 @@ class Object(Sprite):
 
         self._abcd = a, b, c, d
 
-        super().__init__(image, cell_pos, markers=markers)
+        super().__init__(image, cell_pos, markers=markers, **kwargs)
 
     def refresh(self):
         if self.background:  # if behind everything
             self.Map.map_info["background"].image.blit(self.image, self.rect)
-        else: # if can move around
+        else:  # if can move around
             self.Map.bg_sprites.add(self)
 
 
 class Prop(Object):
     """Prop model for item that change the walkable cells"""
 
-    def __init__(self, Map, cell_pos, image, dimensions=(1, 1, 1), **kwargs):
+    def __init__(self, Map, image, cell_pos, dimensions=(1, 1, 1), **kwargs):
         """cell_pos =  midbottom - .5*cell_y"""
         self.Map = Map
         self.Game = Map.Game
@@ -110,14 +113,14 @@ class PropTP(Prop):
     # player is above. Will not be a problem with futur changes
     """Prop model with teleportation function"""
 
-    def __init__(self, Map, cell_pos, image, new_map_pos,
+    def __init__(self, Map, image, cell_pos, new_map_pos,
                  dimensions=(1, 1, 1), **kwargs):
         self.Map = Map
         self.Game = Map.Game
 
         assert dimensions[0] == 1 and dimensions[1] == 1  # only for 1x1xz cell
 
-        super().__init__(Map, cell_pos, image, dimensions=dimensions, **kwargs)
+        super().__init__(Map, image, cell_pos, dimensions=dimensions, **kwargs)
 
         self.special_cell = [
             fp.pos_to_cell(self.markers[0]),
@@ -153,339 +156,78 @@ class PropTP(Prop):
             all_cells[cell].function = self.teleport
 
 
-class Tree(Prop):
-    """Create a tree on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-        image = os.path.join(self.Game.data_dir, 'tree.png')
-        super().__init__(Map, cell_pos, image, dimensions=(1, 1, 3))
+def _fct_none(*args, **kwargs):
+    pass
 
 
-prop_dict["tree"] = Tree
+class PropClickable(Prop):
+    """ Class model for Prop with clicked and hovered functions"""
 
-
-class Hole(Prop):
-    """Create a hole on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-        image = os.path.join(self.Game.data_dir, 'hole.png')
-        super().__init__(Map, cell_pos, image)
-
-
-prop_dict["hole"] = Hole
-
-
-class Wall(Prop):
-    """Create a wall on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-        image = os.path.join(self.Game.data_dir, 'wall_1_1.png')
-        super().__init__(Map, cell_pos, image)
-
-
-prop_dict["wall"] = Wall
-
-
-class Wall_1_1_2(Prop):
-    """Create a wall 1x1x2 on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-        image = os.path.join(self.Game.data_dir, 'wall_1_1_2.png')
-        super().__init__(Map, cell_pos, image, dimensions=(1, 1, 2))
-
-
-prop_dict["wall_left_1_1_2"] = Wall_1_1_2
-
-
-class Wall_1_1_3(Prop):
-    """Create a wall 1x1x3 on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-        image = os.path.join(self.Game.data_dir, 'wall_1_1_3.png')
-        super().__init__(Map, cell_pos, image, dimensions=(1, 1, 3))
-
-
-prop_dict["wall_left_1_1_3"] = Wall_1_1_3
-
-
-class Table(Prop):
-    """Create a 1x2 table on the map"""
-
-    def __init__(self, Map, cell_pos):
+    def __init__(self, Map, image, cell_pos, dimensions=(1, 1, 1), **kwargs):
         self.Map = Map
         self.Game = Map.Game
 
-        image = os.path.join(self.Game.data_dir, 'table.png')
-        super().__init__(Map, cell_pos, image, dimensions=(1, 2, 1))
+        super().__init__(Map, image, cell_pos, dimensions=dimensions, **kwargs)
 
+        self.function = kwargs.get("function", _fct_none)
+        self.arguments = kwargs.get("arguments", None)
 
-prop_dict["table"] = Table
+        self.position = self.rect  # same id until clicked occured, then copy
+        self.image_original = self.image
 
+        self.state = False
+        self.state_clicked = False
+        self.is_hovered = False
 
-class Wall_left_3(Prop):
-    """Create a 1x3 wall on the map"""
+        self.highligh = pg.Surface(self.rect.size).convert_alpha()
+        self.highligh.fill((240, 240, 240))
 
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
+    def hovered(self):
+        self.is_hovered = True
+        self.image_original = self.image.copy()
 
-        image = os.path.join(self.Game.data_dir, 'wall_1_3.png')
-        super().__init__(Map, cell_pos, image, dimensions=(1, 3, 1))
+        self.image.blit(self.highligh, (0, 0),
+                        special_flags=pg.BLEND_RGBA_MULT)
 
+        return True
 
-prop_dict["wall_left_3"] = Wall_left_3
+    def unhovered(self):
+        self.is_hovered = False
+        self.set_back_size()
 
+    def clicked(self):
+        # the not state alloyed to avoid clicking twice and add infinit offset
+        if self.Game.mouse.state_clicking and not self.state_clicked:
+            self.state_clicked = True
 
-class Wall_left_2(Prop):
-    """Create a 1x2 wall on the map"""
+        return True
 
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
+    def unclicked(self):
+        was_clicked = True if self.state_clicked else False
+        self.state_clicked = False
+        self.set_back_size()
 
-        image = os.path.join(self.Game.data_dir, 'wall_1_2.png')
-        super().__init__(Map, cell_pos, image, dimensions=(1, 2, 1))
+        if was_clicked and self.Game.mouse.hovering(self):
+            self.hovered()
+            self.state = True
 
+            if self.arguments is not None:
+                self.function(self.arguments)
+            else:
+                self.function()
 
-prop_dict["wall_left_2"] = Wall_left_2
+        else:
+            self.state = False
 
+    def set_back_size(self):
+        self.image = self.image_original
+        self.rect = self.position
 
-class Wall_left_2_2(Prop):
-    """Create a 2x2 wall on the map"""
+        self.position = self.rect  # same id from now
+        self.image_original = self.image  # same id from now
 
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
 
-        image = os.path.join(self.Game.data_dir, 'wall_2_2.png')
-        super().__init__(Map, cell_pos, image,
-                         dimensions=(2, 2, 1))
-
-
-prop_dict["wall_left_2_2"] = Wall_left_2_2
-
-
-class Wall_left_2_2_2(Prop):
-    """Create a 2x2x2 wall on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'wall_2_2_2.png')
-        super().__init__(Map, cell_pos, image, dimensions=(2, 2, 2))
-
-
-prop_dict["wall_left_2_2_2"] = Wall_left_2_2_2
-
-
-class Wall_left_2_3(Prop):
-    """Create a 2x3 wall on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'wall_2_3.png')
-        super().__init__(Map, cell_pos, image, dimensions=(2, 3, 1))
-
-
-prop_dict["wall_left_2_3"] = Wall_left_2_3
-
-
-class Wall_left_2_3_2(Prop):
-    """Create a 2x3x2 wall on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'wall_2_3_2.png')
-        super().__init__(Map, cell_pos, image, dimensions=(2, 3, 2))
-
-
-prop_dict["wall_left_2_3_2"] = Wall_left_2_3_2
-
-
-class Wall_left_2_3_4(Prop):
-    """Create a 2x3x4 wall on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'wall_2_3_4.png')
-        super().__init__(Map, cell_pos, image, dimensions=(2, 3, 4))
-
-
-prop_dict["wall_left_2_3_4"] = Wall_left_2_3_4
-
-
-class Wall_left_3_3_4(Prop):
-    """Create a 3x3x4 wall on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'wall_3_3_4.png')
-        super().__init__(Map, cell_pos, image, dimensions=(3, 3, 4))
-
-
-prop_dict["wall_left_3_3_4"] = Wall_left_3_3_4
-
-
-class Wall_left_3_3_4_spec(Prop):
-    """Create a 3x3x4 wall with cut right on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'wall_3_3_4_spec.png')
-        super().__init__(Map, cell_pos, image, dimensions=(3, 3, 4))
-        self.forbidden_cells = self.forbidden_cells[:-3]
-
-
-prop_dict["wall_left_3_3_4_spec"] = Wall_left_3_3_4_spec
-
-
-class Wall_right_3(Prop):
-    """Create a 3x1 wall on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'wall_1_3.png')
-        super().__init__(Map, cell_pos, image, dimensions=(3, 1, 1))
-
-        self.image = pg.transform.flip(self.image, True, False)
-
-
-prop_dict["wall_right_3"] = Wall_right_3
-
-
-class Wall_right_2(Prop):
-    """Create a 2x1 wall on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'wall_1_2.png')
-        super().__init__(Map, cell_pos, image, dimensions=(2, 1, 1))
-
-        self.image = pg.transform.flip(self.image, True, False)
-
-
-prop_dict["wall_right_2"] = Wall_right_2
-
-
-class House(Prop):
-    """Create a house 5x5x5 on the map"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'house.png')
-        super().__init__(Map, cell_pos, image, dimensions=(5, 5, 5))
-
-
-prop_dict["house"] = House
-
-
-class House_inside(Prop):
-    """Create the inside of a house 5x5x5 on the map and make the inside cell
-    walkable"""
-
-    def __init__(self, Map, cell_pos):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'house_inside.png')
-        super().__init__(Map, cell_pos, image, dimensions=(5, 5, 5),
-                         background=True, additive=True)
-
-
-prop_dict["house_inside"] = House_inside
-
-
-class Door(PropTP):
-    """Create a door on the map with tp function"""
-
-    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'door.png')
-
-        super().__init__(Map, cell_pos, image, new_map_pos,
-                         dimensions=(1, 1, 2), **kwargs)
-
-
-prop_dict["door"] = Door
-
-
-class Door_left(PropTP):  # TODO: change to not be PropTP but redirection to a
-    # invisible cell in front of door. And use this proxy by clicking on door
-    """Create a door on the map with tp function"""
-
-    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'door_left.png')
-
-        super().__init__(Map, cell_pos, image, new_map_pos,
-                         dimensions=(1, 1, 2), **kwargs)
-
-
-prop_dict["door_left"] = Door_left
-
-
-class Door_right(PropTP):
-    """Create a door on the map with tp function"""
-
-    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'door_left.png')
-
-        super().__init__(Map, cell_pos, image, new_map_pos,
-                         dimensions=(1, 1, 2), **kwargs)
-
-        self.image = pg.transform.flip(self.image, True, False)
-
-
-prop_dict["door_right"] = Door_right
-
-
-class TPCell(PropTP):
-    """Create a door on the map with tp function"""
-
-    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'tp_cell.png')
-
-        super().__init__(Map, cell_pos, image, new_map_pos, **kwargs)
-
-
-prop_dict["tp_cell"] = TPCell
+"""Classes made from Object model"""
 
 
 class Frame(Object):
@@ -512,3 +254,359 @@ class Vase(Object):
 
 
 prop_dict["vase"] = Vase
+
+
+"""Classes made from Prop model"""
+
+
+class Tree(Prop):
+    """Create a tree on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+        image = os.path.join(self.Game.data_dir, 'tree.png')
+        super().__init__(Map, image, cell_pos, dimensions=(1, 1, 3))
+
+
+prop_dict["tree"] = Tree
+
+
+class Hole(Prop):
+    """Create a hole on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+        image = os.path.join(self.Game.data_dir, 'hole.png')
+        super().__init__(Map, image, cell_pos)
+
+
+prop_dict["hole"] = Hole
+
+
+class Wall(Prop):
+    """Create a wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+        image = os.path.join(self.Game.data_dir, 'wall_1_1.png')
+        super().__init__(Map, image, cell_pos)
+
+
+prop_dict["wall"] = Wall
+
+
+class Wall_1_1_2(Prop):
+    """Create a wall 1x1x2 on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+        image = os.path.join(self.Game.data_dir, 'wall_1_1_2.png')
+        super().__init__(Map, image, cell_pos, dimensions=(1, 1, 2))
+
+
+prop_dict["wall_left_1_1_2"] = Wall_1_1_2
+
+
+class Wall_1_1_3(Prop):
+    """Create a wall 1x1x3 on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+        image = os.path.join(self.Game.data_dir, 'wall_1_1_3.png')
+        super().__init__(Map, image, cell_pos, dimensions=(1, 1, 3))
+
+
+prop_dict["wall_left_1_1_3"] = Wall_1_1_3
+
+
+class Table(Prop):
+    """Create a 1x2 table on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'table.png')
+        super().__init__(Map, image, cell_pos, dimensions=(1, 2, 1))
+
+
+prop_dict["table"] = Table
+
+
+class Wall_left_3(Prop):
+    """Create a 1x3 wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_1_3.png')
+        super().__init__(Map, image, cell_pos, dimensions=(1, 3, 1))
+
+
+prop_dict["wall_left_3"] = Wall_left_3
+
+
+class Wall_left_2(Prop):
+    """Create a 1x2 wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_1_2.png')
+        super().__init__(Map, image, cell_pos, dimensions=(1, 2, 1))
+
+
+prop_dict["wall_left_2"] = Wall_left_2
+
+
+class Wall_left_2_2(Prop):
+    """Create a 2x2 wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_2_2.png')
+        super().__init__(Map, image, cell_pos,
+                         dimensions=(2, 2, 1))
+
+
+prop_dict["wall_left_2_2"] = Wall_left_2_2
+
+
+class Wall_left_2_2_2(Prop):
+    """Create a 2x2x2 wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_2_2_2.png')
+        super().__init__(Map, image, cell_pos, dimensions=(2, 2, 2))
+
+
+prop_dict["wall_left_2_2_2"] = Wall_left_2_2_2
+
+
+class Wall_left_2_3(Prop):
+    """Create a 2x3 wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_2_3.png')
+        super().__init__(Map, image, cell_pos, dimensions=(2, 3, 1))
+
+
+prop_dict["wall_left_2_3"] = Wall_left_2_3
+
+
+class Wall_left_2_3_2(Prop):
+    """Create a 2x3x2 wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_2_3_2.png')
+        super().__init__(Map, image, cell_pos, dimensions=(2, 3, 2))
+
+
+prop_dict["wall_left_2_3_2"] = Wall_left_2_3_2
+
+
+class Wall_left_2_3_4(Prop):
+    """Create a 2x3x4 wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_2_3_4.png')
+        super().__init__(Map, image, cell_pos, dimensions=(2, 3, 4))
+
+
+prop_dict["wall_left_2_3_4"] = Wall_left_2_3_4
+
+
+class Wall_left_3_3_4(Prop):
+    """Create a 3x3x4 wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_3_3_4.png')
+        super().__init__(Map, image, cell_pos, dimensions=(3, 3, 4))
+
+
+prop_dict["wall_left_3_3_4"] = Wall_left_3_3_4
+
+
+class Wall_left_3_3_4_spec(Prop):
+    """Create a 3x3x4 wall with cut right on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_3_3_4_spec.png')
+        super().__init__(Map, image, cell_pos, dimensions=(3, 3, 4))
+        self.forbidden_cells = self.forbidden_cells[:-3]
+
+
+prop_dict["wall_left_3_3_4_spec"] = Wall_left_3_3_4_spec
+
+
+class Wall_right_3(Prop):
+    """Create a 3x1 wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_1_3.png')
+        super().__init__(Map, image, cell_pos, dimensions=(3, 1, 1))
+
+        self.image = pg.transform.flip(self.image, True, False)
+
+
+prop_dict["wall_right_3"] = Wall_right_3
+
+
+class Wall_right_2(Prop):
+    """Create a 2x1 wall on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'wall_1_2.png')
+        super().__init__(Map, image, cell_pos, dimensions=(2, 1, 1))
+
+        self.image = pg.transform.flip(self.image, True, False)
+
+
+prop_dict["wall_right_2"] = Wall_right_2
+
+
+class House(Prop):
+    """Create a house 5x5x5 on the map"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'house.png')
+        super().__init__(Map, image, cell_pos, dimensions=(5, 5, 5))
+
+
+prop_dict["house"] = House
+
+
+class House_inside(Prop):
+    """Create the inside of a house 5x5x5 on the map and make the inside cell
+    walkable"""
+
+    def __init__(self, Map, cell_pos):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'house_inside.png')
+        super().__init__(Map, image, cell_pos, dimensions=(5, 5, 5),
+                         background=True, additive=True)
+
+
+prop_dict["house_inside"] = House_inside
+
+
+"""Classes made from PropTP model"""
+
+
+class Door(PropClickable):
+    """Create a door on the map with tp function"""
+
+    def __init__(self, Map, cell_pos, target_cell, **kwargs):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'door.png')
+        kwargs["alpha"] = True
+        super().__init__(Map, image, cell_pos,
+                         dimensions=(0, 1, 2), **kwargs)
+
+        self.target_cell = target_cell
+
+    def refresh(self):
+        super().refresh()
+
+        cell = self.Map.map_info["cells"][self.target_cell]
+        self.function = cell._overwrite_clicked
+
+
+prop_dict["door"] = Door
+
+
+class Door_right(PropClickable):
+    """Create a door on the map with tp function"""
+
+    def __init__(self, Map, cell_pos, target_cell, **kwargs):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'door.png')
+        kwargs["alpha"] = True
+        super().__init__(Map, image, cell_pos,
+                         dimensions=(1, 0, 2), **kwargs)
+
+        self.target_cell = target_cell
+
+        self.image = pg.transform.flip(self.image, True, False)
+        self.image_original = pg.transform.flip(self.image_original, True, False)
+
+    def refresh(self):
+        super().refresh()
+
+        cell = self.Map.map_info["cells"][self.target_cell]
+        self.function = cell._overwrite_clicked
+
+
+prop_dict["door_right"] = Door_right
+
+
+class TPCell(PropTP):
+    """Create a visible on the map with tp function"""
+
+    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'tp_cell.png')
+
+        super().__init__(Map, image, cell_pos, new_map_pos, **kwargs)
+
+
+prop_dict["tp_cell"] = TPCell
+
+
+class TPCellInvisble(PropTP):
+    """Create a invisible cell on the map with tp function"""
+
+    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, '128x128.png')
+
+        super().__init__(Map, image, cell_pos, new_map_pos, **kwargs)
+
+
+prop_dict["tp_cell_invisible"] = TPCellInvisble

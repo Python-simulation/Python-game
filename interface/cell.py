@@ -167,3 +167,6 @@ class Cell(pg.sprite.Sprite):
 
     def unclicked(self):
         self.state = False
+
+    def _overwrite_clicked(self):
+        self.state = True

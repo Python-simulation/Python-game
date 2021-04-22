@@ -4,14 +4,18 @@ import pygame as pg
 class NeededFunctions:
     # functions to create our resources
 
-    def load_image(self, name, colorkey=None):
+    def load_image(self, name, colorkey=None, **kwargs):
         """Load images to the pygame variables space"""
         fullname = name
 
         image = pg.image.load(fullname)
 
-        image = image.convert()
-        # image = image.convert_alpha()
+        alpha = kwargs.get("alpha", False)
+
+        if alpha:
+            image = image.convert_alpha()
+        else:
+            image = image.convert()
 
         if colorkey is not None:
 
@@ -23,6 +27,8 @@ class NeededFunctions:
             # RLEACCEL make it faster to display
             image.set_colorkey(colorkey, pg.RLEACCEL)
 
+        # image = image.convert_alpha()  # almost work for every sprite used
+            # bug for cell but need to investigate benefice
         return image, image.get_rect()
 
     def load_sound(self, name):

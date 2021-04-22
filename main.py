@@ -181,6 +181,8 @@ class Game():
     def unclick(self):
         for button in self.all_buttons:
             button.unclicked()
+        for bg_sprite in self.bg_sprites:
+            bg_sprite.unclicked()
 
     def events(self):
         """All clicked regestered"""
@@ -231,30 +233,39 @@ class Game():
                         if self.mouse.clicking(sprites):
                             # print("just clicked on ", sprites)
                             sprites.clicked()
-                            # print("hit sprite", sprites)
+                            # print("hit sprite", sprites, output)
                             break
                     else:
-                        for npc in self.npc:
-                            # print("tried to clicked on ", sprites)
-                            if self.mouse.clicking(npc):
-                                # print("just clicked on ", sprites)
-                                npc.clicked()
-                                # print("hit sprite", sprites)
-                                break
-                        else:
-                            for cell in self.all_cells.values():
-                                if self.mouse.clicking(cell):
-                                    for cell_bis in self.all_cells.values():
-                                        cell_bis.unclicked()
-                                    cell.clicked()
-                                    # print("hit cell", cell.rect, cell.active)
+                        for bg_sprite in self.bg_sprites:
+                            # print("tried to clicked on ", bg_sprite)
+                            if self.mouse.clicking(bg_sprite):
+                                # print("just clicked on ", npc)
+                                output = bg_sprite.clicked()
+                                # print("hit bg_sprite", bg_sprite)
+                                if output is not None:
                                     break
-                            # else:
-                            #     if self.mouse.clicking(self.game_screen):
-                            #         print("hit no cells")
-                            #         self.character.dest(self.mouse.rect.topleft)
-                            #         for cell in self.all_cells.values():
-                            #             cell.unclicked()
+                        else:
+                            for npc in self.npc:
+                                # print("tried to clicked on ", npc)
+                                if self.mouse.clicking(npc):
+                                    # print("just clicked on ", npc)
+                                    npc.clicked()
+                                    # print("hit npc", npc)
+                                    break
+                            else:
+                                for cell in self.all_cells.values():
+                                    if self.mouse.clicking(cell):
+                                        for cell_bis in self.all_cells.values():
+                                            cell_bis.unclicked()
+                                        cell.clicked()
+                                        # print("hit cell", cell.rect, cell.active)
+                                        break
+                                # else:
+                                #     if self.mouse.clicking(self.game_screen):
+                                #         print("hit no cells")
+                                #         self.character.dest(self.mouse.rect.topleft)
+                                #         for cell in self.all_cells.values():
+                                #             cell.unclicked()
 
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 self.mouse.unclicked()
@@ -264,6 +275,8 @@ class Game():
                     button.unhovered()
                 for sprites in self.sprites:
                     sprites.unhovered()
+                for bg_sprite in self.bg_sprites:
+                    bg_sprite.unhovered()
                 for npc in self.npc:
                     npc.unhovered()
                 for cell in self.all_cells.values():
@@ -285,20 +298,28 @@ class Game():
                             # print("hover sprite", sprites)
                             break
                     else:
-                        for npc in self.npc:
-                            if self.mouse.hovering(npc):
-                                npc.hovered()
+                        for bg_sprite in self.bg_sprites:
+                            if self.mouse.hovering(bg_sprite):
+                                output = bg_sprite.hovered()
                                 pg.mouse.set_cursor(*pg.cursors.ball)
-                                # print("hover npc", npc)
-                                break
+                                # print("hover bg_sprite", bg_sprite)
+                                if output is not None:
+                                    break
                         else:
-                            for cell in self.all_cells.values():
-                                if self.mouse.hovering(cell):
-                                    cell.hovered()
-                                    # print("hover cell", cell)
+                            for npc in self.npc:
+                                if self.mouse.hovering(npc):
+                                    npc.hovered()
+                                    pg.mouse.set_cursor(*pg.cursors.ball)
+                                    # print("hover npc", npc)
                                     break
                             else:
-                                pg.mouse.set_cursor(*pg.cursors.arrow)
+                                for cell in self.all_cells.values():
+                                    if self.mouse.hovering(cell):
+                                        cell.hovered()
+                                        # print("hover cell", cell)
+                                        break
+                                else:
+                                    pg.mouse.set_cursor(*pg.cursors.arrow)
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside

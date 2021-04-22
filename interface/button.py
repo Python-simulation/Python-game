@@ -9,7 +9,7 @@ def _fct_none(*args, **kwargs):
 class Button(pg.sprite.Sprite):
     """buttons"""
 
-    def __init__(self, Game, function=None, name=None, size=(0, 0)):
+    def __init__(self, Game, function=None, name=None, size=(0, 0), **kwargs):
         pg.sprite.Sprite.__init__(self)
         self.Game = Game
         self.nf = NeededFunctions()
@@ -20,7 +20,7 @@ class Button(pg.sprite.Sprite):
             self.function = function
 
         if name is not None:
-            self.image, self.rect = self.nf.load_image(name)
+            self.image, self.rect = self.nf.load_image(name, **kwargs)
         else:
             self.add_background(size)
 
@@ -31,9 +31,8 @@ class Button(pg.sprite.Sprite):
         self.state_clicked = False
         self.is_hovered = False
 
-        self.highligh = pg.Surface(self.rect.size)
-        self.highligh.fill((255, 255, 255))
-        self.highligh.set_alpha(10)
+        self.highligh = pg.Surface(self.rect.size).convert_alpha()
+        self.highligh.fill((240, 240, 240))
 
         self.text = ""
 
@@ -77,7 +76,9 @@ class Button(pg.sprite.Sprite):
     def hovered(self):
         self.is_hovered = True
         self.image_original = self.image.copy()
-        self.image.blit(self.highligh, self.highligh.get_rect())
+        # see https://stackoverflow.com/questions/56209634/is-it-possible-to-change-sprite-colours-in-pygame
+        self.image.blit(self.highligh, (0, 0),
+                        special_flags=pg.BLEND_RGBA_MULT)
 
         if self.state_clicked:
             self.change_size()
