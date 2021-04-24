@@ -18,6 +18,9 @@ class MapGenerator:
         self.rect.center = self.Game.game_screen.rect.center
 
         self.tile = "grass"
+        self.tile_number = 0
+        self.tile_list = list(Game.ground_dict.keys())+list(prop_dict.keys())
+        self.time_pressed = 0
 
     def events(self):
         """All clicked regestered"""
@@ -27,52 +30,32 @@ class MapGenerator:
             self.Game.flags = self.Game.flags ^ pg.FULLSCREEN
             self.Game.reset_app_screen(self.Game.game_screen.rect.size)
 
-        if ((all_keys[pg.K_LCTRL] or all_keys[pg.K_RCTRL])
+        elif ((all_keys[pg.K_LCTRL] or all_keys[pg.K_RCTRL])
                 and (all_keys[97] or all_keys[122])):
             self.Game.running = False
             self.running = False
 
-        # if all_keys[pg.K_1] or all_keys[pg.K_KP1]:
-        #     self.tile = "grass"
-        # if all_keys[pg.K_2] or all_keys[pg.K_KP2]:
-        #     self.tile = "ground"
-        # if all_keys[pg.K_3] or all_keys[pg.K_KP3]:
-        #     self.tile = "water"
-        # if all_keys[pg.K_4] or all_keys[pg.K_KP4]:
-        #     self.tile = "tree"
-        # if all_keys[pg.K_5] or all_keys[pg.K_KP5]:
-        #     self.tile = "wall"
-        # if all_keys[pg.K_6] or all_keys[pg.K_KP6]:
-        #     self.tile = "wall_left_2"
-        # if all_keys[pg.K_7] or all_keys[pg.K_KP7]:
-        #     self.tile = "wall_right_2"
-        # if all_keys[pg.K_8] or all_keys[pg.K_KP8]:
-        #     self.tile = "wall_left_3"
-        # if all_keys[pg.K_9] or all_keys[pg.K_KP9]:
-        #     self.tile = "wall_right_3"
+        elif all_keys[pg.K_UP] or all_keys[pg.K_KP_PLUS]:
 
-        if all_keys[pg.K_1] or all_keys[pg.K_KP1]:
-            self.tile = "wall"
-        if all_keys[pg.K_2] or all_keys[pg.K_KP2]:
-            self.tile = "wall_left_2"
-        if all_keys[pg.K_3] or all_keys[pg.K_KP3]:
-            self.tile = "wall_left_2_2"
-        if all_keys[pg.K_4] or all_keys[pg.K_KP4]:
-            self.tile = "wall_left_2_3"
-        if all_keys[pg.K_5] or all_keys[pg.K_KP5]:
-            self.tile = "wall_left_2_3_2"
-        if all_keys[pg.K_6] or all_keys[pg.K_KP6]:
-            self.tile = "wall_left_2_3_4"
-        if all_keys[pg.K_7] or all_keys[pg.K_KP7]:
-            self.tile = "wall_left_3_3_4_spec"
-        if all_keys[pg.K_8] or all_keys[pg.K_KP8]:
-            self.tile = "wall_left_2_2_2"
-        if all_keys[pg.K_9] or all_keys[pg.K_KP9]:
-            self.tile = "wall_left_3_3_4"
-        if all_keys[pg.K_0] or all_keys[pg.K_KP0]:
-            self.tile = "house_inside"
-        if all_keys[pg.K_2] or all_keys[pg.K_KP3]:
-            self.tile = "table"
+            if ((self.time_pressed == 0 or self.time_pressed > 1)
+                    and self.tile_number+1 < len(self.tile_list)):
+                self.tile_number += 1
+
+            self.time_pressed += self.Game.dt
+
+        elif all_keys[pg.K_DOWN] or all_keys[pg.K_KP_MINUS]:
+
+            if ((self.time_pressed == 0 or self.time_pressed > 1)
+                    and self.tile_number >= 1):
+                self.tile_number -= 1
+
+            self.time_pressed += self.Game.dt
+
+        else:
+            self.time_pressed = 0
+
+        self.tile = self.tile_list[self.tile_number]
+
 
         for event in pg.event.get():  # listed key in pressed order
 
@@ -94,10 +77,14 @@ class MapGenerator:
                         try:
                             self.map.add_ground(self.tile, cell.cell_pos)
                         except KeyError:
-                            self.map.add_prop(self.tile, cell.cell_pos)
-                            print("self.add_prop(\""+str(self.tile)+"\", "+str(cell.cell_pos)+")")
-                            self.map.refresh()
-
+                            try:
+                                self.map.add_prop(self.tile, cell.cell_pos)
+                                print("self.add_prop(\""+str(self.tile)+"\", "+str(cell.cell_pos)+")")
+                                self.map.refresh()
+                            except TypeError:
+                                self.map.add_prop(self.tile, cell.cell_pos, cell.cell_pos)
+                                print("self.add_prop(\""+str(self.tile)+"\", "+str(cell.cell_pos)+", "+str(cell.cell_pos)+")")
+                                self.map.refresh()
                         break
 
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
@@ -113,7 +100,10 @@ class MapGenerator:
                         try:
                             self.show_ground(self.tile, cell.cell_pos)
                         except KeyError:
-                            self.show_prop(self.tile, cell.cell_pos)
+                            try:
+                                self.show_prop(self.tile, cell.cell_pos)
+                            except TypeError:
+                                self.show_prop(self.tile, cell.cell_pos, cell.cell_pos)
                         break
                 else:
                     pg.mouse.set_cursor(*pg.cursors.arrow)
@@ -124,9 +114,9 @@ class MapGenerator:
         ground.rect.center = position
         self.Game.sprites.add(ground)
 
-    def show_prop(self, name, cell):
+    def show_prop(self, name, cell, *args, **kwargs):
         Prop = prop_dict[str(name)]
-        prop = Prop(self.map, cell)
+        prop = Prop(self.map, cell, *args, **kwargs)
         self.Game.sprites.add(prop)
 
     def update(self):

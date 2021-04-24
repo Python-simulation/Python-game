@@ -19,13 +19,13 @@ class Map(MapDefault):
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ground', 'ground', 0],
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ground', 'ground', 'ground', 0],
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ground', 'ground', 'ground', 'ground', 0],
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'grass', 'grass', 'grass', 'grass', 0, 0, 0, 0, 0, 'ground', 0, 0, 'ground', 'ground', 0],
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'grass', 0, 0, 'water', 0, 0, 0, 0, 0, 'ground', 0, 0, 0, 'grass', 'ground', 0],
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'grass', 0, 'grass', 'water', 'grass', 'grass', 'ground', 'ground', 'ground', 'ground', 0, 0, 0, 'grass', 'grass', 'ground', 0],
-					[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'grass', 'grass', 'grass', 'water', 'grass', 'grass', 'grass', 0, 0, 0, 0, 0, 0, 'grass', 'grass', 'grass', 'water', 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ground', 'ground', 'ground'],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ground', 'ground', 'ground', 'ground'],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ground', 'ground', 'ground', 'ground','ground'],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'grass', 'grass', 'grass', 'grass', 0, 0, 0, 0, 0, 'ground', 0, 0, 'ground', 'ground', 'ground'],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'grass', 0, 0, 'ground', 0, 0, 0, 0, 0, 'ground', 0, 0, 0, 'grass', 'ground', 'ground'],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'grass', 0, 'grass', 'ground', 'grass', 'grass', 'ground', 'ground', 'ground', 'ground', 0, 0, 0, 'grass', 'grass', 'ground', 'ground'],
+					[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'grass', 'grass', 'grass', 'ground', 'grass', 'grass', 'grass', 0, 0, 0, 0, 0, 0, 'grass', 'grass', 'grass', 'ground', 'ground'],
 					[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ground', 'ground', 'ground', 'grass', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 					[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ground', 'ground', 'ground', 'grass', 0, 0, 0, 0, 0, 0, 0, 0, 0],
 					[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'grass', 0, 0, 0, 0, 0, 0, 0, 0],
@@ -43,6 +43,7 @@ class Map(MapDefault):
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
         super().__init__(Maps, Game, position,
+                          map_data_default="water",
                          map_data=map_data,
                          borders="lb")
 

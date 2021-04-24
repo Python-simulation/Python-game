@@ -28,10 +28,23 @@ class MapDefault:
         Maps.all_maps[position] = self
 
         # warning: don't use Game.mf because id conflict that change cell
-        self.map_data = kwargs.get("map_data", mf.map_data_zero)
 
-        if self.map_data == "grass":
-            self.map_data = mf.map_data
+        map_data_default = kwargs.get("map_data_default", mf.map_data_zero)
+
+        if type(map_data_default) is str:
+            ground = map_data_default
+            map_data_default = mf.map_data
+
+            for row_nb, row in enumerate(map_data_default):
+                for col_nb, tile in enumerate(row):
+                    map_data_default[row_nb][col_nb] = ground
+
+        self.map_data = kwargs.get("map_data", map_data_default)
+
+        for row_nb, row in enumerate(self.map_data):
+            for col_nb, tile in enumerate(row):
+                if self.map_data[row_nb][col_nb] == 0:
+                    self.map_data[row_nb][col_nb] = map_data_default[row_nb][col_nb]
 
         self.cell_data = kwargs.get("cell_data", mf.cell_data_zero)
 
@@ -72,46 +85,22 @@ class MapDefault:
                     elif tile == 3 or tile == "water":
                         self.add_ground("water", cell)
 
-                # elif tile == 4:
-                #     self.add_prop("wall", cell)
-
-                # elif tile == 5:
-                #     self.add_prop("wall_right_3", cell)
-
-                # elif tile == 6:
-                #     # self.list_refresh.append(Wall_left(self, cell))
-                #     self.add_prop("wall_left_3", cell)
-
-                # elif tile == 7:
-                #     self.add_prop("tree", cell)
-
-                # elif tile == 8:
-                #     self.add_prop("hole", cell)
-
-                # elif tile == 9:
-                #     self.add_prop("wall_left_2", cell)
-
-                # elif tile == 10:
-                #     self.add_prop("wall_right_2", cell)
-
         self.map_info["npc"] = npc
 
     def add_npc(self, npc):
         self.map_info["npc"].add(npc)
 
-    def add_ground(self, name, cell):
+    def add_ground(self, name, cell, **kwargs):
         ground = self.Game.ground_dict[str(name)]
-        position = fp.cell_to_pos(cell)
-        ground.rect.center = position
-        self.map_data[cell[0]][cell[1]] = name
-        # print(self.cell_data[cell[0]][cell[1]])
-        self.cell_data[cell[0]][cell[1]] = 1
-        # print(self.cell_data[cell[0]][cell[1]])
+        ground.rect.center = fp.cell_to_pos(cell)
+        self.map_data[cell[0]][cell[1]] = str(name)
+        walkable = kwargs.get("walkable", ground.walkable)
+        self.cell_data[cell[0]][cell[1]] = int(walkable)
         self.map_info["background"].image.blit(ground.image, ground.rect)
 
-    def add_prop(self, name, cell, *args, **kargs):
+    def add_prop(self, name, cell, *args, **kwargs):
         prop = prop_dict[str(name)]
-        self.list_refresh.append(prop(self, cell, *args, **kargs))
+        self.list_refresh.append(prop(self, cell, *args, **kwargs))
 
     def refresh(self):
         [cells_dict, borders_left, borders_top, borders_right, borders_bottom,

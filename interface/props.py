@@ -108,9 +108,6 @@ class Prop(Object):
 
 
 class PropTP(Prop):
-    # BUG: player infront of door after TP istead of behind -> came from the
-    # fact that door is a cube and the player is standing on it so return that
-    # player is above. Will not be a problem with futur changes
     """Prop model with teleportation function"""
 
     def __init__(self, Map, image, cell_pos, new_map_pos,
@@ -237,7 +234,8 @@ class Frame(Object):
         self.Map = Map
         self.Game = Map.Game
         image = os.path.join(self.Game.data_dir, 'frame.png')
-        super().__init__(Map, image, cell_pos, **kwargs)
+        kwargs["alpha"] = True
+        super().__init__(Map, image, cell_pos, dimensions=(1, 0, 1), **kwargs)
 
 
 prop_dict["frame"] = Frame
@@ -531,6 +529,39 @@ prop_dict["house_inside"] = House_inside
 """Classes made from PropTP model"""
 
 
+class TPCell(PropTP):
+    """Create a visible on the map with tp function"""
+
+    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'tp_cell.png')
+
+        super().__init__(Map, image, cell_pos, new_map_pos, **kwargs)
+
+
+prop_dict["tp_cell"] = TPCell
+
+
+class TPCellInvisble(PropTP):
+    """Create a invisible cell on the map with tp function"""
+
+    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, '128x128.png')
+
+        super().__init__(Map, image, cell_pos, new_map_pos, **kwargs)
+
+
+prop_dict["tp_cell_invisible"] = TPCellInvisble
+
+
+"""Classes made from PropClickable model"""
+
+
 class Door(PropClickable):
     """Create a door on the map with tp function"""
 
@@ -570,7 +601,8 @@ class Door_right(PropClickable):
         self.target_cell = target_cell
 
         self.image = pg.transform.flip(self.image, True, False)
-        self.image_original = pg.transform.flip(self.image_original, True, False)
+        self.image_original = pg.transform.flip(self.image_original,
+                                                True, False)
 
     def refresh(self):
         super().refresh()
@@ -580,33 +612,3 @@ class Door_right(PropClickable):
 
 
 prop_dict["door_right"] = Door_right
-
-
-class TPCell(PropTP):
-    """Create a visible on the map with tp function"""
-
-    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, 'tp_cell.png')
-
-        super().__init__(Map, image, cell_pos, new_map_pos, **kwargs)
-
-
-prop_dict["tp_cell"] = TPCell
-
-
-class TPCellInvisble(PropTP):
-    """Create a invisible cell on the map with tp function"""
-
-    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
-        self.Map = Map
-        self.Game = Map.Game
-
-        image = os.path.join(self.Game.data_dir, '128x128.png')
-
-        super().__init__(Map, image, cell_pos, new_map_pos, **kwargs)
-
-
-prop_dict["tp_cell_invisible"] = TPCellInvisble

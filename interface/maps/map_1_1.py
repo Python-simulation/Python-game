@@ -10,43 +10,40 @@ class Map(MapDefault):
     def __init__(self, Maps, Game):
         position = (1, 1)  # position of the map relative to all the maps
 
-        map_data = Game.mf.map_data.copy()
-
-        map_data[15][8] = 2  # done: add function to add to existing mapdefault__init__
-        map_data[16][8] = 2
-
-        map_data[20][10] = 3
-
-        map_data[19][9] = 2
-        map_data[20][9] = 2
-        map_data[21][9] = 2
-
-        map_data[19][11] = 2
-        map_data[20][11] = 2
-        map_data[21][11] = 2
-
-        map_data[19][10] = 2
-        map_data[21][10] = 2
-
-        map_data[15][5] = 0
-        map_data[16][5] = 0
-        map_data[15][6] = 0
-        map_data[16][6] = 0
-
         super().__init__(Maps, Game, position,
-                         map_data=map_data,
+                         map_data_default="grass",
                          borders="lt")
 
-        # BUG: can't have black sprite (no sprite) if use "grass" -> need to create a black sprite or
-        # need to create back background using new map_data
+        self.add_ground("ground", (15, 8))
+        self.add_ground("ground", (16, 8))
+        self.add_ground("water", (20, 10))
+
+        self.add_ground("ground", (19, 9))
+        self.add_ground("ground", (20, 9))
+        self.add_ground("ground", (21, 9))
+
+        self.add_ground("ground", (19, 11))
+        self.add_ground("ground", (20, 11))
+        self.add_ground("ground", (21, 11))
+
+        self.add_ground("ground", (19, 10))
+        self.add_ground("ground", (21, 10))
+
+        self.add_ground("empty", (15, 5))
+        self.add_ground("empty", (16, 5))
+        self.add_ground("empty", (15, 6))
+        self.add_ground("empty", (16, 6))
+
         self.add_prop("tree", (15, 8))
         self.add_prop("tree", (16, 8))
         self.add_prop("tree", (17, 8))
 
-        self.cell_data[15][5] = 0
-        self.cell_data[16][5] = 0
-        self.cell_data[15][6] = 0
-        self.cell_data[16][6] = 0
+        # self.cell_data[15][5] = 0
+        # self.cell_data[16][5] = 0
+        # self.cell_data[15][6] = 0
+        # self.cell_data[16][6] = 0
+
+        self.add_ground("water", (21, 17), walkable=False)
 
         file_name = os.path.join(Game.data_dir, "npc.png")
         npc_1 = Npc(Game, file_name)

@@ -19,7 +19,7 @@ class Map(MapDefault):
         position = (0, 1)  # position of the map relative to all the maps
 
         super().__init__(Maps, Game, position,
-                         map_data="grass", borders="tr")
+                         map_data_default="grass", borders="tr")
 
         file_name = os.path.join(Game.data_dir, "npc.png")
         npc_1 = Npc(Game, file_name)
@@ -35,6 +35,8 @@ class Map(MapDefault):
                       new_char_cell=(13, 20), char_orientation="nw")
 
         self.add_prop("tp_cell", (20, 17), (1, -1), new_char_cell=(14, 15))
+
+        self.add_ground("water", (21, 17), walkable=True)
 
     def refresh(self):
         super().refresh()
