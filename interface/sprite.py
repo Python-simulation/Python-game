@@ -9,8 +9,13 @@ cell_sizes = fp.cell_sizes
 
 class Sprite(BackGround):
 
-    def __init__(self, file_name, cell_pos, markers=list(), **kwargs):
-        super().__init__(file_name, -1, **kwargs)
+    def __init__(self, image, cell_pos, markers=list(), **kwargs):
+        if type(image) is str:  # OPTIMIZE: change this if merge anim and image
+            super().__init__(image, -1, **kwargs)
+        else:
+            super().__init__()
+            self.image = image
+            self.rect = self.image.get_rect()
 
         position = fp.cell_to_pos(cell_pos)
         position = (position[0],

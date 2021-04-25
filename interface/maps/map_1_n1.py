@@ -7,9 +7,9 @@ from .map_model import MapDefault
 class Map(MapDefault):
 
     def __init__(self, Maps, Game):
+        self.Maps = Maps
         position = (1, -1)
 
-        # created using the MapGenerator class
         map_data = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -43,11 +43,21 @@ class Map(MapDefault):
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
         super().__init__(Maps, Game, position,
-                          map_data_default="water",
+                         map_data_default="water",
                          map_data=map_data,
                          borders="lb")
 
-        # created using the MapGenerator class
+        self.add_ground("grass", (14, 7))
+        self.add_ground("grass", (14, 8))
+        self.add_ground("grass", (15, 8))
+        self.add_ground("grass", (15, 7))
+        self.add_prop("tp_cell", (15, 7), (0, 1), new_char_cell=(20, 17))
+        self.add_ground("grass", (14, 6))
+        self.add_ground("grass", (15, 6))
+        self.add_ground("grass", (16, 6))
+        self.add_ground("grass", (16, 7))
+        self.add_ground("grass", (16, 8))
+
         self.add_prop("wall", (13, 14))
         self.add_prop("wall", (13, 15))
         self.add_prop("wall", (14, 14))

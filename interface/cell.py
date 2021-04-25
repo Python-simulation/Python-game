@@ -114,18 +114,18 @@ class Cell(pg.sprite.Sprite):
             if output in (True, None):
                 self.state = False
 
-    def hovered(self):
+    def hovered(self):  # OPTIMIZE: temporary for development
+        # return
         if not self.show_path:
             return
 
         if not self.check_real_pos("hovered"):
             self.image.set_alpha(self.alpha_on)
             char_pos = self.Game.character.rect.midbottom
-            begin_cell = (char_pos[0],
+            begin_pos = (char_pos[0],
                           char_pos[1] - cell_sizes[1]/2)
-            self.road = fp.find_path(begin_cell,
-                                     self.rect.center,
-                                     all_cells=self.Game.all_cells,
+            self.road = fp.find_path(self.Game.all_cells,
+                                     begin_pos, self.rect.center,
                                      cardinal=self.Game.character.cardinal)
 
             for next_cell in self.road:

@@ -29,7 +29,7 @@ class Map(MapDefault):
 
         self.add_prop("tp_cell_invisible", (13, 20), (0, 1),
                       new_char_cell=(14, 20), char_orientation="se")
-        self.add_prop("door", (14, 20), (13, 20))
+        self.add_prop("door", (14, 20), target_cell=(13, 20))
 
         # other solution but not completly satisfied with it (perspective)
         # self.add_prop("tp_cell_invisible", (14, 20), (0, 1),

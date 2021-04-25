@@ -119,6 +119,8 @@ class MapFunctions:
         [cells_dict, borders_left, borders_top,
          borders_right, borders_bottom, borders] = self._all_cells
 
+        # print(borders_bottom)
+
         [cells_dict, borders_left, borders_top,
          borders_right, borders_bottom, borders] = [
              dict(cells_dict), dict(borders_left),
@@ -180,6 +182,7 @@ class MapFunctions:
         current_cell.reset()
         current_cell.function = self.Game.character.dest
         current_cell.alpha_off = 100
+
     # def _add_border_cell(self, Game, pos, func=None):
     #     if func == "l":
     #         function = Game.border_left

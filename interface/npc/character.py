@@ -120,15 +120,13 @@ class Character(pg.sprite.Sprite):
 
                 begin_cell = (self.rect.midbottom[0],
                               self.rect.midbottom[1] - cell_sizes[1]/2)
-                self.road = fp.find_path(begin_cell,
-                                         moving_to_pos,
-                                         all_cells=self.Game.all_cells,
+                self.road = fp.find_path(self.Game.all_cells,
+                                         begin_cell, moving_to_pos,
                                          cardinal=self.cardinal)
                 # print(self.road)
             else:
-                new_road = fp.find_path(self.road[0],
-                                        moving_to_pos,
-                                        all_cells=self.Game.all_cells,
+                new_road = fp.find_path(self.Game.all_cells,
+                                        self.road[0], moving_to_pos,
                                         cardinal=self.cardinal)
                 self.road = [self.road[0]]
                 self.road.extend(new_road)

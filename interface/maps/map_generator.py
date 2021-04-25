@@ -76,6 +76,7 @@ class MapGenerator:
                     if self.Game.mouse.clicking(cell):
                         try:
                             self.map.add_ground(self.tile, cell.cell_pos)
+                            print("self.add_ground(\""+str(self.tile)+"\", "+str(cell.cell_pos)+")")
                         except KeyError:
                             try:
                                 self.map.add_prop(self.tile, cell.cell_pos)

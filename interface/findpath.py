@@ -2,16 +2,20 @@
 import math
 from math import pi
 
+from .A_algorithm import A_algorithm
+
+
 cell_sizes = (128, 64)
 authorized_angle = math.atan(0.5)
 
 
 class FindPath:
-
+    """Clas with cell manipulation function and with find_path function."""
     cell_sizes = cell_sizes
     authorized_angle = authorized_angle
 
     def cell_to_pos(self, cell):
+        """Convert the matrix position of a cell into its pixel position"""
         cart_x = cell[0] * cell_sizes[0]/2
         cart_y = cell[1] * cell_sizes[0]/2  # x not a mistake
         iso_x = (cart_x - cart_y)
@@ -23,6 +27,7 @@ class FindPath:
         return pos
 
     def pos_to_cell(self, pos):
+        """Convert the pixel position of a cell into its matrix position."""
         iso = (pos[0] - 7.5*cell_sizes[0],
                pos[1] + 7.5*cell_sizes[1])
         cart = (iso[0]/2 + iso[1],
@@ -34,6 +39,7 @@ class FindPath:
         return cell
 
     def theta_cardinal(self, theta, cardinal):
+        """"Round theta to the authorized angles defined by cardinal."""
         if cardinal == 4:  # allows only cross
             first = 0
             second = pi/2
@@ -93,69 +99,85 @@ class FindPath:
 
         return theta
 
-    def find_path(self, begin_cell, dest_cell,
-                  all_cells=None, cardinal=4):
-        # print(all_cells)
-        # print(begin_cell, dest_cell)
-        if all_cells is None:
-            all_cells = range(560)
+    def find_path(self, all_cells, begin_pos, dest_pos, cardinal=4):
+        """function returning the path between two given cell.
+        First try a direct path without obsacle.
+        Switch to a A* algorithm if encounter an obstacle."""
+
+        dest_cell = self.pos_to_cell(dest_pos)
+        cell = all_cells.get(dest_cell)
+
+        if cell is None or not cell.active:
+            return list()
+
         road = list()
-        previous_cell = begin_cell
+        prev_pos = begin_pos
         nbr_step = 0
 
-        while previous_cell != dest_cell:
+        while prev_pos != dest_pos:
 
             nbr_step += 1
-            if nbr_step > len(all_cells):
-                # road = [dest_cell]  # BUG: temporaire just pour test
+            if nbr_step > len(all_cells):  # OPTIMIZE: temporary for dev
+                # road = [dest_cell]  # if remove cell preview, remove this
                 road = list()
-    #            print("bad road", road)
+                # print("bad road", road)
                 break
 
-            x_length = dest_cell[0] - previous_cell[0]
-            y_length = dest_cell[1] - previous_cell[1]
+            x_length = dest_pos[0] - prev_pos[0]
+            y_length = dest_pos[1] - prev_pos[1]
             theta = math.atan2(y_length, x_length)
 
             theta = self.theta_cardinal(theta, cardinal)
 
             if theta == 0:  # ugly but work
-                next_cell = (previous_cell[0]+cell_sizes[0],
-                             previous_cell[1])
-            elif theta == pi or theta == -pi:
-                next_cell = (previous_cell[0]-cell_sizes[0],
-                             previous_cell[1])
+                next_pos = (prev_pos[0]+cell_sizes[0],
+                            prev_pos[1])
+            elif theta in (pi, -pi):
+                next_pos = (prev_pos[0]-cell_sizes[0],
+                            prev_pos[1])
             elif theta == pi/2:
-                next_cell = (previous_cell[0],
-                             previous_cell[1]+cell_sizes[1])
+                next_pos = (prev_pos[0],
+                            prev_pos[1]+cell_sizes[1])
             elif theta == -pi/2:
-                next_cell = (previous_cell[0],
-                             previous_cell[1]-cell_sizes[1])
+                next_pos = (prev_pos[0],
+                            prev_pos[1]-cell_sizes[1])
             elif theta == authorized_angle:
-                next_cell = (previous_cell[0]+cell_sizes[0]/2,
-                             previous_cell[1]+cell_sizes[1]/2)
+                next_pos = (prev_pos[0]+cell_sizes[0]/2,
+                            prev_pos[1]+cell_sizes[1]/2)
             elif theta == (pi - authorized_angle):
-                next_cell = (previous_cell[0]-cell_sizes[0]/2,
-                             previous_cell[1]+cell_sizes[1]/2)
+                next_pos = (prev_pos[0]-cell_sizes[0]/2,
+                            prev_pos[1]+cell_sizes[1]/2)
             elif theta == -authorized_angle:
-                next_cell = (previous_cell[0]+cell_sizes[0]/2,
-                             previous_cell[1]-cell_sizes[1]/2)
+                next_pos = (prev_pos[0]+cell_sizes[0]/2,
+                            prev_pos[1]-cell_sizes[1]/2)
             elif theta == -(pi - authorized_angle):
-                next_cell = (previous_cell[0]-cell_sizes[0]/2,
-                             previous_cell[1]-cell_sizes[1]/2)
+                next_pos = (prev_pos[0]-cell_sizes[0]/2,
+                            prev_pos[1]-cell_sizes[1]/2)
             else:
                 print("error with angle", theta, theta*180/pi)
                 # road = [dest_cell]  # BUG: temporaire just pour test
                 break
 
-            unit_pos = self.pos_to_cell(next_cell)
+            unit_pos = self.pos_to_cell(next_pos)
 
             if (all_cells.get(unit_pos) is None
-                    or all_cells.get(unit_pos).active == False):
-                # TODO: implement A* here
-                # print("can't walk here, stop before it")
-                break
+                    or not all_cells.get(unit_pos).active):
+                begin_cell = self.pos_to_cell(begin_pos)
+                dest_cell = self.pos_to_cell(dest_pos)
 
-            road.append(next_cell)
-            previous_cell = next_cell
+                road = A_algorithm(all_cells,
+                                   begin_cell, dest_cell,
+                                   cardinal=cardinal)
+
+                road_pos = []
+
+                if road != []:
+                    for cell in road:
+                        road_pos.append(self.cell_to_pos(cell))
+
+                return road_pos
+
+            road.append(next_pos)
+            prev_pos = next_pos
 
         return road

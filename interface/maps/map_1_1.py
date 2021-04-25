@@ -38,11 +38,6 @@ class Map(MapDefault):
         self.add_prop("tree", (16, 8))
         self.add_prop("tree", (17, 8))
 
-        # self.cell_data[15][5] = 0
-        # self.cell_data[16][5] = 0
-        # self.cell_data[15][6] = 0
-        # self.cell_data[16][6] = 0
-
         self.add_ground("water", (21, 17), walkable=False)
 
         file_name = os.path.join(Game.data_dir, "npc.png")

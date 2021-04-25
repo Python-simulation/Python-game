@@ -29,6 +29,8 @@ class Map(MapDefault):
         self.add_prop("tree", (18, 18))
         self.add_prop("tree", (12, 20))
         self.add_prop("tree", (16, 26))
-        self.add_prop("tree", (16, 28))
+        # self.add_prop("tree", (16, 28))  # BUG: remove border cell even on adjacent
+        self.add_prop("tree", (17, 27))  # BUG: remove border cell even on adjacent
+        # map (1,-1) but not (0, 0) -> 00 has walk option that reactive all cell
         self.add_prop("wall_left_3", (16, 19))
         self.add_prop("wall_right_3", (16, 22))

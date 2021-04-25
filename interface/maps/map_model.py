@@ -31,13 +31,14 @@ class MapDefault:
 
         map_data_default = kwargs.get("map_data_default", mf.map_data_zero)
 
-        if type(map_data_default) is str:
+        if type(map_data_default) is str:  # BUG: here
             ground = map_data_default
             map_data_default = mf.map_data
 
             for row_nb, row in enumerate(map_data_default):
                 for col_nb, tile in enumerate(row):
-                    map_data_default[row_nb][col_nb] = ground
+                    if map_data_default[row_nb][col_nb] == 1:
+                        map_data_default[row_nb][col_nb] = ground
 
         self.map_data = kwargs.get("map_data", map_data_default)
 
@@ -93,9 +94,13 @@ class MapDefault:
     def add_ground(self, name, cell, **kwargs):
         ground = self.Game.ground_dict[str(name)]
         ground.rect.center = fp.cell_to_pos(cell)
-        self.map_data[cell[0]][cell[1]] = str(name)
+        self.map_data[cell[0]][cell[1]] = str(name)  # OPTIMIZE: temp for dev
+
         walkable = kwargs.get("walkable", ground.walkable)
-        self.cell_data[cell[0]][cell[1]] = int(walkable)
+        # BUG: keep in memory previous cell walkable variable when changing map
+        if self.cell_data[cell[0]][cell[1]] in (0, 1):
+            self.cell_data[cell[0]][cell[1]] = int(walkable)  # OPTIMIZE: had bug here because if "b" -> change to 1 and bug cell
+        # TODO: remove borders if water on it (need to acces cell and not just cell_data)
         self.map_info["background"].image.blit(ground.image, ground.rect)
 
     def add_prop(self, name, cell, *args, **kwargs):
@@ -106,6 +111,8 @@ class MapDefault:
         [cells_dict, borders_left, borders_top, borders_right, borders_bottom,
          borders] = self.Maps.map_reset_cells(cell_data=self.cell_data)
 
+        # for cell in borders_bottom.values():
+        #     print("avant", cell.active)
         borders_choice = {"l": borders_left, "r": borders_right,
                           "t": borders_top, "b": borders_bottom,
                           "a": borders}
@@ -122,3 +129,6 @@ class MapDefault:
 
         for sprite in self.list_refresh:
             sprite.refresh()
+
+        # for cell in borders_bottom.values():
+        #     print("apres", cell.active)

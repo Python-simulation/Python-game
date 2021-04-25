@@ -2,6 +2,7 @@ import os
 import pygame as pg
 from .sprite import Sprite
 from .findpath import FindPath
+from .animation import image_animate
 
 fp = FindPath()
 
@@ -102,13 +103,13 @@ class Prop(Object):
                     if self.additive:
                         self.Game.mf.fct_tile_1(current_cell)
 
-                    current_cell.active = self.additive
+                    current_cell.active = self.additive  # BUG: here if change map without reset cell
                 except KeyError:
                     pass  # outside map
 
 
-class PropTP(Prop):
-    """Prop model with teleportation function"""
+class PropTP(Object):
+    """Object model with teleportation function"""
 
     def __init__(self, Map, image, cell_pos, new_map_pos,
                  dimensions=(1, 1, 1), **kwargs):
@@ -125,8 +126,8 @@ class PropTP(Prop):
             # cell without tp if try to change map but stopped by the house
             ]
 
-        for cell in self.special_cell:
-            self.forbidden_cells.remove(cell)
+        # for cell in self.special_cell:
+        #     self.forbidden_cells.remove(cell)
 
         tp_cell_in = self.special_cell[0]
 
@@ -559,13 +560,59 @@ class TPCellInvisble(PropTP):
 prop_dict["tp_cell_invisible"] = TPCellInvisble
 
 
+class TPCellAnimated(PropTP):
+    """Create a invisible cell on the map with tp function"""
+
+    def __init__(self, Map, cell_pos, new_map_pos, **kwargs):
+        self.Map = Map
+        self.Game = Map.Game
+
+        image = os.path.join(self.Game.data_dir, 'character.png')
+
+        self.animation = image_animate(image, -1,  # TODO: merge with load_image
+                                       frames=8*6)
+        self.frames = 8*6
+        self._anim_time = 10
+        self._anim_time_elapsed = 0
+        self.step = 0
+        self.image = self.animation[0]
+
+        super().__init__(Map, self.image, cell_pos, new_map_pos,
+                         dimensions=(1, 1, 2), **kwargs)
+
+    def update(self, dt):
+        self._move_animation(self._anim_time, self.frames, dt)
+
+    def _move_animation(self, anim_time, frames, dt):  # TODO: merge with character into a model class
+        time_frame = anim_time / frames
+
+        if dt == 0:  # reset
+            self._anim_time_elapsed = 0
+            self.step = 0
+
+        else:
+            self._anim_time_elapsed += dt
+
+            while self._anim_time_elapsed > self.step*time_frame:
+                self.step += 1
+
+                if self.step >= frames:
+                    self.step = 1
+                    self._anim_time_elapsed = 0
+
+            self.image = self.animation[self.step]
+
+
+prop_dict["tp_cell_animated"] = TPCellAnimated
+
+
 """Classes made from PropClickable model"""
 
 
 class Door(PropClickable):
     """Create a door on the map with tp function"""
 
-    def __init__(self, Map, cell_pos, target_cell, **kwargs):
+    def __init__(self, Map, cell_pos, **kwargs):
         self.Map = Map
         self.Game = Map.Game
 
@@ -574,7 +621,7 @@ class Door(PropClickable):
         super().__init__(Map, image, cell_pos,
                          dimensions=(0, 1, 2), **kwargs)
 
-        self.target_cell = target_cell
+        self.target_cell = kwargs.get("target_cell", cell_pos)
 
     def refresh(self):
         super().refresh()
@@ -589,7 +636,7 @@ prop_dict["door"] = Door
 class Door_right(PropClickable):
     """Create a door on the map with tp function"""
 
-    def __init__(self, Map, cell_pos, target_cell, **kwargs):
+    def __init__(self, Map, cell_pos, **kwargs):
         self.Map = Map
         self.Game = Map.Game
 
@@ -598,7 +645,7 @@ class Door_right(PropClickable):
         super().__init__(Map, image, cell_pos,
                          dimensions=(1, 0, 2), **kwargs)
 
-        self.target_cell = target_cell
+        self.target_cell = kwargs.get("target_cell", cell_pos)
 
         self.image = pg.transform.flip(self.image, True, False)
         self.image_original = pg.transform.flip(self.image_original,
