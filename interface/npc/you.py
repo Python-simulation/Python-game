@@ -21,9 +21,12 @@ class You(Character):
 
     def hovered(self):
         # self.message.text("I'm you")
-        self.message.hovered()
-        pass
+        self.message.activated()
+        return False
 
     def unhovered(self):
-        self.message.unhovered()
+        self.message.desactivated()
         pass
+
+    def clicked(self):
+        return False

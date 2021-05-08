@@ -68,8 +68,6 @@ class Game():
         assert self.ratio_pix_meter_x == self.ratio_pix_meter_y
         self.ratio_pix_meter = self.ratio_pix_meter_x
 
-        self.check_border = None
-
         self.flags = (
                 pg.RESIZABLE |
                 pg.DOUBLEBUF
@@ -87,7 +85,7 @@ class Game():
         pg.display.set_caption("Loading screen")
         pg.mouse.set_visible(1)
 
-        self.allsprites = pg.sprite.RenderPlain(())  # init -> cell use it befo
+        self.allsprites = pg.sprite.LayeredUpdates()  # init -> cell use it befo
 
         loading_image = BackGround(size=self.game_screen.image.get_size())
         loading_image.image.fill((200, 200, 200))
@@ -113,10 +111,6 @@ class Game():
         self.mouse = Mouse(self)
 
         self.lower_bar = LowerBar(self)
-        self.lower_tool_bar = self.lower_bar.lower_tool_bar
-
-        self.all_buttons = []
-        self.all_buttons.extend(self.lower_bar.buttons)
 
         cell_pos = (3, 16)  # will be defined in a load file
         self.character = You(self)
@@ -155,7 +149,6 @@ class Game():
         self.cells.update(self.cells_visible)  # TODO:need to decide what to do
         self.all_cells = dict(self.cells_visible)
         self.all_cells.update(self.cells)
-        self.sprites = pg.sprite.Group()
         self.npc = self.map_info["npc"]
         self.map_pos_txt.text(new_map_pos)
         self.map_pos_txt.rect.topleft = (self.map_pos_txt.rect.h/2,
@@ -163,14 +156,17 @@ class Game():
 
         self.allsprites = pg.sprite.LayeredUpdates()
         self.allsprites.add(self.background_screen, layer=0)
+        # self.allsprites.add(self.all_cells.values(), layer=0)
         self.allsprites.add(self.bg_sprites, layer=1)
         self.allsprites.add(self.npc, layer=1)
         self.allsprites.add(self.character, layer=1)
-        self.allsprites.add(self.sprites, layer=2)
-        self.allsprites.add(self.lower_tool_bar, layer=3)
+        self.allsprites.add(self.lower_bar, layer=3)
         self.allsprites.add(self.lower_bar.buttons, layer=3)
         self.allsprites.add(self.map_pos_txt, layer=3)
         # self.allsprites.add(self.mouse, layer=4)
+
+        sprites = self.map_info["sprites"]  # OPTIMIZE: temporary for dev
+        self.allsprites.add(sprites, layer=2)
 
         for npc in self.npc:  # avoid bug if npc behing sprite
             npc.change_order()
@@ -178,11 +174,53 @@ class Game():
         self.character.change_order()
         # self.allsprites.add(self.cells.values(), layer=0)
 
-    def unclick(self):
-        for button in self.all_buttons:
-            button.unclicked()
-        for bg_sprite in self.bg_sprites:
-            bg_sprite.unclicked()
+    def click(self):
+        for sprite in self.allsprites.sprites()[::-1]:
+            # print("tried to clicked on ", sprite)
+            if self.mouse.clicking(sprite):
+                output = sprite.clicked()
+                # print("just clicked on ", sprite, output)
+                if output is True:
+                    break
+
+        else:
+            for cell in self.all_cells.values():
+                # print("tried to clicked on ", cell)
+                if self.mouse.clicking(cell):
+                    # print("just clicked on ", cell)
+                    output = cell.clicked()
+                    # print("hit cell", cell.rect, cell.active, output)
+                    if output is True:
+                        break
+
+    def unclick(self):  # could do function clicked, unclicked, hovered,.. ?
+        for sprite in self.allsprites:
+            sprite.unclicked()
+
+    def hover(self):
+        """Try to hover each sprite following the layer order"""
+
+        for sprite in self.allsprites.sprites()[::-1]:
+            # print("tried to hover on ", sprite)
+            if self.mouse.hovering(sprite):
+                output = sprite.hovered()
+                # print("just hovered ", sprite, output)
+                if output is True:
+                    break
+
+        else:
+            for cell in self.all_cells.values():
+                if self.mouse.hovering(cell):
+                    output = cell.hovered()
+                    # print("hover cell", cell)
+                    if output is True:
+                        break
+            else:
+                pg.mouse.set_cursor(*pg.cursors.arrow)
+
+    def unhover(self):
+        for sprite in self.allsprites:
+            sprite.unhovered()
 
     def events(self):
         """All clicked regestered"""
@@ -211,115 +249,14 @@ class Game():
                 self.reset_app_screen(event.dict['size'])
 
             elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                # tried with allsprites but keep having errors
-                # list(reversed(sprites)) but Group is not a callable
-
-                for button in self.all_buttons:
-                    if self.mouse.clicking(button):
-                        # reminder that unclicked occure here before
-                        button.clicked()
-                        # print("hit button", button)
-                        break
-                else:
-                    # OPTIMIZE: ugly but necessary for now
-                    self.check_border = None
-
-                    for sprite in self.allsprites:
-                        sprite.unclicked()
-                        # print("unclicking", sprite)
-
-                    for sprites in self.sprites:
-                        # print("tried to clicked on ", sprites)
-                        if self.mouse.clicking(sprites):
-                            # print("just clicked on ", sprites)
-                            sprites.clicked()
-                            # print("hit sprite", sprites, output)
-                            break
-                    else:
-                        for bg_sprite in self.bg_sprites:
-                            # print("tried to clicked on ", bg_sprite)
-                            if self.mouse.clicking(bg_sprite):
-                                # print("just clicked on ", npc)
-                                output = bg_sprite.clicked()
-                                # print("hit bg_sprite", bg_sprite)
-                                if output is not None:
-                                    break
-                        else:
-                            for npc in self.npc:
-                                # print("tried to clicked on ", npc)
-                                if self.mouse.clicking(npc):
-                                    # print("just clicked on ", npc)
-                                    npc.clicked()
-                                    # print("hit npc", npc)
-                                    break
-                            else:
-                                for cell in self.all_cells.values():
-                                    if self.mouse.clicking(cell):
-                                        for cell_bis in self.all_cells.values():
-                                            cell_bis.unclicked()
-                                        cell.clicked()
-                                        # print("hit cell", cell.rect, cell.active)
-                                        break
-                                # else:
-                                #     if self.mouse.clicking(self.game_screen):
-                                #         print("hit no cells")
-                                #         self.character.dest(self.mouse.rect.topleft)
-                                #         for cell in self.all_cells.values():
-                                #             cell.unclicked()
+                self.click()
 
             elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 self.mouse.unclicked()
 
             else:
-                for button in self.all_buttons:
-                    button.unhovered()
-                for sprites in self.sprites:
-                    sprites.unhovered()
-                for bg_sprite in self.bg_sprites:
-                    bg_sprite.unhovered()
-                for npc in self.npc:
-                    npc.unhovered()
-                for cell in self.all_cells.values():
-                    cell.unhovered()
-                pg.mouse.set_cursor(*pg.cursors.diamond)
-
-                # OPTIMIZE: tried without succes to do one for loop
-                for button in self.all_buttons:
-                    if self.mouse.hovering(button):
-                        pg.mouse.set_cursor(*pg.cursors.ball)
-                        button.hovered()
-                        # print("hover button", button)
-                        break
-                else:
-                    for sprites in self.sprites:
-                        if self.mouse.hovering(sprites):
-                            sprites.hovered()
-                            pg.mouse.set_cursor(*pg.cursors.ball)
-                            # print("hover sprite", sprites)
-                            break
-                    else:
-                        for bg_sprite in self.bg_sprites:
-                            if self.mouse.hovering(bg_sprite):
-                                output = bg_sprite.hovered()
-                                pg.mouse.set_cursor(*pg.cursors.ball)
-                                # print("hover bg_sprite", bg_sprite)
-                                if output is not None:
-                                    break
-                        else:
-                            for npc in self.npc:
-                                if self.mouse.hovering(npc):
-                                    npc.hovered()
-                                    pg.mouse.set_cursor(*pg.cursors.ball)
-                                    # print("hover npc", npc)
-                                    break
-                            else:
-                                for cell in self.all_cells.values():
-                                    if self.mouse.hovering(cell):
-                                        cell.hovered()
-                                        # print("hover cell", cell)
-                                        break
-                                else:
-                                    pg.mouse.set_cursor(*pg.cursors.arrow)
+                self.unhover()
+                self.hover()
 
     def update(self, dt):
         self.allsprites.update(dt)  # call update function of each class inside
@@ -355,7 +292,7 @@ class Game():
         #                                 rect, rect)
 
         # self.new_rects = self.rect_coverage(
-        #     self.allsprites)#, self.all_buttons)
+        #     self.allsprites)
 
         # for rect in self.new_rects:
         #     self.game_screen.image.blit(self.background_screen.image,
@@ -406,9 +343,7 @@ class Game():
     def teleportation(self, new_map_pos, new_char_pos, *args):
         new_char_pos = (new_char_pos[0], new_char_pos[1] + cell_sizes[1]/2)
 
-        if args != self.check_border:
-            self.character.dest(*args)
-            self.check_border = args
+        self.character.dest(*args)
 
         char_pos = self.character.position
         char_pos = (char_pos[0], char_pos[1] - cell_sizes[1]/2)
@@ -417,7 +352,6 @@ class Game():
             self.character.position = new_char_pos
             self.character.rect.midbottom = new_char_pos  # avoid sprite bug
             self.change_map(new_map_pos)
-            self.check_border = None
             return True
         else:
             return False
@@ -471,7 +405,7 @@ class Game():
             step = 0
 
             # self.old_rects = self.rect_coverage(
-            #     self.allsprites)#, self.all_buttons)
+            #     self.allsprites)
 
             while self.dt_accumulator >= self.dt_fixed:
                 step += 1

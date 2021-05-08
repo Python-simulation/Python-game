@@ -23,10 +23,16 @@ class Display(pg.sprite.Sprite):
         self.rect.center = position
 
     def hovered(self):
+        pass
+
+    def unhovered(self):
+        pass
+
+    def activated(self):
         self.rect = self.Game.mouse.rect
         self.Game.allsprites.add(self, layer=2)
 
-    def unhovered(self):
+    def desactivated(self):
         self.Game.allsprites.remove(self)
 
     def clicked(self):

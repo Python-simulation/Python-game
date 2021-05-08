@@ -117,7 +117,7 @@ class Cell(pg.sprite.Sprite):
     def hovered(self):  # OPTIMIZE: temporary for development
         # return
         if not self.show_path:
-            return
+            return True
 
         if not self.check_real_pos("hovered"):
             self.image.set_alpha(self.alpha_on)
@@ -138,7 +138,10 @@ class Cell(pg.sprite.Sprite):
                     # self.message.text("")
                     pass
 
-            # self.message.hovered()
+            # self.message.activated()
+
+        pg.mouse.set_cursor(*pg.cursors.diamond)
+        return True
 
     def unhovered(self):
         if not self.show_path:
@@ -158,15 +161,21 @@ class Cell(pg.sprite.Sprite):
             except KeyError:
                 pass
         self.road = list()
-        # self.message.unhovered()
+        # self.message.desactivated()
 
     def clicked(self):
+        for cell in self.Game.all_cells.values():
+            cell.state = False
 
         if not self.check_real_pos("clicked") and self.active:
             self.state = True
 
+        return True
+
     def unclicked(self):
-        self.state = False
+        # print("cell unclicked")
+        pass
+        # self.state = False
 
     def _overwrite_clicked(self):
         self.state = True

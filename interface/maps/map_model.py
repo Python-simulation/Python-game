@@ -67,6 +67,7 @@ class MapDefault:
             background = BackGround(size=Game.size)
 
         self.map_info["background"] = background
+        self.map_info["sprites"] = pg.sprite.RenderPlain()  # OPTIMIZE: temporary for dev
 
         for row_nb, row in enumerate(self.map_data):
             for col_nb, tile in enumerate(row):

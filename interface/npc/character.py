@@ -20,7 +20,7 @@ class Character(pg.sprite.Sprite):
         self.Game = Game
         pg.sprite.Sprite.__init__(self)
         self.area = self.Game.game_screen.rect.copy()  # walkable space
-        self.area.h -= self.Game.lower_tool_bar.rect.h - 19
+        self.area.h -= self.Game.lower_bar.rect.h - 19
         # self.image, self.rect = nf.load_image(name, colorkey=-1)
         self.cardinal = cardinal  # alloyed mvt (8 -> cros+diag, 4 -> diag)
         self.frames = frames  # number of frame for an animation
@@ -112,12 +112,16 @@ class Character(pg.sprite.Sprite):
                     break  # stay behind the 1st
 
     def dest(self, moving_to_pos):
+
+        if self.road != list():
+            if self.road[-1] == moving_to_pos:
+                return
+
         if (self.area.left <= moving_to_pos[0] <= self.area.right
                 and self.area.top <= moving_to_pos[1] <= self.area.bottom
                 and moving_to_pos != self.rect.midbottom):
 
             if self.road == list():
-
                 begin_cell = (self.rect.midbottom[0],
                               self.rect.midbottom[1] - cell_sizes[1]/2)
                 self.road = fp.find_path(self.Game.all_cells,
@@ -254,13 +258,14 @@ class Character(pg.sprite.Sprite):
         self.position = self.rect.midbottom
 
     def hovered(self):
-        pass
+        pg.mouse.set_cursor(*pg.cursors.ball)
+        return True
 
     def unhovered(self):
         pass
 
     def clicked(self):
-        pass
+        return True
 
     def unclicked(self):
         pass

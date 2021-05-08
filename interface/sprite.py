@@ -10,6 +10,7 @@ cell_sizes = fp.cell_sizes
 class Sprite(BackGround):
 
     def __init__(self, image, cell_pos, markers=list(), **kwargs):
+
         if type(image) is str:  # OPTIMIZE: change this if merge anim and image
             super().__init__(image, -1, **kwargs)
         else:
@@ -108,3 +109,4 @@ class Sprite(BackGround):
         b = y2 - a*x2
 
         return True if y0 >= a*x0 + b else False
+

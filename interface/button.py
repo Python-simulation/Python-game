@@ -32,7 +32,7 @@ class Button(pg.sprite.Sprite):
         self.is_hovered = False
 
         self.highligh = pg.Surface(self.rect.size).convert_alpha()
-        self.highligh.fill((240, 240, 240))
+        self.highligh.fill((10, 10, 10))
 
         self.text = ""
 
@@ -78,10 +78,13 @@ class Button(pg.sprite.Sprite):
         self.image_original = self.image.copy()
         # see https://stackoverflow.com/questions/56209634/is-it-possible-to-change-sprite-colours-in-pygame
         self.image.blit(self.highligh, (0, 0),
-                        special_flags=pg.BLEND_RGBA_MULT)
+                        special_flags=pg.BLEND_RGB_ADD)
 
         if self.state_clicked:
             self.change_size()
+
+        pg.mouse.set_cursor(*pg.cursors.ball)
+        return True
 
     def unhovered(self):
         self.is_hovered = False
@@ -92,6 +95,7 @@ class Button(pg.sprite.Sprite):
         if self.Game.mouse.state_clicking and not self.state_clicked:
             self.state_clicked = True
             self.change_size()
+        return True
 
     def unclicked(self):
         was_clicked = True if self.state_clicked else False

@@ -7,7 +7,7 @@ class FlyingMenu(BackGround):
     """Menu that pop when a npc is clicked"""
 
     def __init__(self, Owner, *args, background=False):
-        """args being a list of all the buttons that contain the menu.
+        """args being a list of all the elements that contain the menu.
         Each element can be a button, a background or any class containing
         a Rect and a image subclass"""
         self.Game = Owner.Game
@@ -18,7 +18,9 @@ class FlyingMenu(BackGround):
         self.active = False
         self.background = background
         self.bg = BackGround(size=self.Game.size)
-
+        self.bg.image.set_alpha(0)
+        self.bg.clicked = self.clicked  # used to stop mouse if outside menu
+        self.bg.hovered = self.hovered  # used to stop mouse if outside menu
 
     def _update_menu(self):
         extra_width = 2*self._margin
@@ -54,9 +56,9 @@ class FlyingMenu(BackGround):
         if value[1] < 0:
             value = (value[0], 0)
         elif (value[1] + self.rect.h
-              + self.Game.lower_tool_bar.rect.h - 19) > self.Game.size[1]:
+              + self.Game.lower_bar.rect.h - 19) > self.Game.size[1]:
             value = (value[0], (self.Game.size[1] - self.rect.h
-                                - self.Game.lower_tool_bar.rect.h + 19))
+                                - self.Game.lower_bar.rect.h + 19))
 
         self.rect.topleft = value
         height = 0
@@ -73,7 +75,7 @@ class FlyingMenu(BackGround):
 
     def activated(self):
 
-        self.desactivated()  # reset and put menu on top of display
+        self.desactivated()  # reset and put menu on top of display # TODO: OBSOLETE: ?
         self.active = True
         # print("menu clicked", self.name, self)
         self._update_menu()
@@ -86,38 +88,24 @@ class FlyingMenu(BackGround):
 
         # if self not in self.Game.allsprites:  # could be used but meh
         if self.background:
-            self.Game.sprites.add(self.bg)  # display
+            self.Game.allsprites.add(self.bg, layer=2)  # display
 
         self.Game.allsprites.add(self, layer=2)  # display
-        self.Game.sprites.add(self)  # prevent from clicking behind the menu (except clicking on the npc...)
-
-        for item in self.items:
-
-            if isinstance(item, Button):
-                self.Game.all_buttons.append(item)
-                self.Game.allsprites.add(item, layer=2)
-            else:
-                self.Game.allsprites.add(item, layer=2)  # reminder: allsprites does unclicked if clicked outside
+        self.Game.allsprites.add(self.items, layer=2)
+        # reminder: allsprites does unclicked if clicked outside
 
     def desactivated(self):
 
         self.active = False
         # print("menu unclicked", self.name, self)
         if self.background:
-            self.Game.sprites.remove(self.bg)  # display
+            self.Game.allsprites.remove(self.bg)  # display
 
         self.Game.allsprites.remove(self)
-        self.Game.sprites.remove(self)
-        # self.kill()  # work but harder to know from which group was remove
+        self.Game.allsprites.remove(self.items)
 
-        for item in self.items:
+    def clicked(self):
+        return True
 
-            self.Game.sprites.remove(item)
-
-            if isinstance(item, Button):
-                if item in self.Game.all_buttons:
-                    self.Game.all_buttons.remove(item)
-                    self.Game.allsprites.remove(item)
-            else:
-                if item in self.Game.allsprites:
-                    self.Game.allsprites.remove(item)
+    def hovered(self):
+        return True

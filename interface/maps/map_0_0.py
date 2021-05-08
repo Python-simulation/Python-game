@@ -8,7 +8,7 @@ import os
 
 from .map_model import MapDefault
 
-# from ..background import BackGround
+from ..background import BackGround
 from ..npc.character import Character
 from ..npc.someguy import SomeGuy
 from ..npc.npc import Npc
@@ -28,15 +28,15 @@ class Map(MapDefault):
                          borders="a")
 
         npc = self.map_info["npc"]
-        # sprites = self.map_info["sprites"]
+        sprites = self.map_info["sprites"]
 
         someguy = SomeGuy(Game)
         someguy.change_position((23, 19))
         npc.add(someguy)
 
-        # show = BackGround(size=someguy.area.size)
-        # show.rect.topleft = someguy.area.topleft
-        # sprites.add(show)
+        show = BackGround(size=someguy.area.size)
+        show.rect.topleft = someguy.area.topleft
+        sprites.add(show)
 
         file_name = os.path.join(Game.data_dir, "npc.png")
         npc_2 = Npc(Game, file_name)

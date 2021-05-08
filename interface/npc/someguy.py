@@ -7,7 +7,7 @@ class SomeGuy(Npc):
     def __init__(self, Game):
         self.Game = Game
         image_name = os.path.join(Game.data_dir, "npc.png")
-        Npc.__init__(self, Game, image_name)
+        super().__init__(Game, image_name)
 
         self.allowed_mvt(1, 1)
         self.speed = 2
@@ -19,23 +19,24 @@ class SomeGuy(Npc):
         # (if several character involved and over differente maps)
 
     def update(self, dt):
-        Npc.update(self, dt)
+        super().update(dt)
         self.quest.update(dt)
         pass
 
     def hovered(self):
+        super().hovered()
         if not self.quest.menu.active:
             self.message.text("I'm a special npc! I can talk!")
-            self.message.hovered()
-        pass
+            self.message.activated()
+        return True
 
     def unhovered(self):
-        self.message.unhovered()
+        self.message.desactivated()
         pass
 
     def clicked(self):
         self.quest.clicked()
-        pass
+        return True
 
     def unclicked(self):
         # self.quest.unclicked()

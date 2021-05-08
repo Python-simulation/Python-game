@@ -105,10 +105,11 @@ class Npc(Character):
             self.allowed_mvt()
 
     def hovered(self):
+        super().hovered()
         # self.message.text("I'm a basic npc !")
-        self.message.hovered()
-        pass
+        self.message.activated()
+        return True
 
     def unhovered(self):
-        self.message.unhovered()
+        self.message.desactivated()
         pass

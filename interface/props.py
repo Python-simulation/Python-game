@@ -178,22 +178,25 @@ class PropClickable(Prop):
         self.is_hovered = False
 
         self.highligh = pg.Surface(self.rect.size).convert_alpha()
-        self.highligh.fill((240, 240, 240))
+        self.highligh.fill((10, 10, 10))
 
     def hovered(self):
         self.is_hovered = True
         self.image_original = self.image.copy()
 
         self.image.blit(self.highligh, (0, 0),
-                        special_flags=pg.BLEND_RGBA_MULT)
+                        special_flags=pg.BLEND_RGB_ADD)
 
-        return True
+        pg.mouse.set_cursor(*pg.cursors.ball)
+        return True  # OPTIMIZE: reverse logic by making by default
 
     def unhovered(self):
         self.is_hovered = False
         self.set_back_size()
 
     def clicked(self):
+        for cell in self.Game.all_cells.values():  # OPTIMIZE ugly here
+            cell.state = False
         # the not state alloyed to avoid clicking twice and add infinit offset
         if self.Game.mouse.state_clicking and not self.state_clicked:
             self.state_clicked = True
